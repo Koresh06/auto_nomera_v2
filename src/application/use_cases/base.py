@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 
-class UseCaseRequest(ABC):
-    pass
+class UseCaseRequest(ABC): ...
 
-ReqT = TypeVar("ReqT", bound=UseCaseRequest)
-ResT = TypeVar("ResT")
 
-class UseCase(ABC, Generic[ReqT, ResT]):
+CT = TypeVar("CT", bound=UseCaseRequest)
+CR = TypeVar("CR", bound=Any)
+
+
+class UseCase(ABC, Generic[CT, CR]):
+    
     @abstractmethod
-    async def __call__(self, command: ReqT) -> ResT:
-        raise NotImplementedError
+    async def __call__(self, command: CT) -> CR: ...
