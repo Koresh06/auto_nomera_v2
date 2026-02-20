@@ -34,6 +34,8 @@ class Publication(Entity):
     channel_message_id: int | None = None
     published_at_utc: datetime | None = None
 
+    scheduler_job_id: str | None = None
+
     services: list[PublicationService] = field(default_factory=list)
 
     def schedule(self, *, slot: SlotKey, publish_at_utc: datetime) -> None:
@@ -100,6 +102,14 @@ class Publication(Entity):
         self.slot = slot
         self.publish_at_utc = publish_at_utc
         self.status = PublicationStatus.AWAITING_PAYMENT
+        self.touch()
+
+    def set_scheduler_job(self, job_id: str) -> None:
+        self.scheduler_job_id = job_id
+        self.touch()
+
+    def clear_scheduler_job(self) -> None:
+        self.scheduler_job_id = None
         self.touch()
 
     

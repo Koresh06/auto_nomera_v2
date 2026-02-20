@@ -14,7 +14,6 @@ from src.application.use_cases.publication.select_slot_for_publication import Se
 from src.application.use_cases.publication_service.unpin_message import UnpinMessageRequest, UnpinMessageUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest, GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest, HoldSlotUseCase
-from src.infrastructure.dev.bootstrap import build_dev_container
 
 
 
@@ -56,8 +55,3 @@ class MediatorProvider(Provider):
 
         return mediator
     
-class FakeMediatorProvider(Provider):
-    @provide(scope=Scope.APP)
-    def provide_mediator(self) -> Mediator:
-        # singleton на всё приложение
-        return build_dev_container()

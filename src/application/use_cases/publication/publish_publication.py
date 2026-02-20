@@ -6,7 +6,7 @@ from src.application.ports.publication_service.image_processor import ImageProce
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.publication.scheduler import Scheduler
-from src.application.ports.publication_service.telegram_publisher import TelegramPublisher
+from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.publication import Publication
 from src.domain.entities.publication_service import PublicationService
@@ -42,11 +42,19 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         pub = await self.publication_repo.get_by_id(command.publication_id)
 
         # уже опубликовано/отменено/замещено — ничего не делаем
-        if pub.status in (PublicationStatus.PUBLISHED, PublicationStatus.CANCELED, PublicationStatus.REPLACED):
+        if pub.status in (
+            PublicationStatus.PUBLISHED,
+            PublicationStatus.CANCELED,
+            PublicationStatus.REPLACED,
+        ):
             return
 
-        # готовим к публикации
-        pub.mark_publishing()
+        if pub.status == PublicationStatus.SCHEDULED:
+            pub.mark_publishing()
+        else:
+            pub.status = PublicationStatus.PUBLISHING
+            pub.touch()
+
         await self.publication_repo.save(pub)
 
         ad = await self.ad_repo.get_by_id(pub.ad_id)
@@ -60,14 +68,28 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
 
         # 1) highlight — делаем рамку перед публикацией
         if pub.has_service(PublicationServiceType.HIGHLIGHT) and image_file_id:
-            image_file_id = await self.image_processor.add_red_frame(file_id=image_file_id)
+            image_file_id = await self.image_processor.add_red_frame(
+                file_id=image_file_id
+            )
 
-        # 2) публикуем в канал
-        message_id = await self.telegram.send_ad(
-            channel_id=region.channel_id,
-            text=text,
-            image_file_id=image_file_id,
-        )
+        if ad.ad_type.value == "store":
+            result = await self.telegram.publish_text(
+                channel_id=region.channel_id,
+                text=text,
+            )
+        else:
+            if not image_file_id:
+                pub.mark_failed()
+                await self.publication_repo.save(pub)
+                return
+
+            result = await self.telegram.publish_photo(
+                channel_id=region.channel_id,
+                file_id_or_input=image_file_id,
+                caption=text,
+            )
+
+        message_id = result.message_id
 
         pub.mark_published(message_id=message_id, published_at_utc=now)
         await self.publication_repo.save(pub)
@@ -75,12 +97,16 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         # 3) pin — после публикации
         pin_service = _get_active_service(pub, PublicationServiceType.PIN)
         if pin_service is not None:
-            await self.telegram.pin_message(channel_id=region.channel_id, message_id=message_id)
+            await self.telegram.pin_message(
+                channel_id=region.channel_id, message_id=message_id
+            )
 
             # время открепления: пока берём из params, потом можно из админки/настроек
             # params: {"days": 3} или {"hours": 24}
-            run_at = _resolve_unpin_time(now, pin_service.params)
-            await self.scheduler.schedule_unpin(channel_id=region.channel_id, message_id=message_id, run_at_utc=run_at)
+            run_at = self.time_resolver.resolve_unpin_time(now, pin_service.params)
+            await self.scheduler.schedule_unpin(
+                channel_id=region.channel_id, message_id=message_id, run_at_utc=run_at
+            )
 
             pin_service.mark_used()
             await self.publication_repo.save(pub)
@@ -126,7 +152,10 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
             # publish_at_utc для next_slot считаем через resolver
             # но resolver ждёт Region, а у нас timezone строкой — проще создать временный Region не будем,
             # поэтому можно сделать отдельную функцию, но пока сделаем быстро:
-            publish_at_utc = self._resolve_publish_utc_from_timezone(region_timezone, next_slot)
+            publish_at_utc = self.time_resolver.resolve_publish_at_utc(
+                region_timezone,
+                next_slot,
+            )
 
             new_pub = Publication(
                 ad_id=ad_id,
@@ -135,27 +164,19 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
             new_pub.schedule(slot=next_slot, publish_at_utc=publish_at_utc)
 
             await self.publication_repo.create(new_pub)
-            await self.scheduler.schedule_publication(publication_id=new_pub.id, run_at_utc=publish_at_utc)
-
-    def _resolve_publish_utc_from_timezone(self, tz_name: str, slot: SlotKey) -> datetime:
-        # небольшой локальный хелпер, чтобы не тащить Region
-        from zoneinfo import ZoneInfo
-        tz = ZoneInfo(tz_name)
-        local_dt = datetime.combine(slot.local_day, slot.local_time, tzinfo=tz)
-        return local_dt.astimezone(timezone.utc)
+            await self.scheduler.schedule_publication(
+                publication_id=new_pub.id, run_at_utc=publish_at_utc
+            )
 
 
-def _get_active_service(pub: Publication, t: PublicationServiceType) -> PublicationService | None:
+def _get_active_service(
+    pub: Publication,
+    t: PublicationServiceType,
+) -> PublicationService | None:
     for s in pub.services:
         if s.type == t and s.status.value == "active":
             return s
     return None
 
 
-def _resolve_unpin_time(now_utc: datetime, params: dict) -> datetime:
-    if "hours" in params:
-        return now_utc + timedelta(hours=int(params["hours"]))
-    if "days" in params:
-        return now_utc + timedelta(days=int(params["days"]))
-    # дефолт: 24 часа
-    return now_utc + timedelta(hours=24)
+

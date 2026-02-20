@@ -12,3 +12,6 @@ class PublicationRepository(Protocol):
 
     async def create(self, publication: Publication) -> None:
        ...
+
+    async def list_scheduled_by_ad(self, ad_id: int) -> list[Publication]:
+        ...

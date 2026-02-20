@@ -8,7 +8,7 @@ from src.domain.exceptions.region import InvalidTimezone
 class TimezoneName:
     value: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         try:
             ZoneInfo(self.value)
         except ValueError:

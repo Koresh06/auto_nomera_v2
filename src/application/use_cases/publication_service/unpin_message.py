@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from src.application.ports.publication_service.telegram_publisher import TelegramPublisher
+from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.use_cases.base import UseCase, UseCaseRequest
 
 
@@ -18,4 +18,7 @@ class UnpinMessageUseCase(UseCase[UnpinMessageRequest, None]):
 
     async def __call__(self, command: UnpinMessageRequest) -> None:
         _ = command.now_utc or datetime.now(timezone.utc)
-        await self.telegram.unpin_message(channel_id=command.channel_id, message_id=command.message_id)
+        await self.telegram.unpin_message(
+            channel_id=command.channel_id,
+            message_id=command.message_id,
+        )

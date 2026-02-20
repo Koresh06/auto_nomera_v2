@@ -1,5 +1,3 @@
-from io import BytesIO
-
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
 

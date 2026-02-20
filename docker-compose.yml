@@ -1,0 +1,29 @@
+
+services:
+
+  redis:
+    image: redis:7
+    container_name: auto_nomera_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  bot:
+    build: .
+    container_name: auto_nomera_bot
+    command: python -m src.presentation.telegram.app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: always
+
+  worker:
+    build: .
+    container_name: auto_nomera_worker
+    command: taskiq worker src.worker:broker
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: always

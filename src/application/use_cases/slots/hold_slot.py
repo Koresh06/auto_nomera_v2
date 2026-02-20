@@ -4,7 +4,10 @@ from datetime import datetime, timezone
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.services.slots.calendar_builder import CalendarBuilder
-from src.domain.services.slots.slot_reservation_service import HoldResult, SlotReservationService
+from src.domain.services.slots.slot_reservation_service import (
+    HoldResult,
+    SlotReservationService,
+)
 from src.domain.value_objects.slot_key import SlotKey
 
 
@@ -27,7 +30,10 @@ class HoldSlotUseCase(UseCase[HoldSlotRequest, HoldResult]):
         now = command.now_utc or datetime.now(timezone.utc)
         region = await self.region_repo.get_by_id(command.region_id)
 
-        ordered_future_slots = self.calendar_builder.generate_future_slots(region=region, now_utc=now)
+        ordered_future_slots = self.calendar_builder.generate_future_slots(
+            region=region,
+            now_utc=now,
+        )
 
         return await self.reservation_service.hold_slot(
             slot=command.slot,

@@ -19,7 +19,7 @@ class AdTextRenderer:
 
         return self._render_standard(ad, region) + "\n" + links_block
 
-    def _render_standard(self, ad: Ad, region: Region) -> str:
+    def _render_standard(self, ad: Ad) -> str:
         c = ad.content
         assert c is not None
 
@@ -48,7 +48,7 @@ class AdTextRenderer:
 
         return "\n".join(lines)
 
-    def _render_store(self, ad: Ad, region: Region) -> str:
+    def _render_store(self, ad: Ad) -> str:
         s = ad.store_content
         assert s is not None
 

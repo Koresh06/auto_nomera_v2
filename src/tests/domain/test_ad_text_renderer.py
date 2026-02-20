@@ -14,6 +14,7 @@ def test_render_standard_sale():
         title="Ставрополь",
         timezone=TimezoneName("Europe/Moscow"),
         channel_id=-100123,
+        channel_username="Snomerami",
         metadata=RegionMetadata(
             {
                 "tg_group_url": "https://t.me/...",
@@ -56,6 +57,7 @@ def test_render_store():
         title="Ставрополь",
         timezone=TimezoneName("Europe/Moscow"),
         channel_id=-100123,
+        channel_username="Snomerami",
         metadata=RegionMetadata(
             {
                 "tg_group_url": "https://t.me/...",

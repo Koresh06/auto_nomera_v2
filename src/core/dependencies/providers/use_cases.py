@@ -4,14 +4,17 @@ from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.publication_service.image_processor import ImageProcessor
-from src.application.ports.publication_service.telegram_publisher import (
-    TelegramPublisher,
+from src.application.ports.publication_service.service_definition_repo import (
+    ServiceDefinitionRepository,
 )
+from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefUseCase
 from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase
-from src.application.use_cases.publication.create_publication_from_ad import CreatePublicationFromAdUseCase
+from src.application.use_cases.publication.create_publication_from_ad import (
+    CreatePublicationFromAdUseCase,
+)
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationUseCase,
 )
@@ -40,10 +43,7 @@ from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
-from src.domain.services.slots.slot_reservation_service import (
-    HoldResult,
-    SlotReservationService,
-)
+from src.domain.services.slots.slot_reservation_service import SlotReservationService
 
 
 class UseCasesProvider(Provider):
@@ -115,9 +115,14 @@ class UseCasesProvider(Provider):
 
     @provide
     def add_service_to_publication_use_case(
-        self, publication_repo: PublicationRepository
+        self,
+        publication_repo: PublicationRepository,
+        service_def_repo: ServiceDefinitionRepository,
     ) -> AddServiceToPublicationUseCase:
-        return AddServiceToPublicationUseCase(publication_repo=publication_repo)
+        return AddServiceToPublicationUseCase(
+            publication_repo=publication_repo,
+            service_def_repo=service_def_repo,
+        )
 
     @provide
     def priority_publish_publication_use_case(
@@ -172,19 +177,16 @@ class UseCasesProvider(Provider):
         )
 
     @provide
-    def create_ad_draft_use_case(
-        self,
-        ad_repo: AdRepository
-    ) -> CreateAdDraftUseCase:
+    def create_ad_draft_use_case(self, ad_repo: AdRepository) -> CreateAdDraftUseCase:
         return CreateAdDraftUseCase(ad_repo=ad_repo)
-    
+
     @provide
     def update_ad_content_use_case(
         self,
-        ad_repo: AdRepository
+        ad_repo: AdRepository,
     ) -> UpdateAdContentUseCase:
         return UpdateAdContentUseCase(ad_repo=ad_repo)
-    
+
     @provide
     def finalize_ad_use_case(
         self,
@@ -195,7 +197,7 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             region_repo=region_repo,
         )
-    
+
     @provide
     def create_publication_from_ad_use_case(
         self,

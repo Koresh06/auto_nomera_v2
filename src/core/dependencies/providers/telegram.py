@@ -6,7 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from src.core.config import settings
 
 
-class TgBotProvider(Provider):
+class TelegramProvider(Provider):
     scope = Scope.APP
 
     @provide

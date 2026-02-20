@@ -27,13 +27,13 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
             if sc is None:
                 raise ValueError("Store content is required")
         
-            if not sc.shop_name.strip():
+            if not sc.shop_name:
                 raise ValueError("Shop name required")
         
-            if not sc.city.strip():
+            if not sc.city:
                 raise ValueError("City required")
         
-            if not sc.contacts.strip():
+            if not sc.contacts:
                 raise ValueError("Contacts required")
         
             if len(sc.items) == 0:
@@ -47,13 +47,13 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
             raise ValueError("Ad content is required")
 
         c = ad.content
-        if not c.plate_number.strip():
+        if not c.plate_number:
             raise ValueError("Plate number is required")
-        if not c.city.strip():
+        if not c.city:
             raise ValueError("City is required")
-        if not c.price_text.strip():
+        if not c.price_text:
             raise ValueError("Price is required")
-        if not c.contacts.strip():
+        if not c.contacts:
             raise ValueError("Contacts are required")
 
         # allow_mask логика: для BUY можно маску, для SALE/URGENT — нет
@@ -63,14 +63,9 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
         # фото обязательно (кроме STORE)
         if not c.image_file_id:
             region = await self.region_repo.get_by_id(ad.region_id)
-            meta = region.metadata.data if region.metadata else {}
-            channel_username = meta.get("channel_username")
-            if not channel_username:
-                raise ValueError("Region metadata must contain channel_username")
-
             virtual_url = build_virtual_plate_url(
                 plate_number=c.plate_number,
-                channel_username=str(channel_username),
+                channel_username=region.channel_username,
                 chat_id=command.chat_id,
             )
 

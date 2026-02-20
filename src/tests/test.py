@@ -3,7 +3,7 @@ from datetime import datetime, time, timezone, date
 from src.domain.entities.region import Region
 from src.domain.value_objects.timezone_name import TimezoneName
 from src.domain.value_objects.region_settings import RegionSettings
-from src.domain.services.calendar_builder import CalendarBuilder
+from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.value_objects.slot_key import SlotKey
 
 
@@ -13,6 +13,7 @@ def main():
         title="Минск",
         timezone=TimezoneName("Europe/Minsk"),
         channel_id=-1001234567890,
+        channel_username="username",
         settings=RegionSettings(
             slot_times=(time(10, 0), time(14, 0), time(18, 0)),
             days_range=7,

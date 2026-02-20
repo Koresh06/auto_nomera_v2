@@ -15,6 +15,7 @@ class Region(Entity):
     title: str
     timezone: TimezoneName
     channel_id: int
+    channel_username: str
     status: RegionStatus = RegionStatus.ACTIVE
     settings: RegionSettings | None = None
     metadata: RegionMetadata | None = None
@@ -26,6 +27,7 @@ class Region(Entity):
         title: str,
         timezone: str,
         channel_id: int,
+        channel_username: str,
         settings: RegionSettings,
     ) -> "Region":
         if not title.strip():
@@ -37,6 +39,7 @@ class Region(Entity):
         region = cls(
             title=title.strip(),
             timezone=TimezoneName(timezone),
+            channel_username=channel_username,
             channel_id=channel_id,
             settings=settings,
             

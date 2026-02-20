@@ -10,7 +10,7 @@ from src.domain.enums.ad import AdType
 @dataclass(frozen=True, eq=False)
 class EnsureAdImageRefRequest(UseCaseRequest):
     ad_id: int
-    chat_id: int  # куда можно на секунду отправить temp photo (как у тебя)
+    chat_id: int
     
 
 @dataclass(kw_only=True)
