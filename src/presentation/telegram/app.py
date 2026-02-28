@@ -35,12 +35,15 @@ async def create_app():
     bot: Bot = await container.get(Bot)
     dp: Dispatcher = await container.get(Dispatcher)
 
+    await set_commands(bot)
+
     setup_dishka(container=container, router=dp)
+
+    setup_middlewares(dp=dp, container=container)
 
     dp.include_routers(*get_all_routers())
     dp.include_routers(*get_all_dialogs())
 
-    setup_middlewares(dp=dp)
     setup_dialogs(dp)
 
     setup_dialogs(dp, message_manager=CustomMessageManager())

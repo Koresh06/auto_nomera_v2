@@ -1,4 +1,5 @@
 from datetime import timedelta
+from aiogram import Bot
 from dishka import Provider, Scope, provide
 
 from src.core.config import settings
@@ -60,6 +61,6 @@ class ServicesProvider(Provider):
         )
     
     @provide
-    def image_processor(self) -> ImageProcessor:
-        return PillowImageProcessor()
+    def image_processor(self, bot: Bot) -> ImageProcessor:
+        return PillowImageProcessor(bot)
     

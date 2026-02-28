@@ -14,6 +14,7 @@ from src.application.use_cases.publication.select_slot_for_publication import Se
 from src.application.use_cases.publication_service.unpin_message import UnpinMessageRequest, UnpinMessageUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest, GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest, HoldSlotUseCase
+from src.application.use_cases.user.register_user import UserRegisterRequest, RegisterUserUseCase
 
 
 
@@ -23,6 +24,7 @@ class MediatorProvider(Provider):
     @provide
     def mediator(
         self,
+        user_register_use_case: RegisterUserUseCase,
         get_calendar_use_case: GetCalendarUseCase,
         hold_slot_use_case: HoldSlotUseCase,
         confirm_paid_slot_and_schedule_publication_use_case: ConfirmPaidSlotAndSchedulePublicationUseCase,
@@ -39,6 +41,7 @@ class MediatorProvider(Provider):
     ) -> Mediator:
         mediator = Mediator()
 
+        mediator.register(UserRegisterRequest, user_register_use_case)
         mediator.register(GetCalendarRequest, get_calendar_use_case)
         mediator.register(HoldSlotRequest, hold_slot_use_case)
         mediator.register(ConfirmPaidSlotAndSchedulePublicationRequest, confirm_paid_slot_and_schedule_publication_use_case)

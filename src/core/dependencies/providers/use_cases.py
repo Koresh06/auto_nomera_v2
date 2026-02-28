@@ -8,6 +8,7 @@ from src.application.ports.publication_service.service_definition_repo import (
     ServiceDefinitionRepository,
 )
 from src.application.ports.telegram.telegram_publisher import TelegramPublisher
+from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefUseCase
 from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase
@@ -39,6 +40,7 @@ from src.application.use_cases.publication_service.unpin_message import (
 )
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
+from src.application.use_cases.user.register_user import RegisterUserUseCase
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.calendar_builder import CalendarBuilder
@@ -48,6 +50,13 @@ from src.domain.services.slots.slot_reservation_service import SlotReservationSe
 
 class UseCasesProvider(Provider):
     scope = Scope.REQUEST
+
+    @provide
+    def register_user_use_case(
+        self,
+        user_repo: UserRepository,
+    ) -> RegisterUserUseCase:
+        return RegisterUserUseCase(user_repo=user_repo)
 
     @provide
     def get_caledar_use_case(

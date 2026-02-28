@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 
 from src.domain.entities.base import Entity
 from src.domain.enums.region import RegionStatus
-from src.domain.events.region import RegionCreated, RegionSettingsUpdated
 from src.domain.exceptions.region import InvalidChannelId
 from src.domain.value_objects.region_metadata import RegionMetadata
 from src.domain.value_objects.region_settings import RegionSettings
@@ -43,14 +42,6 @@ class Region(Entity):
             channel_id=channel_id,
             settings=settings,
             
-        )
-        region.add_event(
-            RegionCreated(
-                occurred_at=get_datetime_utc_now(),
-                region_id=region.id,
-                title=region.title,
-                metadata=region.metadata,
-            )
         )
         return region
 

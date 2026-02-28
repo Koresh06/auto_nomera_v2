@@ -1,0 +1,30 @@
+from dataclasses import dataclass
+
+from src.domain.entities.user import User
+from src.application.ports.user.user_repo import UserRepository
+from src.application.use_cases.base import UseCase, UseCaseRequest
+
+
+@dataclass(frozen=True, eq=False)
+class UserRegisterRequest(UseCaseRequest):
+    tg_id: int
+    username: str | None
+    full_name: str | None
+
+
+@dataclass(kw_only=True)
+class RegisterUserUseCase(UseCase[UserRegisterRequest, None]):
+    user_repo: UserRepository
+
+    async def __call__(self, command: UserRegisterRequest) -> None:
+        existing = await self.user_repo.get_by_tg_id(command.tg_id)
+        if existing is not None:
+            return
+
+        user = User.register(
+            tg_id=command.tg_id,
+            username=command.username,
+            full_name=command.full_name,
+        )
+
+        await self.user_repo.add(user)

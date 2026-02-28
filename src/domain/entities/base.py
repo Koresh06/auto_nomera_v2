@@ -12,7 +12,6 @@ class Entity(ABC):
     id: int = field(default_factory=int)
     created_at: datetime = field(default_factory=get_datetime_utc_now)
     updated_at: datetime = field(default_factory=get_datetime_utc_now)
-    _events: list = field(default_factory=list, compare=False, hash=False)
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Entity) and self.id == other.id and self.id != 0
@@ -22,11 +21,3 @@ class Entity(ABC):
     
     def touch(self) -> None:
         self.updated_at = get_datetime_utc_now()
-
-    def add_event(self, event: object) -> None:
-        self._events.append(event)
-
-    def pull_events(self) -> list:
-        events = self._events[:]
-        self._events.clear()
-        return events

@@ -1,22 +1,51 @@
-from io import BytesIO
-
+from aiogram import Bot
+from aiogram.types import BufferedInputFile
 from PIL import Image, ImageDraw
+from io import BytesIO
 
 from src.application.ports.publication_service.image_processor import ImageProcessor
 
 
 class PillowImageProcessor(ImageProcessor):
-    async def add_red_frame_png(self, *, png_bytes: bytes) -> bytes:
-        img = Image.open(BytesIO(png_bytes))
+    def __init__(self, bot: Bot) -> None:
+        self.bot = bot
+
+    async def add_red_frame(self, *, file_id: str) -> str:
+        # 1. Скачать файл из Telegram
+        file = await self.bot.get_file(file_id)
+        file_bytes = await self.bot.download_file(file.file_path)
+        image_bytes = file_bytes.read()
+
+        # 2. Обработать через Pillow
+        img = Image.open(BytesIO(image_bytes))
         processed = draw_debug_red_border(
             img,
             border_width=40,
             color=(255, 0, 0, 255),
             mutate=False,
         )
+
+        # 3. Сохранить в память
         out = BytesIO()
         processed.save(out, format="PNG")
-        return out.getvalue()
+        out.seek(0)
+
+        # 4. Отправить в Telegram, чтобы получить новый file_id
+        input_file = BufferedInputFile(out.read(), filename="highlight.png")
+        temp_msg = await self.bot.send_photo(
+            chat_id=self.bot.id,  # можно любой технический чат
+            photo=input_file,
+        )
+
+        new_file_id = temp_msg.photo[-1].file_id
+
+        # (по желанию) удалить временное сообщение
+        await self.bot.delete_message(
+            chat_id=self.bot.id,
+            message_id=temp_msg.message_id,
+        )
+
+        return new_file_id
     
 
 def draw_debug_red_border(

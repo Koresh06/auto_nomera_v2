@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from collections.abc import Callable
 from datetime import datetime, timedelta
 
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
-from src.domain.events.slot import SlotConvertedToPaid, SlotHeld, SlotHoldReleased  # если у тебя есть
-from src.domain.events.slot_reservation import SlotBooked
 from src.domain.exceptions.slot_reservation import (
     SlotAlreadyBooked,
     SlotAlreadyHeld,
@@ -45,7 +42,6 @@ class SlotReservationService:
         ad_id: int,
         ordered_future_slots: list[SlotKey],
         now_utc: datetime | None = None,
-        emit_event: Callable[[object], None] | None = None,
     ) -> HoldResult:
         """
         Логика на нажатие кнопки:
@@ -70,16 +66,6 @@ class SlotReservationService:
         hold_until = now + self.hold_ttl
         await self.hold_store.set(slot, owner, self.hold_ttl)
 
-        if emit_event:
-            emit_event(
-                SlotHeld(
-                    occurred_at=now,
-                    slot_key=slot,
-                    user_id=user_id,
-                    ad_id=ad_id,
-                    hold_until_utc=hold_until,
-                )
-            )
 
         # 4) pricing converted?
         # system paid считается политикой, converted — хранится как состояние
@@ -90,15 +76,6 @@ class SlotReservationService:
         if (not is_system_paid) and (not is_converted):
             await self.converted_repo.mark_converted(slot, user_id=user_id, ad_id=ad_id)
             pricing_changed = True
-            if emit_event:
-                emit_event(
-                    SlotConvertedToPaid(
-                        occurred_at=now,
-                        slot=slot,
-                        user_id=user_id,
-                        ad_id=ad_id,
-                    )
-                )
 
         return HoldResult(slot=slot, hold_until_utc=hold_until, pricing_changed_to_converted=pricing_changed)
 
@@ -108,10 +85,7 @@ class SlotReservationService:
         slot: SlotKey,
         user_id: int,
         ad_id: int,
-        now_utc: datetime | None = None,
-        emit_event: Callable[[object], None] | None = None,
     ) -> None:
-        now = now_utc or get_datetime_utc_now()
         owner = HoldOwner(user_id=user_id, ad_id=ad_id)
 
         existing = await self.hold_store.get(slot)
@@ -122,15 +96,6 @@ class SlotReservationService:
 
         await self.hold_store.delete(slot)
 
-        if emit_event:
-            emit_event(
-                SlotHoldReleased(
-                    occurred_at=now,
-                    slot=slot,
-                    user_id=user_id,
-                    ad_id=ad_id,
-                )
-            )
 
     async def book_after_payment(
         self,
@@ -138,8 +103,6 @@ class SlotReservationService:
         slot: SlotKey,
         user_id: int,
         ad_id: int,
-        now_utc: datetime | None = None,
-        emit_event: Callable[[object], None] | None = None,
         require_hold_owner: bool = False,
     ) -> None:
         """
@@ -149,7 +112,6 @@ class SlotReservationService:
 
         Если require_hold_owner=True — тогда требуем hold и совпадение owner.
         """
-        now = now_utc or get_datetime_utc_now()
         owner = HoldOwner(user_id=user_id, ad_id=ad_id)
 
         if await self.booking_repo.is_booked(slot):
@@ -170,12 +132,3 @@ class SlotReservationService:
         if existing == owner:
             await self.hold_store.delete(slot)
 
-        if emit_event:
-            emit_event(
-                SlotBooked(
-                    occurred_at=now,
-                    slot=slot,
-                    ad_id=ad_id,
-                    user_id=user_id,
-                )
-            )

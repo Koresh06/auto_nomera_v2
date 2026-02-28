@@ -6,15 +6,21 @@ from src.application.ports.publication_service.service_definition_repo import Se
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
+from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.repositories.ad.in_memory import InMemoryAdRepo
 from src.infrastructure.repositories.publication.in_memory import InMemoryPublicationRepo
 from src.infrastructure.repositories.region.in_memory import InMemoryRegionRepo, region_1
 from src.infrastructure.repositories.service_def.in_memory import InMemoryServiceDefinitionRepository
 from src.infrastructure.repositories.slot.in_memory import InMemorySlotBookingRepo, InMemorySlotConvertedRepo
+from src.infrastructure.repositories.user.in_memory import InMemoryUserRepo
 
 
 class RepositoriesProvider(Provider):
     scope = Scope.APP
+
+    @provide
+    def get_user_repository(self) -> UserRepository:
+        return InMemoryUserRepo()
 
     @provide
     def get_region_repository(self) -> RegionRepository:

@@ -6,22 +6,35 @@ from dataclasses import dataclass
 
 RUS_LETTERS = "АВЕКМНОРСТУХ"
 
-LATIN_TO_CYRIL = str.maketrans({
-    "A": "А", "B": "В", "E": "Е", "K": "К",
-    "M": "М", "H": "Н", "O": "О", "P": "Р",
-    "C": "С", "T": "Т", "X": "Х", "Y": "У",
-})
+LATIN_TO_CYRIL = str.maketrans(
+    {
+        "A": "А",
+        "B": "В",
+        "E": "Е",
+        "K": "К",
+        "M": "М",
+        "H": "Н",
+        "O": "О",
+        "P": "Р",
+        "C": "С",
+        "T": "Т",
+        "X": "Х",
+        "Y": "У",
+    }
+)
 
 PLATE_PATTERNS_WITH_MASK = {
-    "auto": re.compile(rf"^[{RUS_LETTERS}\*][0-9\*]{{3}}[{RUS_LETTERS}\*]{{2}}$"),   # X111XX
-    "trailer": re.compile(rf"^[{RUS_LETTERS}\*]{{2}}[0-9\*]{{4}}$"),                  # XX1111
-    "moto": re.compile(rf"^[0-9\*]{{4}}[{RUS_LETTERS}\*]{{2}}$"),                     # 1111XX
+    "auto": re.compile(
+        rf"^[{RUS_LETTERS}\*][0-9\*]{{3}}[{RUS_LETTERS}\*]{{2}}$"
+    ),  # X111XX
+    "trailer": re.compile(rf"^[{RUS_LETTERS}\*]{{2}}[0-9\*]{{4}}$"),  # XX1111
+    "moto": re.compile(rf"^[0-9\*]{{4}}[{RUS_LETTERS}\*]{{2}}$"),  # 1111XX
 }
 
 PLATE_BASE_PATTERNS = {
-    "auto": re.compile(rf"^[{RUS_LETTERS}]\d{{3}}[{RUS_LETTERS}]{{2}}$"),   # X111XX
-    "trailer": re.compile(rf"^[{RUS_LETTERS}]{{2}}\d{{4}}$"),               # XX1111
-    "moto": re.compile(rf"^\d{{4}}[{RUS_LETTERS}]{{2}}$"),                  # 1111XX
+    "auto": re.compile(rf"^[{RUS_LETTERS}]\d{{3}}[{RUS_LETTERS}]{{2}}$"),  # X111XX
+    "trailer": re.compile(rf"^[{RUS_LETTERS}]{{2}}\d{{4}}$"),  # XX1111
+    "moto": re.compile(rf"^\d{{4}}[{RUS_LETTERS}]{{2}}$"),  # 1111XX
 }
 
 
@@ -95,7 +108,10 @@ def split_plate_number(plate: str, *, allow_mask: bool = False) -> tuple[str, st
         patterns = list(PLATE_PATTERNS_WITH_MASK.values())
     else:
         # из масочных шаблонов убираем '*'
-        patterns = [re.compile(rx.pattern.replace(r"\*", "")) for rx in PLATE_PATTERNS_WITH_MASK.values()]
+        patterns = [
+            re.compile(rx.pattern.replace(r"\*", ""))
+            for rx in PLATE_PATTERNS_WITH_MASK.values()
+        ]
 
     for region_length in (2, 3):
         if len(p) <= region_length:
@@ -135,7 +151,16 @@ class PlateValidationResult:
     region: str
 
 
-def validate_and_split(plate: str, *, allow_mask: bool = False) -> PlateValidationResult:
+def validate_and_split(
+    plate: str,
+    *,
+    allow_mask: bool = False,
+) -> PlateValidationResult:
     normalized = validate_plate(plate, allow_mask=allow_mask)
     main_part, region = split_plate_number(normalized, allow_mask=allow_mask)
-    return PlateValidationResult(normalized=normalized, main_part=main_part, region=region)
+
+    return PlateValidationResult(
+        normalized=normalized,
+        main_part=main_part,
+        region=region,
+    )

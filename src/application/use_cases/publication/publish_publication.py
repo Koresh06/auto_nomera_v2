@@ -15,6 +15,7 @@ from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.value_objects.slot_key import SlotKey
+from src.domain.value_objects.timezone_name import TimezoneName
 
 
 @dataclass(frozen=True, eq=False)
@@ -153,8 +154,8 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
             # но resolver ждёт Region, а у нас timezone строкой — проще создать временный Region не будем,
             # поэтому можно сделать отдельную функцию, но пока сделаем быстро:
             publish_at_utc = self.time_resolver.resolve_publish_at_utc(
-                region_timezone,
-                next_slot,
+                tz=TimezoneName(region_timezone),
+                slot=next_slot,
             )
 
             new_pub = Publication(
