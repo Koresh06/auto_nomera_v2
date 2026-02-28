@@ -8,6 +8,7 @@ dependencies = [
     "aiogram-dialog>=2.4.0",
     "betterlogging>=1.0.0",
     "dishka>=1.8.0",
+    "mypy>=1.19.1",
     "pillow>=12.1.1",
     "pydantic-settings>=2.12.0",
     "pytest>=9.0.2",
