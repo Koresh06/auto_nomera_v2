@@ -34,6 +34,6 @@ class Scheduler(Protocol):
         channel_id: int,
         message_id: int,
         run_at_utc: datetime,
-    ) -> None: 
+    ) -> None:
         """Поставить задачу на открепление сообщения."""
         ...

@@ -13,7 +13,9 @@ class CreatePublicationFromAdRequest(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class CreatePublicationFromAdUseCase(UseCase[CreatePublicationFromAdRequest, PublicationDTO]):
+class CreatePublicationFromAdUseCase(
+    UseCase[CreatePublicationFromAdRequest, PublicationDTO]
+):
     ad_repo: AdRepository
     publication_repo: PublicationRepository
 

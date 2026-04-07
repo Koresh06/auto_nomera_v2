@@ -1,6 +1,9 @@
 from aiogram import Bot
 
-from src.application.ports.telegram.telegram_publisher import TelegramPublisher, PublishResult
+from src.application.ports.telegram.telegram_publisher import (
+    TelegramPublisher,
+    PublishResult,
+)
 
 
 class AiogramTelegramPublisher(TelegramPublisher):
@@ -20,7 +23,7 @@ class AiogramTelegramPublisher(TelegramPublisher):
             caption=caption,
         )
         return PublishResult(channel_id=channel_id, message_id=msg.message_id)
-    
+
     async def publish_text(self, *, channel_id: int, text: str) -> PublishResult:
         msg = await self.bot.send_message(chat_id=channel_id, text=text)
         return PublishResult(channel_id=channel_id, message_id=msg.message_id)

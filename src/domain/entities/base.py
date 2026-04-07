@@ -18,6 +18,6 @@ class Entity(ABC):
 
     def __hash__(self) -> int:
         return hash(self.id)
-    
+
     def touch(self) -> None:
         self.updated_at = get_datetime_utc_now()

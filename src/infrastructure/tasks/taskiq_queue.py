@@ -15,13 +15,21 @@ class TaskiqTaskQueue(TaskQueue):
             return getattr(job, "task_id", None) or getattr(job, "id", None)
 
         # fallback: если kick нет, попробуем через реестр задач (зависит от taskiq версии)
-        task = getattr(self._broker, "task_registry", {}).get(task_name) if hasattr(self._broker, "task_registry") else None
+        task = (
+            getattr(self._broker, "task_registry", {}).get(task_name)
+            if hasattr(self._broker, "task_registry")
+            else None
+        )
         if task is None:
-            raise RuntimeError(f"Task '{task_name}' not found and broker has no kick().")
+            raise RuntimeError(
+                f"Task '{task_name}' not found and broker has no kick()."
+            )
         job = await task.kiq(*args)
         return getattr(job, "task_id", None) or getattr(job, "id", None)
 
-    async def schedule(self, *, task_name: str, args: tuple[Any, ...], run_at_utc: datetime) -> str | None:
+    async def schedule(
+        self, *, task_name: str, args: tuple[Any, ...], run_at_utc: datetime
+    ) -> str | None:
         # если у брокера есть планирование по времени
         if hasattr(self._broker, "kick_by_time"):
             job = await self._broker.kick_by_time(run_at_utc, task_name, *args)

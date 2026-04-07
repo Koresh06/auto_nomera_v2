@@ -61,10 +61,18 @@ async def test_hold_free_slot_sets_hold_and_converts_if_not_system():
 
     region_id = 1
     future = [
-        SlotKey(region_id=region_id, local_day=date(2026, 2, 12), local_time=time(10, 0)),
-        SlotKey(region_id=region_id, local_day=date(2026, 2, 12), local_time=time(14, 0)),
-        SlotKey(region_id=region_id, local_day=date(2026, 2, 12), local_time=time(18, 0)),
-        SlotKey(region_id=region_id, local_day=date(2026, 2, 13), local_time=time(10, 0)),  # НЕ system
+        SlotKey(
+            region_id=region_id, local_day=date(2026, 2, 12), local_time=time(10, 0)
+        ),
+        SlotKey(
+            region_id=region_id, local_day=date(2026, 2, 12), local_time=time(14, 0)
+        ),
+        SlotKey(
+            region_id=region_id, local_day=date(2026, 2, 12), local_time=time(18, 0)
+        ),
+        SlotKey(
+            region_id=region_id, local_day=date(2026, 2, 13), local_time=time(10, 0)
+        ),  # НЕ system
     ]
 
     now = datetime(2026, 2, 12, 9, 0, tzinfo=timezone.utc)
@@ -95,10 +103,18 @@ async def test_hold_system_paid_slot_does_not_convert():
 
     region_id = 1
     future = [
-        SlotKey(region_id=region_id, local_day=date(2026, 2, 12), local_time=time(10, 0)),  # system
-        SlotKey(region_id=region_id, local_day=date(2026, 2, 12), local_time=time(14, 0)),  # system
-        SlotKey(region_id=region_id, local_day=date(2026, 2, 12), local_time=time(18, 0)),  # system
-        SlotKey(region_id=region_id, local_day=date(2026, 2, 13), local_time=time(10, 0)),
+        SlotKey(
+            region_id=region_id, local_day=date(2026, 2, 12), local_time=time(10, 0)
+        ),  # system
+        SlotKey(
+            region_id=region_id, local_day=date(2026, 2, 12), local_time=time(14, 0)
+        ),  # system
+        SlotKey(
+            region_id=region_id, local_day=date(2026, 2, 12), local_time=time(18, 0)
+        ),  # system
+        SlotKey(
+            region_id=region_id, local_day=date(2026, 2, 13), local_time=time(10, 0)
+        ),
     ]
 
     now = datetime(2026, 2, 12, 9, 0, tzinfo=timezone.utc)
@@ -129,7 +145,9 @@ async def test_hold_slot_fails_if_held_by_other_user():
     slot = SlotKey(region_id=1, local_day=date(2026, 2, 12), local_time=time(10, 0))
     future = [slot]
 
-    await hold_store.set(slot, HoldOwner(user_id=999, ad_id=888), ttl=timedelta(minutes=15))
+    await hold_store.set(
+        slot, HoldOwner(user_id=999, ad_id=888), ttl=timedelta(minutes=15)
+    )
 
     with pytest.raises(SlotAlreadyHeld):
         await service.hold_slot(
@@ -179,7 +197,9 @@ async def test_book_after_payment_marks_booked_and_releases_own_hold():
     )
 
     slot = SlotKey(region_id=1, local_day=date(2026, 2, 12), local_time=time(10, 0))
-    await hold_store.set(slot, HoldOwner(user_id=10, ad_id=20), ttl=timedelta(minutes=15))
+    await hold_store.set(
+        slot, HoldOwner(user_id=10, ad_id=20), ttl=timedelta(minutes=15)
+    )
 
     await service.book_after_payment(
         slot=slot,

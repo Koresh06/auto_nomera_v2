@@ -16,7 +16,9 @@ class PriorityPublishPublicationRequest(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class PriorityPublishPublicationUseCase(UseCase[PriorityPublishPublicationRequest, None]):
+class PriorityPublishPublicationUseCase(
+    UseCase[PriorityPublishPublicationRequest, None]
+):
     publication_repo: PublicationRepository
     scheduler: Scheduler
 
@@ -27,7 +29,9 @@ class PriorityPublishPublicationUseCase(UseCase[PriorityPublishPublicationReques
 
         # 1) добавляем услугу PRIORITY (если ещё нет) — чтобы воркер знал контекст
         if not publication.has_service(PublicationServiceType.PRIORITY_PUBLISH):
-            publication.add_service(PublicationService(type=PublicationServiceType.PRIORITY_PUBLISH))
+            publication.add_service(
+                PublicationService(type=PublicationServiceType.PRIORITY_PUBLISH)
+            )
 
         # 2) если было запланировано — отменяем задачу и помечаем как REPLACED
         if publication.status == PublicationStatus.SCHEDULED:

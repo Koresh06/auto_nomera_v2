@@ -66,10 +66,11 @@ class SlotReservationService:
         hold_until = now + self.hold_ttl
         await self.hold_store.set(slot, owner, self.hold_ttl)
 
-
         # 4) pricing converted?
         # system paid считается политикой, converted — хранится как состояние
-        is_system_paid = self.pricing_policy.is_system_paid(ordered_future_slots=ordered_future_slots, slot=slot)
+        is_system_paid = self.pricing_policy.is_system_paid(
+            ordered_future_slots=ordered_future_slots, slot=slot
+        )
         is_converted = await self.converted_repo.is_converted(slot)
 
         pricing_changed = False
@@ -77,7 +78,11 @@ class SlotReservationService:
             await self.converted_repo.mark_converted(slot, user_id=user_id, ad_id=ad_id)
             pricing_changed = True
 
-        return HoldResult(slot=slot, hold_until_utc=hold_until, pricing_changed_to_converted=pricing_changed)
+        return HoldResult(
+            slot=slot,
+            hold_until_utc=hold_until,
+            pricing_changed_to_converted=pricing_changed,
+        )
 
     async def release_hold(
         self,
@@ -95,7 +100,6 @@ class SlotReservationService:
             raise SlotHoldOwnerMismatch()
 
         await self.hold_store.delete(slot)
-
 
     async def book_after_payment(
         self,
@@ -131,4 +135,3 @@ class SlotReservationService:
         existing = await self.hold_store.get(slot)
         if existing == owner:
             await self.hold_store.delete(slot)
-

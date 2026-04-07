@@ -16,7 +16,7 @@ class RegionMetadata:
     @property
     def vk_group_url(self) -> str | None:
         return self.get_str("vk_group_url")
-    
+
     @property
     def max_channel_url(self) -> str | None:
         return self.get_str("max_channel_url")

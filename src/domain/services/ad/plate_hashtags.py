@@ -19,7 +19,7 @@ def split_plate(num: str) -> tuple[str, str]:
     if not m:
         return num, ""
     region = m.group(1)
-    return num[:-len(region)], region
+    return num[: -len(region)], region
 
 
 def detect_number_tags(main: str) -> list[str]:

@@ -11,7 +11,7 @@ from src.domain.enums.ad import AdType
 class EnsureAdImageRefRequest(UseCaseRequest):
     ad_id: int
     chat_id: int
-    
+
 
 @dataclass(kw_only=True)
 class EnsureAdImageRefUseCase(UseCase[EnsureAdImageRefRequest, None]):
@@ -34,8 +34,10 @@ class EnsureAdImageRefUseCase(UseCase[EnsureAdImageRefRequest, None]):
         meta = region.metadata.data if region.metadata else {}
         channel_username = meta.get("channel_username")
         if not channel_username:
-            raise ValueError("Region metadata must contain channel_username to generate plate image")
-        
+            raise ValueError(
+                "Region metadata must contain channel_username to generate plate image"
+            )
+
         virtual_url = build_virtual_plate_url(
             plate_number=ad.content.plate_number,
             channel_username=str(channel_username),

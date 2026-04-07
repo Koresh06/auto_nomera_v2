@@ -44,8 +44,6 @@ async def create_app():
     dp.include_routers(*get_all_routers())
     dp.include_routers(*get_all_dialogs())
 
-    setup_dialogs(dp)
-
     setup_dialogs(dp, message_manager=CustomMessageManager())
 
     await bot.delete_webhook(drop_pending_updates=True)
@@ -58,8 +56,6 @@ async def create_app():
         logger.info("🧹 Бот остановлены.")
 
 
-
 if __name__ == "__main__":
     logger.info("Starting bot")
     asyncio.run(create_app())
-    

@@ -17,9 +17,13 @@ from src.application.mediator import Mediator
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 from src.application.use_cases.ad.finalize_ad import FinalizeAdRequest
-from src.application.use_cases.publication.create_publication_from_ad import CreatePublicationFromAdRequest
+from src.application.use_cases.publication.create_publication_from_ad import (
+    CreatePublicationFromAdRequest,
+)
 
-from src.application.use_cases.publication.select_slot_for_publication import SelectSlotForPublicationRequest
+from src.application.use_cases.publication.select_slot_for_publication import (
+    SelectSlotForPublicationRequest,
+)
 
 from src.domain.enums.ad import AdType
 from src.domain.value_objects.slot_key import SlotKey
@@ -27,7 +31,7 @@ from src.domain.value_objects.slot_key import SlotKey
 from .states import CreateAdSG
 
 
-REGION_ID_DEV = 1  # мок-регион из build_dev_container()
+REGION_ID_DEV = 1
 
 
 @inject
@@ -38,13 +42,14 @@ async def on_plate_success(
     value: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    # создаём draft один раз, при первом вводе
     if "ad_id" not in dialog_manager.dialog_data:
-        dto: AdDTO = await mediator.handle(CreateAdDraftRequest(
-            user_id=message.from_user.id,
-            region_id=REGION_ID_DEV,
-            ad_type=AdType.SALE,
-        ))
+        dto: AdDTO = await mediator.handle(
+            CreateAdDraftRequest(
+                user_id=message.from_user.id,
+                region_id=REGION_ID_DEV,
+                ad_type=AdType.SALE,
+            )
+        )
         dialog_manager.dialog_data["ad_id"] = dto.id
 
     ad_id = dialog_manager.dialog_data["ad_id"]
@@ -93,7 +98,9 @@ async def on_contacts_success(
     await mediator.handle(FinalizeAdRequest(ad_id=ad_id, chat_id=message.chat.id))
 
     # создаём publication
-    pub: PublicationDTO = await mediator.handle(CreatePublicationFromAdRequest(ad_id=ad_id))
+    pub: PublicationDTO = await mediator.handle(
+        CreatePublicationFromAdRequest(ad_id=ad_id)
+    )
     dialog_manager.dialog_data["publication_id"] = pub.id
 
     await dialog_manager.switch_to(CreateAdSG.calendar)
@@ -119,14 +126,18 @@ async def on_pick_slot(
     day, t = _decode_slot_id(item_id)
     slot = SlotKey(region_id=REGION_ID_DEV, local_day=day, local_time=t)
 
-    res = await mediator.handle(SelectSlotForPublicationRequest(
-        publication_id=pub_id,
-        slot=slot,
-        user_id=callback.from_user.id,
-        ad_id=ad_id,
-    ))
+    res = await mediator.handle(
+        SelectSlotForPublicationRequest(
+            publication_id=pub_id,
+            slot=slot,
+            user_id=callback.from_user.id,
+            ad_id=ad_id,
+        )
+    )
 
     dialog_manager.dialog_data["picked"] = item_id
-    dialog_manager.dialog_data["converted"] = getattr(res, "pricing_changed_to_converted", False)
+    dialog_manager.dialog_data["converted"] = getattr(
+        res, "pricing_changed_to_converted", False
+    )
 
     await dialog_manager.switch_to(CreateAdSG.done)

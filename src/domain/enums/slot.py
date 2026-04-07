@@ -9,7 +9,5 @@ class SlotAvailability(str, Enum):
 
 class SlotPricing(str, Enum):
     FREE = "free"
-    SYSTEM = "system"          # первые N слотов по политике региона
-    CONVERTED = "converted"    # стал платным, потому что пользователь выбрал бесплатный
-
-    
+    SYSTEM = "system"  # первые N слотов по политике региона
+    CONVERTED = "converted"  # стал платным, потому что пользователь выбрал бесплатный

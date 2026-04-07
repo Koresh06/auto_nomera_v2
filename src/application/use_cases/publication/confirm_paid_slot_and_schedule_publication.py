@@ -25,19 +25,26 @@ class ConfirmPaidSlotAndSchedulePublicationUseCase(
     scheduler: Scheduler
     reservation_service: SlotReservationService
 
-    async def __call__(self, command: ConfirmPaidSlotAndSchedulePublicationRequest) -> None:
+    async def __call__(
+        self, command: ConfirmPaidSlotAndSchedulePublicationRequest
+    ) -> None:
         now = command.now_utc or datetime.now(timezone.utc)
 
         publication = await self.publication_repo.get_by_id(command.publication_id)
 
         # 1) Проверяем, что публикация ожидает оплату (или хотя бы ещё не scheduled)
-        if publication.status not in (PublicationStatus.AWAITING_PAYMENT, PublicationStatus.DRAFT):
+        if publication.status not in (
+            PublicationStatus.AWAITING_PAYMENT,
+            PublicationStatus.DRAFT,
+        ):
             raise InvalidPublicationState(
                 f"Publication must be awaiting payment or draft, got {publication.status}"
             )
 
         if publication.slot is None or publication.publish_at_utc is None:
-            raise ValueError("Publication slot/publish_at_utc must be set before confirming payment")
+            raise ValueError(
+                "Publication slot/publish_at_utc must be set before confirming payment"
+            )
 
         # 2) Фиксируем booking слота (занят окончательно)
         await self.reservation_service.book_after_payment(
@@ -49,7 +56,9 @@ class ConfirmPaidSlotAndSchedulePublicationUseCase(
         )
 
         # 3) Переводим публикацию в scheduled и ставим задачу
-        publication.schedule(slot=publication.slot, publish_at_utc=publication.publish_at_utc)
+        publication.schedule(
+            slot=publication.slot, publish_at_utc=publication.publish_at_utc
+        )
         await self.publication_repo.save(publication)
 
         await self.scheduler.schedule_publication(

@@ -1,12 +1,17 @@
+import logging
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram_dialog import DialogManager, StartMode
 from dishka.integrations.aiogram import FromDishka, inject
 
+from src.application.exceptions.user import UserNotFoudException
 from src.application.mediator import Mediator
-from src.application.use_cases.user.register_user import UserRegisterRequest
-from src.presentation.telegram.features.user.dialogs.create_ad.states import CreateAdSG
+from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
+from src.presentation.telegram.features.user.dialogs.start.states import StartSG
+
+
+logger = logging.getLogger(__name__)
 
 
 router = Router()
@@ -19,14 +24,15 @@ async def process_start_command(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
 ) -> None:
-    await mediator.handle(
-            UserRegisterRequest(
-            tg_id=message.from_user.id,
-            username=message.from_user.username,
-            full_name=message.from_user.full_name,
+    try:
+        await mediator.handle(GetTgIdRequest(tg_id=message.from_user.id))
+        await dialog_manager.start(
+            StartSG.menu,
+            mode=StartMode.RESET_STACK,
         )
-    )
-    await dialog_manager.start(
-        CreateAdSG.plate,
-        mode=StartMode.RESET_STACK,
-    )
+    except UserNotFoudException as ex:
+        logger.exception(ex)
+        await dialog_manager.start(
+            StartSG.chooise_region,
+            mode=StartMode.RESET_STACK,
+        )

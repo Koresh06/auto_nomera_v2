@@ -3,7 +3,6 @@ from src.domain.entities.ad import Ad
 from src.infrastructure.repositories.utils import _AutoId
 
 
-
 class InMemoryAdRepo(AdRepository):
     def __init__(self) -> None:
         self._ids = _AutoId()

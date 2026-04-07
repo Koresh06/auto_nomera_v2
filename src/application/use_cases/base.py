@@ -5,8 +5,10 @@ from typing import Generic, TypeVar
 class UseCaseRequest(ABC):
     pass
 
+
 ReqT = TypeVar("ReqT", bound=UseCaseRequest)
 ResT = TypeVar("ResT")
+
 
 class UseCase(ABC, Generic[ReqT, ResT]):
     @abstractmethod

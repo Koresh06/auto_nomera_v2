@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 
 from src.domain.entities.base import Entity
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 
 
 @dataclass(kw_only=True)

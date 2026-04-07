@@ -8,6 +8,7 @@ from src.application.use_cases.base import UseCase, UseCaseRequest
 @dataclass(frozen=True, eq=False)
 class UserRegisterRequest(UseCaseRequest):
     tg_id: int
+    region_id: int
     username: str | None
     full_name: str | None
 
@@ -23,6 +24,7 @@ class RegisterUserUseCase(UseCase[UserRegisterRequest, None]):
 
         user = User.register(
             tg_id=command.tg_id,
+            region_id=command.region_id,
             username=command.username,
             full_name=command.full_name,
         )

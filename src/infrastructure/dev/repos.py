@@ -8,9 +8,3 @@ from src.application.ports.region.region_repo import RegionRepository
 
 
 from src.domain.entities.region import Region
-
-
-
-
-
-

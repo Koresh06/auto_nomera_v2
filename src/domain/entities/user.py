@@ -11,6 +11,7 @@ class User(Entity):
     username: str | None = None
     full_name: str | None = None
     role: UserRole = UserRole.USER
+    region_id: int
     is_blocked: bool = False
 
     @classmethod
@@ -18,6 +19,7 @@ class User(Entity):
         cls,
         *,
         tg_id: int,
+        region_id: int,
         username: str | None = None,
         full_name: str | None = None,
     ) -> "User":
@@ -31,6 +33,7 @@ class User(Entity):
             tg_id=tg_id,
             username=username,
             full_name=full_name,
+            region_id=region_id,
         )
         return user
 
@@ -44,4 +47,8 @@ class User(Entity):
 
     def unblock(self) -> None:
         self.is_blocked = False
+        self.touch()
+
+    def change_region(self, region_id: int) -> None:
+        self.region_id = region_id
         self.touch()

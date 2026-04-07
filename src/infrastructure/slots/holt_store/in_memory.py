@@ -7,7 +7,6 @@ from src.domain.value_objects.hold_owner import HoldOwner
 from src.domain.value_objects.slot_key import SlotKey
 
 
-
 @dataclass(frozen=True, slots=True)
 class _HoldEntry:
     owner: HoldOwner

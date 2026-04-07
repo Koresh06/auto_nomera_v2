@@ -46,7 +46,7 @@ class CustomMessageManager(MessageManager):
             return await super().get_media_source(media, bot)
 
         # 2) Парсим payload
-        payload = url[len(CUSTOM_URL_PREFIX):]
+        payload = url[len(CUSTOM_URL_PREFIX) :]
         parts = payload.split("|")
         if len(parts) != 3:
             # если сломанный формат — не падаем
@@ -77,7 +77,9 @@ class CustomMessageManager(MessageManager):
 
         # 5) Сохраняем media_id и удаляем временное сообщение
         photo = temp_msg.photo[-1]  # type: ignore[index]
-        media.file_id = MediaId(file_id=photo.file_id, file_unique_id=photo.file_unique_id)
+        media.file_id = MediaId(
+            file_id=photo.file_id, file_unique_id=photo.file_unique_id
+        )
 
         try:
             await bot.delete_message(chat_id=chat_id, message_id=temp_msg.message_id)

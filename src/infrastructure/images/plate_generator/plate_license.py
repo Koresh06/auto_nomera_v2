@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 
 class PlateTag(StrEnum):
     """Enumeration for license plate tags"""
+
     ROUND = "Круглые"
     MIRROR = "Зеркальные"
     FIRST_TEN = "ПерваяДесятка"
@@ -18,7 +19,8 @@ russian_number_letters = "АВЕКМНОРСТУХ"
 english_number_letters = "ABEKMHOPCTYX"
 number_letters = russian_number_letters + english_number_letters
 russian_to_english = {
-    russian_number_letters[i]: english_number_letters[i] for i in range(len(russian_number_letters))
+    russian_number_letters[i]: english_number_letters[i]
+    for i in range(len(russian_number_letters))
 }
 
 
@@ -39,7 +41,8 @@ class BaseLicensePlate(ABC):
 
         # Convert Russian letters to English
         self.processed_number = "".join(
-            russian_to_english.get(c, c) for c in cleaned_number.upper())
+            russian_to_english.get(c, c) for c in cleaned_number.upper()
+        )
 
         self.original_number = number
 
@@ -88,8 +91,8 @@ class AutoLicensePlate(BaseLicensePlate):
 
     # Auto pattern: 1 letter/*, 3 digits/*, 2 letters/*, region 2-3 digits/*
     PATTERN = re.compile(
-        fr'^[{number_letters}*][0-9*]{{3}}[{number_letters}*]{{2}}[0-9*]{{2,3}}$',
-        flags=re.IGNORECASE
+        rf"^[{number_letters}*][0-9*]{{3}}[{number_letters}*]{{2}}[0-9*]{{2,3}}$",
+        flags=re.IGNORECASE,
     )
 
     def get_main_part(self) -> str:
@@ -118,8 +121,7 @@ class TrailerLicensePlate(BaseLicensePlate):
 
     # 2 буквы + 4 цифры + 2–3 цифры региона
     PATTERN = re.compile(
-        fr'^[{number_letters}*]{{2}}[0-9*]{{4}}[0-9*]{{2,3}}$',
-        flags=re.IGNORECASE
+        rf"^[{number_letters}*]{{2}}[0-9*]{{4}}[0-9*]{{2,3}}$", flags=re.IGNORECASE
     )
 
     def get_main_part(self) -> str:
@@ -139,16 +141,13 @@ class TrailerLicensePlate(BaseLicensePlate):
         return self.processed_number[6:]
 
 
-
 class MotoLicensePlate(BaseLicensePlate):
     """License plate for motorcycles (format: 9999аа01)"""
 
     # Moto pattern: 4 digits/*, 2 letters/*, 2 digits/*
     PATTERN = re.compile(
-        fr'^[0-9*]{{4}}[{number_letters}*]{{2}}[0-9*]{{2,3}}$',
-        flags=re.IGNORECASE
+        rf"^[0-9*]{{4}}[{number_letters}*]{{2}}[0-9*]{{2,3}}$", flags=re.IGNORECASE
     )
-
 
     def get_main_part(self) -> str:
         """Get main part of moto plate (positions 0, 1, 2, 3)"""
@@ -230,4 +229,3 @@ def get_plate_tags(letters: str, digits: str) -> List[PlateTag]:
         tags.append(PlateTag.MIRROR)
 
     return tags
-

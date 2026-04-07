@@ -14,7 +14,7 @@ class CalendarSlotView:
     @property
     def is_disabled(self) -> bool:
         return self.availability != SlotAvailability.FREE
-    
+
     @property
     def is_paid(self) -> bool:
         return self.pricing != SlotPricing.FREE

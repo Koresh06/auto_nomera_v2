@@ -34,7 +34,7 @@ class PlateGenerator:
         self.main_areas = {
             "auto": (110, 75, 600, 195),
             "trailer": (110, 75, 600, 195),
-            "moto": (110, 90, 600, 210)
+            "moto": (110, 90, 600, 210),
         }
 
     def _get_font(self, size: int) -> ImageFont.truetype:
@@ -149,7 +149,9 @@ class PlateGenerator:
         font = self._get_font(self.font_size)
 
         plate_type = type(plate_license).__name__.lower().replace("licenseplate", "")
-        main_area: tuple[int, int, int, int] = self.main_areas.get(plate_type, self.main_area)
+        main_area: tuple[int, int, int, int] = self.main_areas.get(
+            plate_type, self.main_area
+        )
 
         # Рисуем основной номер с отступами
         x, y = self._center_text_with_spacing(main_part, main_area, font)
@@ -167,7 +169,7 @@ class PlateGenerator:
 
         current_x = x
         for char in region_digits:
-            shift_x = -4 if char == "1" else 0 
+            shift_x = -4 if char == "1" else 0
             draw.text((current_x + shift_x, y), char, fill=(0, 0, 0), font=region_font)
             bbox = draw.textbbox((0, 0), char, font=region_font)
             char_width = bbox[2] - bbox[0]
@@ -202,8 +204,13 @@ class PlateGenerator:
     @classmethod
     def load(cls) -> Self:
         return cls(
-            template_path=os.path.join("src/infrastructure/images/plate_generator/static", "plate_template.png"),
-            font_path=os.path.join("src/infrastructure/images/plate_generator/static", "RoadNumbers2.0_fix.otf"),
+            template_path=os.path.join(
+                "src/infrastructure/images/plate_generator/static", "plate_template.png"
+            ),
+            font_path=os.path.join(
+                "src/infrastructure/images/plate_generator/static",
+                "RoadNumbers2.0_fix.otf",
+            ),
         )
 
 
@@ -217,6 +224,7 @@ def _safe_load_font(
         except Exception:
             pass
     return ImageFont.load_default()
+
 
 def draw_footer_link(
     img: Image.Image,
@@ -286,14 +294,19 @@ def draw_footer_link(
 
     # отрисовка (по центру)
     if use_stroke:
-        draw.text((x, y), text, font=font, fill=text_color, anchor="mm",
-                  stroke_width=1, stroke_fill=text_color)
+        draw.text(
+            (x, y),
+            text,
+            font=font,
+            fill=text_color,
+            anchor="mm",
+            stroke_width=1,
+            stroke_fill=text_color,
+        )
     else:
         draw.text((x, y), text, font=font, fill=text_color, anchor="mm")
 
     return base.convert(original_mode) if original_mode != "RGBA" else base
-
-
 
 
 def draw_debug_red_border(

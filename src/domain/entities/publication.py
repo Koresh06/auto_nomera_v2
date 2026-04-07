@@ -19,6 +19,7 @@ class Publication(Entity):
     Публикация = то, что стоит в очереди/планировщике и будет отправлено в канал.
     Услуги покупаются именно к публикации.
     """
+
     ad_id: int
     region_id: int
 
@@ -39,7 +40,11 @@ class Publication(Entity):
     services: list[PublicationService] = field(default_factory=list)
 
     def schedule(self, *, slot: SlotKey, publish_at_utc: datetime) -> None:
-        if self.status not in (PublicationStatus.DRAFT, PublicationStatus.AWAITING_PAYMENT, PublicationStatus.SCHEDULED):
+        if self.status not in (
+            PublicationStatus.DRAFT,
+            PublicationStatus.AWAITING_PAYMENT,
+            PublicationStatus.SCHEDULED,
+        ):
             raise InvalidPublicationState(f"Невозможно запланировать с {self.status}")
         self.slot = slot
         self.publish_at_utc = publish_at_utc
@@ -48,28 +53,45 @@ class Publication(Entity):
 
     def add_service(self, service: PublicationService) -> None:
         # запретим дубли по типу (если нужно — можно ослабить)
-        if any(s.type == service.type and s.status == s.status.ACTIVE for s in self.services):
+        if any(
+            s.type == service.type and s.status == s.status.ACTIVE
+            for s in self.services
+        ):
             raise ServiceAlreadyAdded(f"Услуга {service.type} уже добавлена")
 
         # PRIORITY можно добавлять только если публикация ещё не published/canceled
         if service.type == PublicationServiceType.PRIORITY_PUBLISH:
-            if self.status in (PublicationStatus.PUBLISHED, PublicationStatus.CANCELED, PublicationStatus.REPLACED):
-                raise ServiceNotAllowed("Услуга PRIORITY_PUBLISH нельзя добавить после публикации")
+            if self.status in (
+                PublicationStatus.PUBLISHED,
+                PublicationStatus.CANCELED,
+                PublicationStatus.REPLACED,
+            ):
+                raise ServiceNotAllowed(
+                    "Услуга PRIORITY_PUBLISH нельзя добавить после публикации"
+                )
 
         self.services.append(service)
         self.touch()
 
     def has_service(self, service_type: PublicationServiceType) -> bool:
-        return any(s.type == service_type and s.status == s.status.ACTIVE for s in self.services)
+        return any(
+            s.type == service_type and s.status == s.status.ACTIVE
+            for s in self.services
+        )
 
     def mark_publishing(self) -> None:
         if self.status != PublicationStatus.SCHEDULED:
-            raise InvalidPublicationState(f"Невозможно начать публикацию из {self.status}")
+            raise InvalidPublicationState(
+                f"Невозможно начать публикацию из {self.status}"
+            )
         self.status = PublicationStatus.PUBLISHING
         self.touch()
 
     def mark_published(self, *, message_id: int, published_at_utc: datetime) -> None:
-        if self.status not in (PublicationStatus.PUBLISHING, PublicationStatus.SCHEDULED):
+        if self.status not in (
+            PublicationStatus.PUBLISHING,
+            PublicationStatus.SCHEDULED,
+        ):
             # иногда воркер может пропустить промежуточный статус
             raise InvalidPublicationState(f"Невозможно опубликовать из {self.status}")
         self.channel_message_id = message_id
@@ -78,14 +100,19 @@ class Publication(Entity):
         self.touch()
 
     def mark_failed(self) -> None:
-        if self.status not in (PublicationStatus.PUBLISHING, PublicationStatus.SCHEDULED):
+        if self.status not in (
+            PublicationStatus.PUBLISHING,
+            PublicationStatus.SCHEDULED,
+        ):
             raise InvalidPublicationState(f"Невозможно опубликовать из {self.status}")
         self.status = PublicationStatus.FAILED
         self.touch()
 
     def cancel(self) -> None:
         if self.status in (PublicationStatus.PUBLISHED, PublicationStatus.REPLACED):
-            raise InvalidPublicationState(f"Невозможно отменить публикацию из {self.status}")
+            raise InvalidPublicationState(
+                f"Невозможно отменить публикацию из {self.status}"
+            )
         self.status = PublicationStatus.CANCELED
         self.touch()
 
@@ -96,9 +123,16 @@ class Publication(Entity):
         self.status = PublicationStatus.REPLACED
         self.touch()
 
-    def set_slot_pending_payment(self, *, slot: SlotKey, publish_at_utc: datetime) -> None:
-        if self.status not in (PublicationStatus.DRAFT, PublicationStatus.AWAITING_PAYMENT):
-            raise InvalidPublicationState(f"Не удается установить интервал ожидания платежа с {self.status}")
+    def set_slot_pending_payment(
+        self, *, slot: SlotKey, publish_at_utc: datetime
+    ) -> None:
+        if self.status not in (
+            PublicationStatus.DRAFT,
+            PublicationStatus.AWAITING_PAYMENT,
+        ):
+            raise InvalidPublicationState(
+                f"Не удается установить интервал ожидания платежа с {self.status}"
+            )
         self.slot = slot
         self.publish_at_utc = publish_at_utc
         self.status = PublicationStatus.AWAITING_PAYMENT
@@ -111,6 +145,3 @@ class Publication(Entity):
     def clear_scheduler_job(self) -> None:
         self.scheduler_job_id = None
         self.touch()
-
-    
-

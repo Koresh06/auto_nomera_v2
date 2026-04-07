@@ -41,7 +41,6 @@ class Region(Entity):
             channel_username=channel_username,
             channel_id=channel_id,
             settings=settings,
-            
         )
         return region
 
@@ -56,9 +55,3 @@ class Region(Entity):
     def update_settings(self, *, settings: RegionSettings) -> None:
         self.settings = settings
         self.touch()
-        self.add_event(
-            RegionSettingsUpdated(
-                occurred_at=get_datetime_utc_now(),
-                region_id=self.id,
-            )
-        )

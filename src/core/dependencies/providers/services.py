@@ -26,7 +26,7 @@ class ServicesProvider(Provider):
     @provide
     def slot_hold_ttl(self) -> timedelta:
         return timedelta(minutes=15)
-    
+
     @provide
     def calendar_builder(self) -> CalendarBuilder:
         return CalendarBuilder()
@@ -38,7 +38,7 @@ class ServicesProvider(Provider):
     @provide
     def publish_time_resolver(self) -> PublishTimeResolver:
         return PublishTimeResolver()
-    
+
     @provide
     def renderer(self) -> AdTextRenderer:
         return AdTextRenderer(settings.telegram.bot_url)
@@ -59,8 +59,7 @@ class ServicesProvider(Provider):
             pricing_policy=pricing_policy,
             hold_ttl=slot_hold_ttl,
         )
-    
+
     @provide
     def image_processor(self, bot: Bot) -> ImageProcessor:
         return PillowImageProcessor(bot)
-    

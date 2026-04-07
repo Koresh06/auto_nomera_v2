@@ -29,7 +29,9 @@ class GetCalendarUseCase(UseCase[GetCalendarRequest, CalendarDTO]):
         now = command.now_utc or datetime.now(timezone.utc)
         region = await self.region_repo.get_by_id(command.region_id)
 
-        future_slots = self.calendar_builder.generate_future_slots(region=region, now_utc=now)
+        future_slots = self.calendar_builder.generate_future_slots(
+            region=region, now_utc=now
+        )
 
         booked = await self.booking_repo.get_booked_set(future_slots)
         converted = await self.converted_repo.get_converted_set(future_slots)

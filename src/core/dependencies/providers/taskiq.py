@@ -12,7 +12,6 @@ from src.infrastructure.scheduler.taskiq_queue_scheduler import TaskQueueSchedul
 
 
 class TaskiqProvider(Provider):
-
     @provide(scope=Scope.APP)
     def taskiq_broker(self, settings: AppSettings) -> RedisStreamBroker:
         result_backend = RedisAsyncResultBackend(redis_url=settings.db.redis_url)

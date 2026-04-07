@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import Group, Select
 
@@ -20,10 +20,36 @@ from .getters import calendar_getter
 
 create_ad_dialog = Dialog(
     Window(
-        Const("Введи номер (пример: Х111УХ26 или Х111УХ126)"),
+        Const(
+            "Продать:\n\n"
+            "✍🏻 <b>Введите номер по примеру, который хотите продать. Не вводите ничего лишнего кроме цифр и букв вашего номера.</b>\n\n"
+            "📌 <b>Примеры ввода номера:</b>\n\n"
+            "<code>x111xx01</code>\n"
+            "<code>oo777701</code>\n"
+            "<code>9999yy01</code>",
+        ),
+        Const(
+            "Купить:\n\n"
+            "✍🏻 <b>Введите номер по примеру, который хотите купить. Не вводите ничего лишнего кроме цифр, букв и «***» нужного вам номера.</b>\n\n"
+            "📌 <b>Примеры ввода номера:</b>\n\n"
+            "<code>А111АА01</code>\n"
+            "<code>*111**01</code>\n"
+            "<code>А***АА01</code>\n\n"
+            "<code>oo777701</code>\n"
+            "<code>**777701</code>\n"
+            "<code>oo****01</code>\n\n"
+            "<code>9999yy01</code>\n"
+            "<code>9999**01</code>\n"
+            "<code>****yy01</code>\n\n"
+        ),
         TextInput(
-            id="plate",
+            id="sale_plate",
             type_factory=lambda v: validate_plate(v, allow_mask=False),
+            on_success=on_plate_success,
+        ),
+        TextInput(
+            id="bye_plate",
+            type_factory=lambda v: validate_plate(v, allow_mask=True),
             on_success=on_plate_success,
         ),
         state=CreateAdSG.plate,
@@ -59,7 +85,9 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.calendar,
     ),
     Window(
-        Format("Готово!\nСлот: {dialog_data[picked]}\nConverted: {dialog_data[converted]}"),
+        Format(
+            "Готово!\nСлот: {dialog_data[picked]}\nConverted: {dialog_data[converted]}"
+        ),
         state=CreateAdSG.done,
     ),
 )

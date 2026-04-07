@@ -21,7 +21,7 @@ def test_render_standard_sale():
                 "vk_group_url": "https://vk.com/...",
                 "max_channel_url": "https://max.ru/...",
             }
-        )
+        ),
     )
     # если links у тебя уже есть, можно подставить — иначе тест без links
     # region.links = RegionLinks(tg_group_url="https://t.me/...", vk_group_url="https://vk.com/...")
@@ -41,7 +41,9 @@ def test_render_standard_sale():
         )
     )
 
-    text = AdTextRenderer(bot_url="https://t.me/Snomerami_bot").render(ad=ad, region=region)
+    text = AdTextRenderer(bot_url="https://t.me/Snomerami_bot").render(
+        ad=ad, region=region
+    )
 
     assert "📌 ПРОДАМ НОМЕРА" in text
     assert "🚘 Номер: О126ЕВ136" in text
@@ -64,7 +66,7 @@ def test_render_store():
                 "vk_group_url": "https://vk.com/...",
                 "max_channel_url": "https://max.ru/...",
             }
-        )
+        ),
     )
 
     ad = Ad(
@@ -85,7 +87,9 @@ def test_render_store():
         )
     )
 
-    text = AdTextRenderer(bot_url="https://t.me/Snomerami_bot").render(ad=ad, region=region)
+    text = AdTextRenderer(bot_url="https://t.me/Snomerami_bot").render(
+        ad=ad, region=region
+    )
 
     assert "🏦 Магазин: Автономера vip26" in text
     assert "Список доступных номеров:" in text

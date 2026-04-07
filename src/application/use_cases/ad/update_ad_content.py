@@ -42,7 +42,7 @@ class UpdateAdContentUseCase(UseCase[UpdateAdContentRequest, None]):
             items = cur.items if cur else tuple()
             if command.store_items is not None:
                 validated_items = []
-            
+
                 for plate, price in command.store_items:
                     normalized = validate_plate(plate, allow_mask=False)
                     validated_items.append(
@@ -51,7 +51,7 @@ class UpdateAdContentUseCase(UseCase[UpdateAdContentRequest, None]):
                             price_text=price,
                         )
                     )
-            
+
                 items = tuple(validated_items)
 
             ad.fill_store_content(
@@ -68,8 +68,16 @@ class UpdateAdContentUseCase(UseCase[UpdateAdContentRequest, None]):
             city = command.city or (cur.city if cur else "")
             price = command.price_text or (cur.price_text if cur else "")
             contacts = command.contacts or (cur.contacts if cur else "")
-            caption = command.caption if command.caption is not None else (cur.caption if cur else None)
-            image_file_id = command.image_file_id if command.image_file_id is not None else (cur.image_file_id if cur else None)
+            caption = (
+                command.caption
+                if command.caption is not None
+                else (cur.caption if cur else None)
+            )
+            image_file_id = (
+                command.image_file_id
+                if command.image_file_id is not None
+                else (cur.image_file_id if cur else None)
+            )
 
             ad.fill_content(
                 AdContent(

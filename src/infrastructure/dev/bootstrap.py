@@ -3,6 +3,14 @@ from datetime import timedelta
 
 from src.application.mediator import Mediator
 
+from src.application.use_cases.region.get_all import (
+    GetAllRegionsUseCase,
+    GetRegionsRequest,
+)
+from src.application.use_cases.user.get_by_tg_id import (
+    GetByTgIdUserUseCase,
+    GetTgIdRequest,
+)
 from src.domain.entities.region import Region
 from src.domain.enums.region import RegionStatus
 
@@ -16,15 +24,27 @@ from src.domain.services.slots.slot_reservation_service import SlotReservationSe
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 
 
-from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase, CreateAdDraftRequest
-from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase, UpdateAdContentRequest
-from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase, FinalizeAdRequest
+from src.application.use_cases.ad.create_ad_draft import (
+    CreateAdDraftUseCase,
+    CreateAdDraftRequest,
+)
+from src.application.use_cases.ad.update_ad_content import (
+    UpdateAdContentUseCase,
+    UpdateAdContentRequest,
+)
+from src.application.use_cases.ad.finalize_ad import (
+    FinalizeAdUseCase,
+    FinalizeAdRequest,
+)
 from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdUseCase,
     CreatePublicationFromAdRequest,
 )
 
-from src.application.use_cases.slots.get_calendar import GetCalendarUseCase, GetCalendarRequest
+from src.application.use_cases.slots.get_calendar import (
+    GetCalendarUseCase,
+    GetCalendarRequest,
+)
 from src.application.use_cases.publication.select_slot_for_publication import (
     SelectSlotForPublicationUseCase,
     SelectSlotForPublicationRequest,
@@ -32,9 +52,11 @@ from src.application.use_cases.publication.select_slot_for_publication import (
 
 from src.infrastructure.dev.scheduler import DevScheduler
 from src.infrastructure.repositories.ad.in_memory import InMemoryAdRepo
-from src.infrastructure.repositories.publication.in_memory import InMemoryPublicationRepo
+from src.infrastructure.repositories.publication.in_memory import (
+    InMemoryPublicationRepo,
+)
 from src.infrastructure.repositories.region.in_memory import InMemoryRegionRepo
-
+from src.infrastructure.repositories.user.in_memory import InMemoryUserRepo
 
 
 def build_dev_container() -> Mediator:
@@ -47,7 +69,7 @@ def build_dev_container() -> Mediator:
         id=1,
         title="Минск",
         timezone=TimezoneName("Europe/Minsk"),
-        channel_id=-100123456789,  # любой тестовый
+        channel_id=-100123456789,
         channel_username="avtonomera126_26",
         status=RegionStatus.ACTIVE,
         settings=RegionSettings(),
@@ -63,7 +85,8 @@ def build_dev_container() -> Mediator:
     # 2) репозитории
     # ad_repo = InMemoryAdRepo()
     # pub_repo = InMemoryPublicationRepo()
-    # region_repo = InMemoryRegionRepo([region_1])
+    user_repo = InMemoryUserRepo()
+    region_repo = InMemoryRegionRepo([region_1])
 
     # hold_store = InMemorySlotHoldStore()
     # booking_repo = InMemorySlotBookingRepo()
@@ -87,6 +110,8 @@ def build_dev_container() -> Mediator:
     # 5) mediator + регистрации
     mediator = Mediator()
 
+    mediator.register(GetTgIdRequest, GetByTgIdUserUseCase(user_repo=user_repo))
+    mediator.register(GetRegionsRequest, GetAllRegionsUseCase(region_repo=region_repo))
     # mediator.register(CreateAdDraftRequest, CreateAdDraftUseCase(ad_repo=ad_repo))
     # mediator.register(UpdateAdContentRequest, UpdateAdContentUseCase(ad_repo=ad_repo))
     # mediator.register(FinalizeAdRequest, FinalizeAdUseCase(ad_repo=ad_repo, region_repo=region_repo))

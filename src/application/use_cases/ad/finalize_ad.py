@@ -26,19 +26,19 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
             sc = ad.store_content
             if sc is None:
                 raise ValueError("Store content is required")
-        
+
             if not sc.shop_name:
                 raise ValueError("Shop name required")
-        
+
             if not sc.city:
                 raise ValueError("City required")
-        
+
             if not sc.contacts:
                 raise ValueError("Contacts required")
-        
+
             if len(sc.items) == 0:
                 raise ValueError("At least one store item required")
-        
+
             # номера уже провалидированы при вводе
             return
 

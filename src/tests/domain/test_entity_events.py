@@ -11,7 +11,6 @@ def test_entity_events_pull():
     )
     state = SlotState(slot_key=slot_key)
 
-
     events = state.pull_events()
 
     assert len(events) == 1

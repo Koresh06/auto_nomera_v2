@@ -11,6 +11,7 @@ class ServiceDefinition(Entity):
     Это НЕ то, что купил пользователь. Это то, что админ настраивает:
     цена, активность, дефолтные настройки и т.д.
     """
+
     type: PublicationServiceType
     title: str
     price: int

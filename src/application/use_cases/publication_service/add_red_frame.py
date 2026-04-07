@@ -7,6 +7,7 @@ from src.application.ports.publication_service.image_processor import ImageProce
 class AddFrameResult:
     image_file_id: str
 
+
 class AddRedFrameUseCase:
     def __init__(self, image_processor: ImageProcessor) -> None:
         self._image_processor = image_processor

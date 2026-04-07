@@ -178,6 +178,3 @@ def _get_active_service(
         if s.type == t and s.status.value == "active":
             return s
     return None
-
-
-

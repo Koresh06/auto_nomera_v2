@@ -2,7 +2,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from src.application.ports.publication.publication_repo import PublicationRepository
-from src.application.ports.publication_service.service_definition_repo import ServiceDefinitionRepository
+from src.application.ports.publication_service.service_definition_repo import (
+    ServiceDefinitionRepository,
+)
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.publication_service import PublicationServiceType

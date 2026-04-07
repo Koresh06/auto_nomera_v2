@@ -46,7 +46,7 @@ class PillowImageProcessor(ImageProcessor):
         )
 
         return new_file_id
-    
+
 
 def draw_debug_red_border(
     img: Image.Image,

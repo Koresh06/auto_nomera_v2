@@ -7,9 +7,12 @@ from src.domain.exceptions.region import (
     InvalidSystemPaidSlotsCount,
 )
 
+
 @dataclass(frozen=True, slots=True)
 class RegionSettings:
-    slot_times: tuple[time, ...] = field(default=tuple((time(10, 0), time(14, 0), time(18, 0))))  # (10:00, 14:00, 18:00)
+    slot_times: tuple[time, ...] = field(
+        default=tuple((time(10, 0), time(14, 0), time(18, 0)))
+    )  # (10:00, 14:00, 18:00)
     days_range: int = 7
     system_paid_slots_count: int = 3
 
@@ -26,7 +29,10 @@ class RegionSettings:
 
         # count не может превышать общего числа видимых слотов
         total_slots = self.days_range * len(self.slot_times)
-        if self.system_paid_slots_count < 0 or self.system_paid_slots_count > total_slots:
+        if (
+            self.system_paid_slots_count < 0
+            or self.system_paid_slots_count > total_slots
+        ):
             raise InvalidSystemPaidSlotsCount(
                 "system_paid_slots_count must be within 0..(days_range * len(slot_times))"
             )

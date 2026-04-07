@@ -38,8 +38,10 @@ from src.application.use_cases.publication.select_slot_for_publication import (
 from src.application.use_cases.publication_service.unpin_message import (
     UnpinMessageUseCase,
 )
+from src.application.use_cases.region.get_all import GetAllRegionsUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
+from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
 from src.application.use_cases.user.register_user import RegisterUserUseCase
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
@@ -57,6 +59,20 @@ class UseCasesProvider(Provider):
         user_repo: UserRepository,
     ) -> RegisterUserUseCase:
         return RegisterUserUseCase(user_repo=user_repo)
+
+    @provide
+    def get_by_tg_id_user_use_case(
+        self,
+        user_repo: UserRepository,
+    ) -> GetByTgIdUserUseCase:
+        return GetByTgIdUserUseCase(user_repo=user_repo)
+
+    @provide
+    def get_all_region_use_case(
+        self,
+        region_repo: RegionRepository,
+    ) -> GetAllRegionsUseCase:
+        return GetAllRegionsUseCase(region_repo=region_repo)
 
     @provide
     def get_caledar_use_case(
