@@ -1,6 +1,8 @@
 from aiogram import F
-from aiogram_dialog import Dialog, Window, StartMode
+from aiogram.enums.button_style import ButtonStyle
+from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.style import Style
 from aiogram_dialog.widgets.kbd import (
     Select,
     Row,
@@ -38,13 +40,13 @@ start_dialog = Dialog(
                 Const("📤 ПРОДАТЬ"),
                 id="sale",
                 state=CreateAdSG.plate,
-                data={"type_ad": AdType.SALE},
+                data={"ad_type": AdType.SALE},
             ),
             Start(
                 Const("⚠️ Срочный выкуп"),
                 id="urgent_buyout",
                 state=CreateAdSG.plate,
-                data={"type_ad": AdType.URGENT_BUYOUT},
+                data={"ad_type": AdType.URGENT_BUYOUT},
             ),
         ),
         Row(
@@ -52,7 +54,7 @@ start_dialog = Dialog(
                 Const("📥 КУПИТЬ"),
                 id="buy",
                 state=CreateAdSG.plate,
-                data={"type_ad": AdType.BUY},
+                data={"ad_type": AdType.BUY},
             ),
             # Start(
             #     Const("🏦 Мой магазин"),
@@ -115,7 +117,11 @@ start_dialog = Dialog(
             width=1,
             when="regions",
         ),
-        Back(Const("⬅️ Назад"), when="is_region"),
+        Back(
+            Const("⬅️ Назад"),
+            when="is_region",
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StartSG.chooise_region,
         getter=list_regions_getter,
     ),

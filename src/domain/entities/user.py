@@ -11,6 +11,7 @@ class User(Entity):
     username: str | None = None
     full_name: str | None = None
     role: UserRole = UserRole.USER
+    phone: str | None
     region_id: int
     is_blocked: bool = False
 
@@ -22,17 +23,19 @@ class User(Entity):
         region_id: int,
         username: str | None = None,
         full_name: str | None = None,
+        phone: str | None = None,
     ) -> "User":
         if tg_id <= 0:
-            raise InvalidTelegramId("tg_id должен быть положительным.")
+            raise InvalidTelegramId(tg_id)
 
         if username is not None and not username.strip():
-            raise EmptyUsername("Имя пользователя не может быть пустым.")
+            raise EmptyUsername()
 
         user = cls(
             tg_id=tg_id,
             username=username,
             full_name=full_name,
+            phone=phone,
             region_id=region_id,
         )
         return user

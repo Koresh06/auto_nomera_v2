@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from src.application.exceptions.user import UserAlreadyExistsException
 from src.domain.entities.user import User
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
@@ -20,7 +21,7 @@ class RegisterUserUseCase(UseCase[UserRegisterRequest, None]):
     async def __call__(self, command: UserRegisterRequest) -> None:
         existing = await self.user_repo.get_by_tg_id(command.tg_id)
         if existing is not None:
-            return
+            raise UserAlreadyExistsException()
 
         user = User.register(
             tg_id=command.tg_id,

@@ -62,6 +62,7 @@ from src.application.use_cases.user.register_user import (
     UserRegisterRequest,
     RegisterUserUseCase,
 )
+from src.application.use_cases.user.update import UpdateUserRequest, UpdateUserUseCase
 
 
 class MediatorProvider(Provider):
@@ -72,6 +73,7 @@ class MediatorProvider(Provider):
         self,
         user_register_use_case: RegisterUserUseCase,
         get_by_tg_id_user_use_case: GetByTgIdUserUseCase,
+        update_user_use_case: UpdateUserUseCase,
         get_calendar_use_case: GetCalendarUseCase,
         hold_slot_use_case: HoldSlotUseCase,
         confirm_paid_slot_and_schedule_publication_use_case: ConfirmPaidSlotAndSchedulePublicationUseCase,
@@ -91,6 +93,7 @@ class MediatorProvider(Provider):
 
         mediator.register(UserRegisterRequest, user_register_use_case)
         mediator.register(GetTgIdRequest, get_by_tg_id_user_use_case)
+        mediator.register(UpdateUserRequest, update_user_use_case)
         mediator.register(GetCalendarRequest, get_calendar_use_case)
         mediator.register(HoldSlotRequest, hold_slot_use_case)
         mediator.register(
