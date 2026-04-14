@@ -44,7 +44,7 @@ class CustomMessageManager(MessageManager):
             return await super().get_media_source(media, bot)
 
         # 2) Парсим payload
-        payload = url[len(CUSTOM_URL_PREFIX) :]
+        payload = url[len(CUSTOM_URL_PREFIX):]
         parts = payload.split("|")
         if len(parts) != 3:
             # если сломанный формат — не падаем

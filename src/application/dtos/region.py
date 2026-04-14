@@ -15,7 +15,7 @@ class RegionDTO:
     status: RegionStatus
 
     @classmethod
-    def from_orm(cls, region: Region) -> "RegionDTO":
+    def from_entity(cls, region: Region) -> "RegionDTO":
         return cls(
             id=region.id,
             title=region.title,

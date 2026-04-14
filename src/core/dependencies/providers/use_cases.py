@@ -39,8 +39,10 @@ from src.application.use_cases.publication_service.unpin_message import (
     UnpinMessageUseCase,
 )
 from src.application.use_cases.region.get_all import GetAllRegionsUseCase
+from src.application.use_cases.region.get_by_id import GegByIdRegionUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
+from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
 from src.application.use_cases.user.register_user import RegisterUserUseCase
 from src.application.use_cases.user.update import UpdateUserUseCase
@@ -83,6 +85,15 @@ class UseCasesProvider(Provider):
         region_repo: RegionRepository,
     ) -> GetAllRegionsUseCase:
         return GetAllRegionsUseCase(region_repo=region_repo)
+    
+
+    @provide
+    def get_by_id_region_use_case(
+        self,
+        region_repo: RegionRepository,
+    ) -> GegByIdRegionUseCase:
+        return GegByIdRegionUseCase(region_repo=region_repo)
+    
 
     @provide
     def get_caledar_use_case(
@@ -147,6 +158,14 @@ class UseCasesProvider(Provider):
             reservation_service=reservation_service,
             pricing_policy=pricing_policy,
         )
+    
+    @provide
+    def release_hold_use_case(
+        self,
+        reservation_service: SlotReservationService,
+    ) -> ReleaseHoldUseCase:
+        return ReleaseHoldUseCase(reservation_service=reservation_service)
+
 
     @provide
     def add_service_to_publication_use_case(

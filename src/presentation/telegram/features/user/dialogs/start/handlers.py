@@ -2,7 +2,7 @@ import logging
 from dishka.integrations.aiogram_dialog import inject
 from dishka.integrations.aiogram import FromDishka
 from aiogram.types import CallbackQuery
-from aiogram_dialog import DialogManager, StartMode
+from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 

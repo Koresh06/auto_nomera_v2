@@ -36,8 +36,11 @@ def test_render_standard_sale():
         AdContent(
             plate_number="О126ЕВ136",
             city="Ставрополь",
-            price_text="Договорная",
-            contacts="@Ludvig_Petrosyan, +79289113058",
+            price=0,
+            contacts={
+                "user_username": "@Ludvig_Petrosyan",
+                "phone": "+79289113058 ",
+            },
         )
     )
 
@@ -79,10 +82,13 @@ def test_render_store():
         StoreContent(
             shop_name="Автономера vip26",
             city="Георгиевск",
-            contacts="@Bigman026, 89887473674",
+            contacts={
+                "user_username": "@Ludvig_Petrosyan",
+                "phone": "+79289113058 ",
+            },
             items=(
-                StoreItem(plate="Р 100 АТ 126", price_text="130 000 руб."),
-                StoreItem(plate="Р 099 УО 126", price_text="80 000 руб."),
+                StoreItem(plate="Р 100 АТ 126", price=0),
+                StoreItem(plate="Р 099 УО 126", price=0),
             ),
         )
     )

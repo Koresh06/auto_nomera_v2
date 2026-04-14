@@ -49,11 +49,13 @@ from src.application.use_cases.region.get_all import (
     GetAllRegionsUseCase,
     GetRegionsRequest,
 )
+from src.application.use_cases.region.get_by_id import GegByIdRegionUseCase, IdRegionRequest
 from src.application.use_cases.slots.get_calendar import (
     GetCalendarRequest,
     GetCalendarUseCase,
 )
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest, HoldSlotUseCase
+from src.application.use_cases.slots.release_hold import ReleaseHoldRequest, ReleaseHoldUseCase
 from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
     GetTgIdRequest,
@@ -74,10 +76,13 @@ class MediatorProvider(Provider):
         user_register_use_case: RegisterUserUseCase,
         get_by_tg_id_user_use_case: GetByTgIdUserUseCase,
         update_user_use_case: UpdateUserUseCase,
+        get_all_regions_use_case: GetAllRegionsUseCase,
+        get_by_id_region_use_case: GegByIdRegionUseCase,
         get_calendar_use_case: GetCalendarUseCase,
         hold_slot_use_case: HoldSlotUseCase,
         confirm_paid_slot_and_schedule_publication_use_case: ConfirmPaidSlotAndSchedulePublicationUseCase,
         select_slot_for_publication_use_case: SelectSlotForPublicationUseCase,
+        release_hold_use_case: ReleaseHoldUseCase,
         add_service_to_publication_use_case: AddServiceToPublicationUseCase,
         priority_publish_publication_use_case: PriorityPublishPublicationUseCase,
         publish_publication_use_case: PublishPublicationUseCase,
@@ -87,13 +92,15 @@ class MediatorProvider(Provider):
         update_ad_content_use_case: UpdateAdContentUseCase,
         finalize_ad_use_case: FinalizeAdUseCase,
         create_publication_from_ad_use_case: CreatePublicationFromAdUseCase,
-        get_all_regions_use_case: GetAllRegionsUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
         mediator.register(UserRegisterRequest, user_register_use_case)
         mediator.register(GetTgIdRequest, get_by_tg_id_user_use_case)
         mediator.register(UpdateUserRequest, update_user_use_case)
+        mediator.register(GetRegionsRequest, get_all_regions_use_case)
+        mediator.register(IdRegionRequest, get_by_id_region_use_case)
+
         mediator.register(GetCalendarRequest, get_calendar_use_case)
         mediator.register(HoldSlotRequest, hold_slot_use_case)
         mediator.register(
@@ -102,6 +109,10 @@ class MediatorProvider(Provider):
         )
         mediator.register(
             SelectSlotForPublicationRequest, select_slot_for_publication_use_case
+        )
+        mediator.register(
+            ReleaseHoldRequest,
+            release_hold_use_case,
         )
         mediator.register(
             AddServiceToPublicationRequest, add_service_to_publication_use_case
@@ -118,6 +129,5 @@ class MediatorProvider(Provider):
         mediator.register(
             CreatePublicationFromAdRequest, create_publication_from_ad_use_case
         )
-        mediator.register(GetRegionsRequest, get_all_regions_use_case)
 
         return mediator

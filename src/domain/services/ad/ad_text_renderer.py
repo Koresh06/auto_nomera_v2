@@ -15,15 +15,15 @@ class AdTextRenderer:
         links_block = self._render_links(region)
 
         if ad.ad_type == AdType.STORE:
-            return self._render_store(ad, region) + "\n" + links_block
+            return self._render_store(ad) + "\n" + links_block
 
-        return self._render_standard(ad, region) + "\n" + links_block
+        return self._render_standard(ad) + "\n" + links_block
 
     def _render_standard(self, ad: Ad) -> str:
         c = ad.content
         assert c is not None
 
-        header = "📌 ПРОДАМ НОМЕРА"  # позже можно маппить по ad_type
+        header = "📌 ПРОДАМ НОМЕРА"
         if ad.ad_type == AdType.BUY:
             header = "📌 КУПЛЮ НОМЕРА"
         elif ad.ad_type == AdType.URGENT_BUYOUT:
@@ -34,7 +34,7 @@ class AdTextRenderer:
             "",
             f"🚘 Номер: {c.plate_number}",
             f"🌎 Город: {c.city}",
-            f"💰 Цена: {c.price_text}",
+            f"💰 Цена: {c.price}",
             "",
             f"📲 Связь: {c.contacts}",
         ]
@@ -64,12 +64,11 @@ class AdTextRenderer:
         ]
 
         for item in s.items:
-            lines.append(f"✖️ {item.plate} ➖ {item.price_text}")
+            lines.append(f"✖️ {item.plate} ➖ {item.price}")
 
         return "\n".join(lines)
 
     def _render_links(self, region: Region) -> str:
-        # region.metadata может быть None
         bot_line = f"⚠️ РАЗМЕСТИТЬ ОБЪЯВЛЕНИЕ ({self.bot_url})"
         sep = "—————————————————"
 

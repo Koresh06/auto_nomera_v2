@@ -1,21 +1,26 @@
 from dataclasses import dataclass
 
-from src.domain.entities.user import User, UserRole
+from src.domain.entities.user import User
+from src.domain.enums.user import UserRole
 
 
 @dataclass(frozen=True, slots=True)
-class UserDTO:
-    id: int
-    tg_id: int
-    region_id: int
+class BaseUserDTO:
     username: str | None
     full_name: str | None
-    role: UserRole
     phone: str | None
+    region_id: int
+
+
+@dataclass(frozen=True, slots=True)
+class UserDTO(BaseUserDTO):
+    id: int
+    tg_id: int
+    role: UserRole
     is_blocked: bool
 
     @classmethod
-    def from_orm(cls, user: User) -> "UserDTO":
+    def from_entity(cls, user: User) -> "UserDTO":
         return cls(
             id=user.id,
             tg_id=user.tg_id,
@@ -28,9 +33,8 @@ class UserDTO:
         )
 
 
-
 @dataclass(frozen=True, slots=True)
-class UpdateUserDTO:
+class UpdateUserDTO(BaseUserDTO):
     region_id: int | None = None
     username: str | None = None
     full_name: str | None = None

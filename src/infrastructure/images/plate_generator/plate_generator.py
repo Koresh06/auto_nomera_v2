@@ -180,7 +180,7 @@ class PlateGenerator:
                 img,
                 channel_username=channel_username,
                 font_paths=(
-                    "src/generator_photo/static/Arial.ttf",
+                    "src/infrastructure/images/plate_generator/static/Arial.ttf",
                     self.font_path,
                 ),
                 max_font_size=56,  # как на примере — крупнее
