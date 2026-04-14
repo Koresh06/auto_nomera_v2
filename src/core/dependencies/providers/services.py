@@ -17,33 +17,28 @@ from src.infrastructure.telegram.image_processor import PillowImageProcessor
 
 
 class ServicesProvider(Provider):
-    scope = Scope.REQUEST
 
-    @provide
-    def slot_hold_store(self) -> SlotHoldStore:
-        return InMemorySlotHoldStore()
-
-    @provide
+    @provide(scope=Scope.APP)
     def slot_hold_ttl(self) -> timedelta:
         return timedelta(minutes=15)
 
-    @provide
+    @provide(scope=Scope.APP)
     def calendar_builder(self) -> CalendarBuilder:
         return CalendarBuilder()
 
-    @provide
+    @provide(scope=Scope.APP)
     def slot_pricing_policy(self) -> SlotPricingPolicy:
         return SlotPricingPolicy(system_paid_count=3)
 
-    @provide
+    @provide(scope=Scope.APP)
     def publish_time_resolver(self) -> PublishTimeResolver:
         return PublishTimeResolver()
 
-    @provide
+    @provide(scope=Scope.APP)
     def renderer(self) -> AdTextRenderer:
         return AdTextRenderer(settings.telegram.bot_url)
 
-    @provide
+    @provide(scope=Scope.REQUEST)
     def slot_reservation_service(
         self,
         booking_repo: SlotBookingRepository,
@@ -60,6 +55,6 @@ class ServicesProvider(Provider):
             hold_ttl=slot_hold_ttl,
         )
 
-    @provide
+    @provide(scope=Scope.REQUEST)
     def image_processor(self, bot: Bot) -> ImageProcessor:
         return PillowImageProcessor(bot)

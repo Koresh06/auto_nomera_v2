@@ -8,6 +8,7 @@ from src.application.ports.publication_service.service_definition_repo import (
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
+from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.repositories.ad.in_memory import InMemoryAdRepo
 from src.infrastructure.repositories.publication.in_memory import (
@@ -25,6 +26,7 @@ from src.infrastructure.repositories.slot.in_memory import (
     InMemorySlotConvertedRepo,
 )
 from src.infrastructure.repositories.user.in_memory import InMemoryUserRepo
+from src.infrastructure.slots.holt_store.in_memory import InMemorySlotHoldStore
 
 
 class RepositoriesProvider(Provider):
@@ -53,6 +55,10 @@ class RepositoriesProvider(Provider):
     @provide
     def get_slot_converted_repository(self) -> SlotConvertedRepository:
         return InMemorySlotConvertedRepo()
+    
+    @provide
+    def get_slot_hold_store(self) -> SlotHoldStore:
+        return InMemorySlotHoldStore()
 
     @provide
     def get_service_definition_repository(self) -> ServiceDefinitionRepository:
