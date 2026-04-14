@@ -1,13 +1,16 @@
 from dataclasses import dataclass
 
+from src.domain.value_objects.contacts import Contacts
+from src.domain.value_objects.price import Price
+
 
 @dataclass(frozen=True, slots=True)
 class AdContent:
-    plate_number: str | None  # None для STORE
+    plate_number: str | None
     city: str
-    price_text: str  # "Договорная" или "100 000 руб."
+    price: Price
 
-    contacts: str  # уже готовая строка: "@user, +7..."
+    contacts: Contacts
 
     caption: str | None = None
     image_file_id: str | None = None
