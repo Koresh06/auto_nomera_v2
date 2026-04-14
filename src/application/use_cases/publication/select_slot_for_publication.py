@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
 
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
@@ -13,6 +14,9 @@ from src.application.ports.publication.publication_repo import PublicationReposi
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.use_cases.base import UseCase, UseCaseRequest
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, eq=False)
@@ -29,66 +33,64 @@ class SelectSlotForPublicationRequest(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class SelectSlotForPublicationUseCase(
-    UseCase[SelectSlotForPublicationRequest, HoldResult]
-):
+class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, None]):
     publication_repo: PublicationRepository
     region_repo: RegionRepository
     scheduler: Scheduler
-
     calendar_builder: CalendarBuilder
     time_resolver: PublishTimeResolver
-
     reservation_service: SlotReservationService
     pricing_policy: SlotPricingPolicy
 
-    async def __call__(self, command: SelectSlotForPublicationRequest) -> HoldResult:
+    async def __call__(self, command: SelectSlotForPublicationRequest) -> None:
         now = command.now_utc or datetime.now(timezone.utc)
+
+        logger.info(
+            f"[SelectSlot] pub_id={command.publication_id} "
+            f"slot={command.slot.local_day} {command.slot.local_time} "
+            f"user_id={command.user_id} ad_id={command.ad_id}"
+        )
 
         publication = await self.publication_repo.get_by_id(command.publication_id)
         region = await self.region_repo.get_by_id(publication.region_id)
+        logger.info(f"[SelectSlot] region={region.title!r} tz={region.timezone.value!r}")
 
-        # 1) Согласованный порядок слотов (как в UI)
         ordered_future_slots = self.calendar_builder.generate_future_slots(
             region=region,
             now_utc=now,
         )
 
-        # 2) HOLD слота (чтобы не выбрали двое)
-        hold_result = await self.reservation_service.hold_slot(
-            slot=command.slot,
-            user_id=command.user_id,
-            ad_id=command.ad_id,
-            ordered_future_slots=ordered_future_slots,
-            now_utc=now,
-        )
-
-        # 3) Вычисляем publish_at_utc
         publish_at_utc = self.time_resolver.resolve_publish_at_utc(
             tz=region.timezone,
             slot=command.slot,
         )
+        logger.info(f"[SelectSlot] publish_at_utc={publish_at_utc.isoformat()}")
 
-        # 4) Определяем "платный ли слот"
-        # system paid = первые N
         is_system_paid = self.pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots,
             slot=command.slot,
         )
 
-        # converted paid = либо уже был, либо стал сейчас (pricing_changed_to_converted=True)
-        # (в реале converted_repo знает точно, но тут нам достаточно флага + system)
-        is_paid_slot = is_system_paid or hold_result.pricing_changed_to_converted
+        # ← проверяем converted через репо, не через hold_result
+        is_converted = await self.reservation_service.converted_repo.is_converted(
+            command.slot
+        )
 
-        # 5) Если платный и оплаты нет — ставим ожидание оплаты (в scheduler НЕ ставим)
+        is_paid_slot = is_system_paid or is_converted
+        logger.info(
+            f"[SelectSlot:pricing] is_system_paid={is_system_paid} "
+            f"is_converted={is_converted} is_paid_slot={is_paid_slot} "
+            f"payment_confirmed={command.payment_confirmed}"
+        )
+
         if is_paid_slot and not command.payment_confirmed:
             publication.set_slot_pending_payment(
                 slot=command.slot, publish_at_utc=publish_at_utc
             )
             await self.publication_repo.save(publication)
-            return hold_result
+            logger.info(f"[SelectSlot:awaiting_payment] pub_id={publication.id}")
+            return
 
-        # 6) Иначе — сразу ставим в scheduler
         publication.schedule(slot=command.slot, publish_at_utc=publish_at_utc)
         await self.publication_repo.save(publication)
 
@@ -96,4 +98,6 @@ class SelectSlotForPublicationUseCase(
             publication_id=publication.id,
             run_at_utc=publish_at_utc,
         )
-        return hold_result
+        logger.info(
+            f"[SelectSlot:done] pub_id={publication.id} status={publication.status}"
+        )
