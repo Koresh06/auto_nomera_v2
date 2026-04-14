@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 
 from src.application.ports.ad.ad_repo import AdRepository
@@ -5,13 +6,15 @@ from src.application.ports.region.region_repo import RegionRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.ad import AdType
 from src.domain.services.ad.plate_validator import validate_plate
-from src.infrastructure.telegram.media_virtual_url import build_virtual_plate_url
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, eq=False)
 class FinalizeAdRequest(UseCaseRequest):
     ad_id: int
-    chat_id: int  # куда CustomMessageManager сможет отправить временное фото
+    chat_id: int 
 
 
 @dataclass(kw_only=True)
@@ -20,29 +23,26 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
     region_repo: RegionRepository
 
     async def __call__(self, command: FinalizeAdRequest) -> None:
+        logger.info(f"[FinalizeAd] ad_id={command.ad_id} chat_id={command.chat_id}")
+
         ad = await self.ad_repo.get_by_id(command.ad_id)
+        logger.info(f"[FinalizeAd] ad_type={ad.ad_type} content={ad.content}")
 
         if ad.ad_type == AdType.STORE:
             sc = ad.store_content
             if sc is None:
                 raise ValueError("Store content is required")
-
             if not sc.shop_name:
                 raise ValueError("Shop name required")
-
             if not sc.city:
                 raise ValueError("City required")
-
             if not sc.contacts:
                 raise ValueError("Contacts required")
-
             if len(sc.items) == 0:
                 raise ValueError("At least one store item required")
-
-            # номера уже провалидированы при вводе
+            logger.info(f"[FinalizeAd:store] shop={sc.shop_name!r} items={len(sc.items)}")
             return
 
-        # стандартные объявления
         if ad.content is None:
             raise ValueError("Ad content is required")
 
@@ -51,34 +51,17 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
             raise ValueError("Plate number is required")
         if not c.city:
             raise ValueError("City is required")
-        if not c.price_text:
-            raise ValueError("Price is required")
-        if not c.contacts:
+        if c.price is None:                          # ← было: if not c.price
+            raise ValueError("Price is required")   # Price(0) = договорная, это ок
+        if c.contacts is None:                       # ← было: if not c.contacts
             raise ValueError("Contacts are required")
 
-        # allow_mask логика: для BUY можно маску, для SALE/URGENT — нет
         allow_mask = ad.ad_type == AdType.BUY
         validate_plate(c.plate_number, allow_mask=allow_mask)
-
-        # фото обязательно (кроме STORE)
-        if not c.image_file_id:
-            region = await self.region_repo.get_by_id(ad.region_id)
-            virtual_url = build_virtual_plate_url(
-                plate_number=c.plate_number,
-                channel_username=region.channel_username,
-                chat_id=command.chat_id,
-            )
-
-            # пересобираем content
-            ad.fill_content(
-                type(c)(
-                    plate_number=c.plate_number,
-                    city=c.city,
-                    price_text=c.price_text,
-                    contacts=c.contacts,
-                    caption=c.caption,
-                    image_file_id=virtual_url,
-                )
-            )
+        logger.info(
+            f"[FinalizeAd:standard] plate={c.plate_number!r} city={c.city!r} "
+            f"price={c.price.value} contacts={c.contacts.display!r}"
+        )
 
         await self.ad_repo.save(ad)
+        logger.info(f"[FinalizeAd:done] ad_id={ad.id}")

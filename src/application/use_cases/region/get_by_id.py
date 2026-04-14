@@ -6,14 +6,15 @@ from src.application.use_cases.base import UseCase, UseCaseRequest
 
 
 @dataclass(frozen=True, eq=False)
-class GetRegionsRequest(UseCaseRequest):
-    pass
+class IdRegionRequest(UseCaseRequest):
+    region_id: int
 
 
 @dataclass(kw_only=True)
-class GetAllRegionsUseCase(UseCase[GetRegionsRequest, list[RegionDTO]]):
+class GegByIdRegionUseCase(UseCase[IdRegionRequest, RegionDTO]):
     region_repo: RegionRepository
 
-    async def __call__(self, command: GetRegionsRequest) -> list[RegionDTO]:
-        regions = await self.region_repo.get_all()
-        return [RegionDTO.from_entity(region) for region in regions]
+    async def __call__(self, command: IdRegionRequest) -> RegionDTO:
+        region = await self.region_repo.get_by_id(command.region_id)
+        return RegionDTO.from_entity(region)
+

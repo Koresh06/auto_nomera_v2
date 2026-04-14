@@ -19,4 +19,4 @@ class GetByTgIdUserUseCase(UseCase[GetTgIdRequest, UserDTO | None]):
         user = await self.user_repo.get_by_tg_id(tg_id=command.tg_id)
         if user is None:
             raise UserNotFoundException()
-        return UserDTO.from_orm(user)
+        return UserDTO.from_entity(user)

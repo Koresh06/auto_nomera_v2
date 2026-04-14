@@ -50,7 +50,7 @@ class EnsureAdImageRefUseCase(UseCase[EnsureAdImageRefRequest, None]):
             type(c)(
                 plate_number=c.plate_number,
                 city=c.city,
-                price_text=c.price_text,
+                price=c.price,
                 contacts=c.contacts,
                 caption=c.caption,
                 image_file_id=virtual_url,
