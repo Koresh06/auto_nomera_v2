@@ -16,7 +16,7 @@ class HoldSlotRequest(UseCaseRequest):
     region_id: int
     slot: SlotKey
     user_id: int
-    ad_id: int
+    ad_id: int | None = None
     now_utc: datetime | None = None
 
 

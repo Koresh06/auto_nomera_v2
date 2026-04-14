@@ -89,17 +89,21 @@ class SlotReservationService:
         *,
         slot: SlotKey,
         user_id: int,
-        ad_id: int,
+        ad_id: int | None = None,
     ) -> None:
-        owner = HoldOwner(user_id=user_id, ad_id=ad_id)
-
         existing = await self.hold_store.get(slot)
         if existing is None:
             raise SlotHoldNotFound()
-        if existing != owner:
-            raise SlotHoldOwnerMismatch()
+
+        if ad_id is None:
+            if existing.user_id != user_id:
+                raise SlotHoldOwnerMismatch()
+        else:
+            if existing != HoldOwner(user_id=user_id, ad_id=ad_id):
+                raise SlotHoldOwnerMismatch()
 
         await self.hold_store.delete(slot)
+        await self.converted_repo.unmark_converted(slot)
 
     async def book_after_payment(
         self,
