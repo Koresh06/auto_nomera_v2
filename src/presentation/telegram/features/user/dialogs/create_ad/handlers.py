@@ -1,17 +1,19 @@
 import logging
-from datetime import date, time
 
 from aiogram.types import Message, CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
 from aiogram_dialog.widgets.kbd import Select, Button
+from aiogram_dialog.widgets.kbd.select import OnItemClick
+from aiogram_dialog.api.entities import MediaAttachment, MediaId
 
 from dishka.integrations.aiogram_dialog import inject
 from dishka.integrations.aiogram import FromDishka
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
-from src.application.dtos.user import UpdateUserDTO
+from src.application.dtos.region import RegionDTO
+from src.application.dtos.user import UpdateUserDTO, UserDTO
 from src.application.exceptions.user import UserNotFoundException
 from src.application.mediator import Mediator
 
@@ -26,18 +28,24 @@ from src.application.use_cases.publication.select_slot_for_publication import (
     SelectSlotForPublicationRequest,
 )
 
+from src.application.use_cases.region.get_by_id import IdRegionRequest
+from src.application.use_cases.slots.hold_slot import HoldSlotRequest
+from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
+from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.application.use_cases.user.update import UpdateUserRequest
 from src.domain.enums.ad import AdType
+from src.domain.exceptions.slot import SlotAlreadyBooked, SlotAlreadyHeld
 from src.domain.services.ad.plate_validator import validate_plate
+from src.domain.services.slots.slot_reservation_service import HoldResult
+from src.domain.value_objects.ad_content import AdContent
+from src.domain.value_objects.contacts import Contacts
+from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
 
-from .states import CreateAdSG
+from .utils import _decode_slot_id
 
 
 logger = logging.getLogger(__name__)
-
-
-REGION_ID_DEV = 1
 
 
 async def on_input_error(
@@ -99,29 +107,8 @@ async def on_negotiable_price(
     dialog_manager: DialogManager,
 ) -> None:
     dialog_manager.dialog_data["price"] = 0
-    
+    await dialog_manager.next()
 
-# @inject
-# async def on_contacts_success(
-#     message: Message,
-#     widget: ManagedTextInput,
-#     dialog_manager: DialogManager,
-#     value: str,
-#     mediator: FromDishka[Mediator],
-# ) -> None:
-#     ad_id = dialog_manager.dialog_data["ad_id"]
-#     await mediator.handle(UpdateAdContentRequest(ad_id=ad_id, contacts=value))
-
-#     # финализация (если фото нет — проставит my://... для генератора)
-#     await mediator.handle(FinalizeAdRequest(ad_id=ad_id, chat_id=message.chat.id))
-
-#     # создаём publication
-#     pub: PublicationDTO = await mediator.handle(
-#         CreatePublicationFromAdRequest(ad_id=ad_id)
-#     )
-#     dialog_manager.dialog_data["publication_id"] = pub.id
-
-#     await dialog_manager.switch_to(CreateAdSG.calendar)
 
 @inject
 async def on_phone_received_contact(
@@ -142,9 +129,7 @@ async def on_phone_received_contact(
             await mediator.handle(
                 UpdateUserRequest(
                     tg_id=message.from_user.id,
-                    data=UpdateUserDTO(
-                        phone=new_phone
-                    )
+                    data=UpdateUserDTO(phone=new_phone),
                 )
             )
         except UserNotFoundException as ex:
@@ -171,9 +156,7 @@ async def on_phone_input_success(
             await mediator.handle(
                 UpdateUserRequest(
                     tg_id=message.from_user.id,
-                    data=UpdateUserDTO(
-                        phone=new_phone
-                    )
+                    data=UpdateUserDTO(phone=new_phone),
                 )
             )
         except UserNotFoundException as ex:
@@ -183,38 +166,149 @@ async def on_phone_input_success(
     await dialog_manager.next()
 
 
-def _decode_slot_id(slot_id: str) -> tuple[date, time]:
-    # ожидаем формат: YYYY_MM_DD_HH_MM
-    y, m, d, hh, mm = map(int, slot_id.split("_"))
-    return date(y, m, d), time(hh, mm)
-
-
 @inject
 async def on_pick_slot(
     callback: CallbackQuery,
-    widget: Select,
+    widget: OnItemClick[Select[str], str],
     dialog_manager: DialogManager,
     item_id: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    pub_id = dialog_manager.dialog_data["publication_id"]
-    ad_id = dialog_manager.dialog_data["ad_id"]
-
     day, t = _decode_slot_id(item_id)
-    slot = SlotKey(region_id=REGION_ID_DEV, local_day=day, local_time=t)
+    user: UserDTO = dialog_manager.dialog_data["user"]
+    slot = SlotKey(region_id=user.region_id, local_day=day, local_time=t)
 
-    res = await mediator.handle(
-        SelectSlotForPublicationRequest(
-            publication_id=pub_id,
-            slot=slot,
-            user_id=callback.from_user.id,
-            ad_id=ad_id,
+    try:
+        result: HoldResult = await mediator.handle(
+            HoldSlotRequest(
+                region_id=user.region_id,
+                slot=slot,
+                user_id=callback.from_user.id,
+            )
+        )
+    except (SlotAlreadyHeld, SlotAlreadyBooked):
+        await callback.answer(
+            "⚠️ Этот слот уже занят, выберите другой.",
+            show_alert=True,
+        )
+        return  # остаёмся на календаре
+
+    dialog_manager.dialog_data["slot_id"] = item_id
+    dialog_manager.dialog_data["slot_day"] = str(slot.local_day)
+    dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime("%H:%M")
+    dialog_manager.dialog_data["is_paid"] = result.pricing_changed_to_converted
+
+    await dialog_manager.next()
+
+
+@inject
+async def on_back_to_calendar(
+    callback: CallbackQuery,
+    widget: CallbackQuery,
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+) -> None:
+    data = dialog_manager.dialog_data
+    if "slot_id" in data:
+        day, t = _decode_slot_id(data["slot_id"])
+        slot = SlotKey(region_id=data["region_id"], local_day=day, local_time=t)
+        try:
+            await mediator.handle(
+                ReleaseHoldRequest(
+                    slot=slot,
+                    user_id=callback.from_user.id,
+                )
+            )
+            logger.info(f"[ReleaseHold:done] slot released")
+        except Exception:
+            pass
+        data.pop("slot_id", None)
+
+
+
+@inject
+async def on_confirm(
+    callback: CallbackQuery,
+    widget: Button,
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+) -> None:
+    user_id = callback.from_user.id
+    data = dialog_manager.dialog_data
+
+    user: UserDTO = data["user"]
+    plate: str = data["plate"]
+    city: str = data["city"]
+    price: Price = Price(int(data["price"]))
+    phone: str = data["phone"]
+    media: MediaAttachment = data["media"]
+    region_id: int = data["region_id"]
+    contacts = Contacts.from_user(username=user.username, phone=phone)
+
+    logger.info(
+        f"[CONFIRM:start] user_id={user_id} plate={plate!r} city={city!r} "
+        f"price={price.value} phone={phone!r} region_id={region_id}"
+    )
+
+    # 1. Черновик
+    ad: AdDTO = await mediator.handle(
+        CreateAdDraftRequest(
+            user_id=user_id,
+            region_id=region_id,
+            ad_type=data["ad_type"],
         )
     )
+    logger.info(f"[CONFIRM:draft] ad_id={ad.id} ad_type={ad.ad_type}")
 
-    dialog_manager.dialog_data["picked"] = item_id
-    dialog_manager.dialog_data["converted"] = getattr(
-        res, "pricing_changed_to_converted", False
+    # 2. Контент
+    await mediator.handle(
+        UpdateAdContentRequest(
+            ad_id=ad.id,
+            plate_number=plate,
+            city=city,
+            price=price,
+            contacts=contacts,
+            image_file_id=media.file_id.file_id if media.file_id else None,
+        )
+    )
+    logger.info(f"[CONFIRM:content] ad_id={ad.id} contacts={contacts.display!r}")
+
+    # 3. Финализация
+    await mediator.handle(
+        FinalizeAdRequest(
+            ad_id=ad.id,
+            chat_id=callback.message.chat.id,
+        )
+    )
+    logger.info(f"[CONFIRM:finalized] ad_id={ad.id}")
+
+    # 4. Публикация
+    pub: PublicationDTO = await mediator.handle(
+        CreatePublicationFromAdRequest(ad_id=ad.id)
+    )
+    logger.info(f"[CONFIRM:publication] pub_id={pub.id} status={pub.status}")
+
+    # 5. Слот
+    day, t = _decode_slot_id(data["slot_id"])
+    slot = SlotKey(region_id=region_id, local_day=day, local_time=t)
+    logger.info(
+        f"[CONFIRM:slot] slot={slot.local_day} {slot.local_time} region={region_id}"
     )
 
-    await dialog_manager.switch_to(CreateAdSG.done)
+    await mediator.handle(
+        SelectSlotForPublicationRequest(
+            publication_id=pub.id,
+            slot=slot,
+            user_id=user_id,
+            ad_id=ad.id,
+        )
+    )
+    logger.info(
+        f"[CONFIRM:scheduled] pub_id={pub.id} slot={slot.local_day} {slot.local_time}"
+    )
+
+    data["ad_id"] = ad.id
+    data["publication_id"] = pub.id
+
+    logger.info(f"[CONFIRM:done] ad_id={ad.id} pub_id={pub.id}")
+    await dialog_manager.next()

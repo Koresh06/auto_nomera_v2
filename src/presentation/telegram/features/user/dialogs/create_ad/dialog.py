@@ -20,6 +20,8 @@ from aiogram_dialog.widgets.markup.reply_keyboard import ReplyKeyboardFactory
 
 from .states import CreateAdSG
 from .handlers import (
+    on_back_to_calendar,
+    on_confirm,
     on_delete_photo,
     on_input_error,
     on_input_photo,
@@ -31,6 +33,7 @@ from .handlers import (
 )
 from .getters import (
     calendar_getter,
+    getter_confirm,
     getter_default_ad,
     getter_media_plate,
     getter_user_phone,
@@ -92,7 +95,7 @@ create_ad_dialog = Dialog(
             when="photo",
         ),
         Next(Const("➡️ Далее"), when="media"),
-        Next(Const("Пропустить"), id="skip", when=~F["media"]),
+        Next(Const("Пропустить"), id="skip_media", when=~F["media"]),
         SwitchTo(
             Const("⬅️ Назад"),
             id="back_plate",
@@ -188,13 +191,34 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.calendar,
     ),
     Window(
+        Const(
+            '⚠️ <b>Обязательно нажмите кнопку "Подтвердить" в конце этого сообщения, иначе ваше объявление не опубликуется!</b>\n\n'
+            "✅ <b>Предварительный просмотр объявления:</b>\n"
+        ),
         Format(
-            "Готово!\nСлот: {dialog_data[picked]}\nConverted: {dialog_data[converted]}"
+            "📋 <b>Проверьте данные:</b>\n\n"
+            "🚘 Номер: {plate}\n"
+            "🌎 Город: {city}\n"
+            "💰 Цена: {price}\n"
+            "📲 Телефон: {phone}\n\n"
+            "🕐 Слот: {slot_day} в {slot_time}\n"
+        ),
+        DynamicMedia(selector="media", when="media"),
+        Button(
+            Const("✅ Подтвердить"),
+            id="confirm",
+            on_click=on_confirm,
         ),
         Back(
             Const("⬅️ Назад"),
+            on_click=on_back_to_calendar,
             style=Style(style=ButtonStyle.PRIMARY),
         ),
-        state=CreateAdSG.done,
+        state=CreateAdSG.confirm,
+        getter=getter_confirm,
     ),
+    Window(
+        Const("Успешно!!!"),
+        state=CreateAdSG.done,
+    )
 )

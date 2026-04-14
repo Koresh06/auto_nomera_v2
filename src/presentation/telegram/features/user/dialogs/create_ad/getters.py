@@ -5,11 +5,15 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
 
 from src.application.dtos.calendar import CalendarDTO
+from src.application.dtos.region import RegionDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
+from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
+from src.domain.value_objects.price import Price
+from src.infrastructure.telegram.media_virtual_url import build_virtual_plate_url
 
 
 REGION_ID_DEV = 1
@@ -48,27 +52,68 @@ async def getter_media_plate(dialog_manager: DialogManager, **kwargs) -> dict:
 
 @inject
 async def getter_user_phone(
-    dialog_manager: DialogManager, 
-    mediator: FromDishka[Mediator], 
-    **kwargs
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+    **kwargs,
 ) -> dict:
     tg_id = dialog_manager.event.from_user.id
 
-    user: UserDTO = await mediator.handle(
-        GetTgIdRequest(tg_id=tg_id)
-    )
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
     dialog_manager.dialog_data["current_phone"] = user.phone
+    dialog_manager.dialog_data["user"] = user
     return {"phone": user.phone}
-
 
 @inject
 async def calendar_getter(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
     **kwargs,
-):
+) -> dict:
     cal: CalendarDTO = await mediator.handle(
         GetCalendarRequest(region_id=REGION_ID_DEV)
     )
-    # ожидаем: cal.slots -> list[dict] с ключами id/text/is_busy
-    return {"slots": cal.slots}
+    user: UserDTO = dialog_manager.dialog_data["user"]
+    region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
+    dialog_manager.dialog_data["region_id"] = region.id
+    dialog_manager.dialog_data["channel_username"] = region.channel_username
+
+    available = [s for s in cal.slots if not s.disabled]
+
+    return {"slots": available}
+
+
+async def getter_confirm(dialog_manager: DialogManager, **kwargs) -> dict:
+    data = dialog_manager.dialog_data
+    tg_id = dialog_manager.event.from_user.id
+    plate = data.get("plate")
+    city = dialog_manager.find("city").get_value()
+    price = dialog_manager.find("price").get_value() or data["price"]
+    phone = data.get("phone") or data.get("")
+    slot_day = data.get("slot_day")
+    slot_time = data.get("slot_time")
+    channel_username = data["channel_username"]
+
+    media = data.get("media")
+    if not media:
+        media = MediaAttachment(
+            type=ContentType.PHOTO,
+            url=build_virtual_plate_url(
+                plate_number=plate,
+                channel_username=channel_username,
+                chat_id=tg_id,),
+        )
+        dialog_manager.dialog_data["media"] = media
+
+    dialog_manager.dialog_data["city"] = city
+    dialog_manager.dialog_data["price"] = price
+    dialog_manager.dialog_data["phone"] = phone
+
+    return {
+        "plate": plate,
+        "city": city,
+        "price": Price.format(price),
+        "phone": phone,
+        "slot_day": slot_day,
+        "slot_time": slot_time,
+        "media": media,
+    }

@@ -8,4 +8,5 @@ class CreateAdSG(StatesGroup):
     price = State()
     phone = State()
     calendar = State()
+    confirm = State()
     done = State()
