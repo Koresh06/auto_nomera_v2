@@ -51,9 +51,9 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
             raise ValueError("Plate number is required")
         if not c.city:
             raise ValueError("City is required")
-        if c.price is None:                          # ← было: if not c.price
-            raise ValueError("Price is required")   # Price(0) = договорная, это ок
-        if c.contacts is None:                       # ← было: if not c.contacts
+        if c.price is None:                      
+            raise ValueError("Price is required") 
+        if c.contacts is None:                     
             raise ValueError("Contacts are required")
 
         allow_mask = ad.ad_type == AdType.BUY

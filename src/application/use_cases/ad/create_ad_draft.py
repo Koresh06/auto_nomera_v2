@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from src.application.dtos.ad import AdDTO
 from src.application.ports.ad.ad_repo import AdRepository

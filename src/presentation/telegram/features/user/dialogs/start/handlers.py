@@ -8,7 +8,7 @@ from aiogram_dialog.widgets.kbd.select import OnItemClick
 
 from src.application.exceptions.user import UserAlreadyExistsException
 from src.application.mediator import Mediator
-from src.application.use_cases.user.register_user import UserRegisterRequest
+from src.application.use_cases.user.register import UserRegisterRequest
 from src.presentation.telegram.features.user.dialogs.start.states import StartSG
 
 

@@ -9,4 +9,5 @@ class CreateAdSG(StatesGroup):
     phone = State()
     calendar = State()
     confirm = State()
-    done = State()
+    publication_service = State()
+    finish = State()

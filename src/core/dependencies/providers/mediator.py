@@ -60,7 +60,7 @@ from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
     GetTgIdRequest,
 )
-from src.application.use_cases.user.register_user import (
+from src.application.use_cases.user.register import (
     UserRegisterRequest,
     RegisterUserUseCase,
 )

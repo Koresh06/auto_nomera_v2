@@ -1,3 +1,6 @@
+from dataclasses import fields
+
+from src.application.dtos.user import UpdateUserDTO
 from src.domain.entities.user import User
 from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.repositories.utils import _AutoId
@@ -13,6 +16,8 @@ class InMemoryUserRepo(UserRepository):
         user.id = self._ids.next()
         self._items[user.id] = user
         self._by_tg[user.tg_id] = user.id
+        print(self._items)
+
     async def get_by_id(self, user_id: int) -> User | None:
         return self._items.get(user_id)
 
@@ -20,8 +25,13 @@ class InMemoryUserRepo(UserRepository):
         user_id = self._by_tg.get(tg_id)
         return None if user_id is None else self._items[user_id]
     
-    async def update(self, tg_id: int, data: User) -> None:
+    async def update(self, tg_id: int, data: UpdateUserDTO) -> None:
         user_id = self._by_tg.get(tg_id)
         if user_id is None:
-            return
-        self._items[user_id] = data
+            return None
+        
+        user = self._items[user_id]
+        for field in fields(data):
+            value = getattr(data, field.name)
+            if value is not None:
+                setattr(user, field.name, value)

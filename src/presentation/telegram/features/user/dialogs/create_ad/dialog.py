@@ -13,6 +13,7 @@ from aiogram_dialog.widgets.kbd import (
     Button,
     SwitchTo,
     RequestContact,
+    Column,
 )
 from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.style import Style
@@ -218,7 +219,50 @@ create_ad_dialog = Dialog(
         getter=getter_confirm,
     ),
     Window(
-        Const("Успешно!!!"),
-        state=CreateAdSG.done,
+        Const(
+            "💎 <b>Сделайте своё объявление заметнее! Выберите услуги, чтобы выделить его перед публикацией:</b>"
+        ),
+        Group(
+            Select(
+                Format("{item[0]}"),
+                id="selected_services",
+                item_id_getter=lambda x: str(x[1]),
+                items="available_services",
+                on_click=on_service_paid_selected,
+            ),
+            width=1,
+        ),
+        Next(Const("⏭ Пропустить")),
+        state=CreateAdSG.publication_service,
+        getter=getter_publication_service,
+    ),
+    Window(
+        Const("🤝 <b>Спасибо что выбрали Нас.</b>\n\n"),
+        Format(
+            "✅ Ваше объявление о продаже будет опубликовано {published_text} в нашем телеграм канале: <a href='{channel}'>{region_name}</a>\n",
+            when=~F["is_auto_pub"],
+        ),
+        Format(
+            "✅ Ваше объявление о продаже опубликовано в нашем телеграм канале: <a href='{channel}'>{region_name}</a>\n",
+            when="is_auto_pub",
+        ),
+        Const("‼️ Подписывайтесь на канал, чтобы не потерять объявление!\n\n"),
+        Const(
+            "Для быстрой продажи рекомендуем воспользоваться платными услугами, выбрав раздел «🚀 Платные Топ услуги (NEW)» в общем меню, чтобы выделить Ваше объявление среди других.\n\n"
+        ),
+        Format("🔝 Подключённые услуги:\n{selected_services_text}"),
+        DynamicMedia(selector="media", when="media"),
+        Back(Const("Назад к Услугам!")),
+        Column(
+            Button(
+                Const("📝 Редактировать объявление"),
+                id="edit_ad",
+                on_click=on_edit_ad_click,
+            ),
+            Cancel(Const("🏠 Главное меню")),
+        ),
+        state=CreateAdSG.finish,
+        getter=getter_finish,
+        on_process_result=on_process_result,
     )
 )

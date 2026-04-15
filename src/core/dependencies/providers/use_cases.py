@@ -44,7 +44,7 @@ from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
-from src.application.use_cases.user.register_user import RegisterUserUseCase
+from src.application.use_cases.user.register import RegisterUserUseCase
 from src.application.use_cases.user.update import UpdateUserUseCase
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
@@ -222,13 +222,8 @@ class UseCasesProvider(Provider):
     @provide
     def ensure_ad_image_ref_use_case(
         self,
-        ad_repo: AdRepository,
-        region_repo: RegionRepository,
     ) -> EnsureAdImageRefUseCase:
-        return EnsureAdImageRefUseCase(
-            ad_repo=ad_repo,
-            region_repo=region_repo,
-        )
+        return EnsureAdImageRefUseCase()
 
     @provide
     def create_ad_draft_use_case(self, ad_repo: AdRepository) -> CreateAdDraftUseCase:

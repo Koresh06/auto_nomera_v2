@@ -8,12 +8,12 @@ from src.application.dtos.calendar import CalendarDTO
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
+from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
 from src.domain.value_objects.price import Price
-from src.infrastructure.telegram.media_virtual_url import build_virtual_plate_url
 
 
 REGION_ID_DEV = 1
@@ -63,17 +63,20 @@ async def getter_user_phone(
     dialog_manager.dialog_data["user"] = user
     return {"phone": user.phone}
 
+
 @inject
 async def calendar_getter(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    cal: CalendarDTO = await mediator.handle(
-        GetCalendarRequest(region_id=REGION_ID_DEV)
-    )
     user: UserDTO = dialog_manager.dialog_data["user"]
+
+    cal: CalendarDTO = await mediator.handle(
+        GetCalendarRequest(region_id=user.region_id)
+    )
     region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
+
     dialog_manager.dialog_data["region_id"] = region.id
     dialog_manager.dialog_data["channel_username"] = region.channel_username
 
@@ -82,7 +85,12 @@ async def calendar_getter(
     return {"slots": available}
 
 
-async def getter_confirm(dialog_manager: DialogManager, **kwargs) -> dict:
+@inject
+async def getter_confirm(
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+    **kwargs,
+) -> dict:
     data = dialog_manager.dialog_data
     tg_id = dialog_manager.event.from_user.id
     plate = data.get("plate")
@@ -95,12 +103,12 @@ async def getter_confirm(dialog_manager: DialogManager, **kwargs) -> dict:
 
     media = data.get("media")
     if not media:
-        media = MediaAttachment(
-            type=ContentType.PHOTO,
-            url=build_virtual_plate_url(
-                plate_number=plate,
+        media: MediaAttachment = await mediator.handle(
+            EnsureAdImageRefRequest(
+                plate=plate,
                 channel_username=channel_username,
-                chat_id=tg_id,),
+                chat_id=tg_id,
+            )
         )
         dialog_manager.dialog_data["media"] = media
 
