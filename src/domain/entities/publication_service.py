@@ -11,6 +11,7 @@ from src.domain.enums.publication_service import (
 class PublicationService(Entity):
     type: PublicationServiceType
     status: PublicationServiceStatus = PublicationServiceStatus.ACTIVE
+    price_paid: int | None = None
     params: dict = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:

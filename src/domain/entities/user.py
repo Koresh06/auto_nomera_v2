@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from src.domain.entities.base import Entity
-from src.domain.enums.user import UserRole
+from src.domain.enums.role import UserRole
 from src.domain.exceptions.user import InvalidTelegramId, EmptyUsername
 
 

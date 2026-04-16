@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from src.domain.entities.user import User
-from src.domain.enums.user import UserRole
+from src.domain.enums.role import UserRole
 
 
 @dataclass(frozen=True, slots=True)

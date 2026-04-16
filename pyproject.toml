@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aiogram-dialog>=2.4.0",
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
     "betterlogging>=1.0.0",
     "dishka>=1.8.0",
     "mypy>=1.19.1",
