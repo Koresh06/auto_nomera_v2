@@ -1,4 +1,3 @@
-from datetime import timedelta
 
 
 from src.application.mediator import Mediator
@@ -18,43 +17,10 @@ from src.domain.value_objects.region_settings import RegionSettings
 from src.domain.value_objects.timezone_name import TimezoneName
 from src.domain.value_objects.region_metadata import RegionMetadata
 
-from src.domain.services.slots.calendar_builder import CalendarBuilder
-from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
-from src.domain.services.slots.slot_reservation_service import SlotReservationService
-from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 
 
-from src.application.use_cases.ad.create_ad_draft import (
-    CreateAdDraftUseCase,
-    CreateAdDraftRequest,
-)
-from src.application.use_cases.ad.update_ad_content import (
-    UpdateAdContentUseCase,
-    UpdateAdContentRequest,
-)
-from src.application.use_cases.ad.finalize_ad import (
-    FinalizeAdUseCase,
-    FinalizeAdRequest,
-)
-from src.application.use_cases.publication.create_publication_from_ad import (
-    CreatePublicationFromAdUseCase,
-    CreatePublicationFromAdRequest,
-)
 
-from src.application.use_cases.slots.get_calendar import (
-    GetCalendarUseCase,
-    GetCalendarRequest,
-)
-from src.application.use_cases.publication.select_slot_for_publication import (
-    SelectSlotForPublicationUseCase,
-    SelectSlotForPublicationRequest,
-)
 
-from src.infrastructure.dev.scheduler import DevScheduler
-from src.infrastructure.repositories.ad.in_memory import InMemoryAdRepo
-from src.infrastructure.repositories.publication.in_memory import (
-    InMemoryPublicationRepo,
-)
 from src.infrastructure.repositories.region.in_memory import InMemoryRegionRepo
 from src.infrastructure.repositories.user.in_memory import InMemoryUserRepo
 

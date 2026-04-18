@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from src.domain.entities.base import Entity
 from src.domain.enums.region import RegionStatus
@@ -6,7 +6,6 @@ from src.domain.exceptions.region import InvalidChannelId
 from src.domain.value_objects.region_metadata import RegionMetadata
 from src.domain.value_objects.region_settings import RegionSettings
 from src.domain.value_objects.timezone_name import TimezoneName
-from src.utils.get_datetime_utc_now import get_datetime_utc_now
 
 
 @dataclass(kw_only=True)

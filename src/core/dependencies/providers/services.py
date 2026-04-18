@@ -12,7 +12,6 @@ from src.domain.services.publication.publish_time_resolver import PublishTimeRes
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
-from src.infrastructure.slots.holt_store.in_memory import InMemorySlotHoldStore
 from src.infrastructure.telegram.image_processor import PillowImageProcessor
 
 

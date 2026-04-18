@@ -5,14 +5,13 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
 from aiogram_dialog.widgets.kbd import Select, Button
 from aiogram_dialog.widgets.kbd.select import OnItemClick
-from aiogram_dialog.api.entities import MediaAttachment, MediaId
+from aiogram_dialog.api.entities import MediaAttachment
 
 from dishka.integrations.aiogram_dialog import inject
 from dishka.integrations.aiogram import FromDishka
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
-from src.application.dtos.region import RegionDTO
 from src.application.dtos.user import UpdateUserDTO, UserDTO
 from src.application.exceptions.user import UserNotFoundException
 from src.application.mediator import Mediator
@@ -28,16 +27,13 @@ from src.application.use_cases.publication.select_slot_for_publication import (
     SelectSlotForPublicationRequest,
 )
 
-from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
-from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.application.use_cases.user.update import UpdateUserRequest
 from src.domain.enums.ad import AdType
 from src.domain.exceptions.slot import SlotAlreadyBooked, SlotAlreadyHeld
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.services.slots.slot_reservation_service import HoldResult
-from src.domain.value_objects.ad_content import AdContent
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
@@ -219,7 +215,7 @@ async def on_back_to_calendar(
                     user_id=callback.from_user.id,
                 )
             )
-            logger.info(f"[ReleaseHold:done] slot released")
+            logger.info("[ReleaseHold:done] slot released")
         except Exception:
             pass
         data.pop("slot_id", None)

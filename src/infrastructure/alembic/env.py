@@ -1,5 +1,4 @@
 import asyncio
-from logging.config import fileConfig
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -11,14 +10,6 @@ from alembic import context
 from src.core.config import settings
 from src.infrastructure.database.models import (
     BaseModel,
-    UserModel,
-    AdModel,
-    PublicationModel,
-    ServiceDefinitionModel,
-    RegionModel,
-    PublicationServiceModel,
-    SlotBookingModel,
-    SlotConvertedModel,
 )
 
 # this is the Alembic Config object, which provides

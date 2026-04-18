@@ -1,4 +1,3 @@
-from typing import Any
 from dishka import Provider, Scope, provide
 from taskiq_redis import RedisAsyncResultBackend, RedisStreamBroker
 
@@ -6,10 +5,8 @@ from src.core.config import AppSettings
 
 from src.application.ports.tasks.task_queue import TaskQueue
 from src.application.ports.publication.scheduler import Scheduler
-from src.application.ports.publication.publication_repo import PublicationRepository
 from src.infrastructure.dev.scheduler import DevScheduler
 from src.infrastructure.tasks.taskiq_queue import TaskiqTaskQueue
-from src.infrastructure.scheduler.taskiq_queue_scheduler import TaskQueueScheduler
 
 
 class TaskiqProvider(Provider):

@@ -1,5 +1,4 @@
 from abc import ABC
-from uuid import UUID
 from dataclasses import dataclass, field
 from datetime import datetime
 

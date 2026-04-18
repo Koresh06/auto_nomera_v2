@@ -1,16 +1,10 @@
-from typing import AsyncGenerator
 from dishka import Provider, provide, Scope
 
 # from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import AppSettings
 
 # from src.infrastructure.database.sqlalchemy.connection import async_session_maker
-from src.infrastructure.database.transaction_manager.base import TransactionManager
-from src.infrastructure.database.transaction_manager.sqlalchemy import (
-    SQLAlchemyTransactionManager,
-)
 # from src.infrastructure.database.redis.connection import get_redis_client
 
 

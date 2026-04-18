@@ -5,7 +5,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import (
     Integer,
     BigInteger,
-    VARCHAR,
     Enum as SaEnum,
     ForeignKey,
     String,

@@ -31,6 +31,6 @@ class ReleaseHoldUseCase(UseCase[ReleaseHoldRequest, None]):
                 user_id=command.user_id,
                 ad_id=command.ad_id,
             )
-            logger.info(f"[ReleaseHold:done] slot released")
+            logger.info("[ReleaseHold:done] slot released")
         except (SlotHoldNotFound, SlotHoldOwnerMismatch) as e:
             logger.info(f"[ReleaseHold:skip] {e.__class__.__name__}")

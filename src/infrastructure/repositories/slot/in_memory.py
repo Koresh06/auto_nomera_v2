@@ -3,7 +3,6 @@ from typing import Iterable, Set
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 
-from src.domain.value_objects.hold_owner import HoldOwner
 from src.domain.value_objects.slot_key import SlotKey
 
 

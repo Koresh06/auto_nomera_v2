@@ -7,7 +7,6 @@ from src.domain.services.publication.publish_time_resolver import PublishTimeRes
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import (
     SlotReservationService,
-    HoldResult,
 )
 from src.domain.value_objects.slot_key import SlotKey
 from src.application.ports.publication.publication_repo import PublicationRepository
