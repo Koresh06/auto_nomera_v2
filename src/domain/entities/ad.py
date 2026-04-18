@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from src.domain.entities.base import Entity
-from src.domain.enums.ad import AdType
+from src.domain.enums.ad import AdType, AdStatus
 from src.domain.value_objects.ad_content import AdContent
 from src.domain.value_objects.store_content import StoreContent
 
@@ -11,6 +11,7 @@ class Ad(Entity):
     user_id: int
     region_id: int
     ad_type: AdType
+    status: AdStatus
 
     content: AdContent | None = None
     store_content: StoreContent | None = None

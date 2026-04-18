@@ -34,9 +34,9 @@ class AdTextRenderer:
             "",
             f"🚘 Номер: {c.plate_number}",
             f"🌎 Город: {c.city}",
-            f"💰 Цена: {c.price}",
+            f"💰 Цена: {c.price.display}",
             "",
-            f"📲 Связь: {c.contacts}",
+            f"📲 Связь: {c.contacts.display}",
         ]
 
         if c.caption:
@@ -57,14 +57,14 @@ class AdTextRenderer:
             "",
             f"🏦 Магазин: {s.shop_name}",
             f"🌎 Город: {s.city}",
-            f"📲 Связь: {s.contacts}",
+            f"📲 Связь: {s.contacts.display}",
             "",
             "Список доступных номеров:",
             "",
         ]
 
         for item in s.items:
-            lines.append(f"✖️ {item.plate} ➖ {item.price}")
+            lines.append(f"✖️ {item.plate} ➖ {item.price.display}")
 
         return "\n".join(lines)
 
@@ -81,6 +81,6 @@ class AdTextRenderer:
             if rl.vk_group_url:
                 links.append(f"✅ Наша группа VK ({rl.vk_group_url})")
             if rl.max_channel_url:
-                links.append(f"✅ Наш канал MAX ({rl})")
+                links.append(f"✅ Наш канал MAX ({rl.max_channel_url})")
 
         return "\n".join(links)

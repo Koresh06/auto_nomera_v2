@@ -1,9 +1,6 @@
 import re
 from dataclasses import dataclass
 
-from aiogram_dialog import DialogManager
-from aiogram_dialog.widgets.input import TextInput
-
 
 RUS_LETTERS = "АВЕКМНОРСТУХ"
 

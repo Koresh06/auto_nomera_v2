@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -39,7 +37,7 @@ class SlotReservationService:
         *,
         slot: SlotKey,
         user_id: int,
-        ad_id: int,
+        ad_id: int | None = None,
         ordered_future_slots: list[SlotKey],
         now_utc: datetime | None = None,
     ) -> HoldResult:
@@ -110,7 +108,7 @@ class SlotReservationService:
         *,
         slot: SlotKey,
         user_id: int,
-        ad_id: int,
+        ad_id: int | None = None,
         require_hold_owner: bool = False,
     ) -> None:
         """

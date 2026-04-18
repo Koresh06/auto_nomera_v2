@@ -4,7 +4,7 @@ from datetime import datetime
 from src.domain.entities.base import Entity
 from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceType
+from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
 from src.domain.exceptions.publication import (
     InvalidPublicationState,
     ServiceAlreadyAdded,
@@ -54,7 +54,7 @@ class Publication(Entity):
     def add_service(self, service: PublicationService) -> None:
         # запретим дубли по типу (если нужно — можно ослабить)
         if any(
-            s.type == service.type and s.status == s.status.ACTIVE
+            s.type == service.type and s.status == PublicationServiceStatus.ACTIVE
             for s in self.services
         ):
             raise ServiceAlreadyAdded(f"Услуга {service.type} уже добавлена")

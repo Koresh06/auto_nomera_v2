@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Iterable, Protocol
 
 from src.domain.value_objects.slot_key import SlotKey

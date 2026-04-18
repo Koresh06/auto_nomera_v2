@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, VARCHAR, Enum as SaEnum, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 
-from src.domain.enums.ad import AdType
+from src.domain.enums.ad import AdType, AdStatus
 
 from .base import BaseModel, CreatedAtMixin, UpdatedAtMixin
 
@@ -36,6 +36,7 @@ class AdModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
         ),
     )
     ad_type: Mapped[AdType] = mapped_column(SaEnum(AdType))
+    status: Mapped[AdStatus] = mapped_column(SaEnum(AdStatus))
 
     plate_number: Mapped[str | None] = mapped_column(VARCHAR(16), nullable=True)
     city: Mapped[str | None] = mapped_column(VARCHAR(128), nullable=True)
