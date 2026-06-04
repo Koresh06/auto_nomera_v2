@@ -45,6 +45,7 @@ from src.application.use_cases.publication_service.unpin_message import (
     UnpinMessageRequest,
     UnpinMessageUseCase,
 )
+from src.application.use_cases.region.create import CreateRegionCommand, CreateRegionUseCase
 from src.application.use_cases.region.get_all import (
     GetAllRegionsUseCase,
     GetRegionsRequest,
@@ -78,6 +79,7 @@ class MediatorProvider(Provider):
         update_user_use_case: UpdateUserUseCase,
         get_all_regions_use_case: GetAllRegionsUseCase,
         get_by_id_region_use_case: GegByIdRegionUseCase,
+        create_region_use_case: CreateRegionUseCase,
         get_calendar_use_case: GetCalendarUseCase,
         hold_slot_use_case: HoldSlotUseCase,
         confirm_paid_slot_and_schedule_publication_use_case: ConfirmPaidSlotAndSchedulePublicationUseCase,
@@ -100,6 +102,7 @@ class MediatorProvider(Provider):
         mediator.register(UpdateUserRequest, update_user_use_case)
         mediator.register(GetRegionsRequest, get_all_regions_use_case)
         mediator.register(IdRegionRequest, get_by_id_region_use_case)
+        mediator.register(CreateRegionCommand, create_region_use_case)
 
         mediator.register(GetCalendarRequest, get_calendar_use_case)
         mediator.register(HoldSlotRequest, hold_slot_use_case)
