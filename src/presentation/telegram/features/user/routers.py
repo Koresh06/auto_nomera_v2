@@ -8,7 +8,7 @@ from dishka.integrations.aiogram import FromDishka, inject
 from src.application.exceptions.user import UserNotFoundException
 from src.application.mediator import Mediator
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
-from src.presentation.telegram.features.user.dialogs.start.states import StartSG
+from src.presentation.telegram.features.user.views.start.states import StartSG
 
 
 logger = logging.getLogger(__name__)
