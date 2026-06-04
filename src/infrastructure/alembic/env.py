@@ -12,6 +12,17 @@ from src.infrastructure.database.models import (
     BaseModel,
 )
 
+from src.infrastructure.database.models import (
+    UserModel,
+    RegionModel,
+    AdModel,
+    PublicationModel,
+    PublicationServiceModel,
+    SlotBookingModel,
+    SlotConvertedModel,
+    ServiceDefinitionModel,
+) # noqa
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -19,7 +30,7 @@ config = context.config
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 
-config.set_main_option("sqlalchemy.url", settings.db.postgres.db_url)
+config.set_main_option("sqlalchemy.url", settings.db.postgres.url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
