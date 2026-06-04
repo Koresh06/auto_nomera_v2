@@ -1,11 +1,13 @@
 import logging
 from dataclasses import dataclass
 
+from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.ad import AdType
 from src.domain.services.ad.plate_validator import validate_plate
+from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 logger = logging.getLogger(__name__)
@@ -21,11 +23,15 @@ class FinalizeAdRequest(UseCaseRequest):
 class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
     ad_repo: AdRepository
     region_repo: RegionRepository
+    transaction_manager: TransactionManager
 
     async def __call__(self, command: FinalizeAdRequest) -> None:
         logger.info(f"[FinalizeAd] ad_id={command.ad_id} chat_id={command.chat_id}")
 
         ad = await self.ad_repo.get_by_id(command.ad_id)
+        if ad is None:
+            raise AdNotFoundException(command.ad_id)
+        
         logger.info(f"[FinalizeAd] ad_type={ad.ad_type} content={ad.content}")
 
         if ad.ad_type == AdType.STORE:
@@ -65,3 +71,5 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
 
         await self.ad_repo.save(ad)
         logger.info(f"[FinalizeAd:done] ad_id={ad.id}")
+
+        await self.transaction_manager.commit()

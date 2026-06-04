@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
 
+from src.application.exceptions.publication import PublicationNotFoundException
+from src.application.exceptions.region import RegionNotFoundException
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
@@ -13,6 +15,7 @@ from src.application.ports.publication.publication_repo import PublicationReposi
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 logger = logging.getLogger(__name__)
@@ -40,6 +43,7 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
     time_resolver: PublishTimeResolver
     reservation_service: SlotReservationService
     pricing_policy: SlotPricingPolicy
+    transaction_manager: TransactionManager
 
     async def __call__(self, command: SelectSlotForPublicationRequest) -> None:
         now = command.now_utc or datetime.now(timezone.utc)
@@ -51,7 +55,13 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         )
 
         publication = await self.publication_repo.get_by_id(command.publication_id)
+        if publication is None:
+            raise PublicationNotFoundException(command.publication_id)
+        
         region = await self.region_repo.get_by_id(publication.region_id)
+        if region is None:
+            raise RegionNotFoundException(publication.region_id)
+
         logger.info(f"[SelectSlot] region={region.title!r} tz={region.timezone.value!r}")
 
         ordered_future_slots = self.calendar_builder.generate_future_slots(
@@ -100,3 +110,5 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         logger.info(
             f"[SelectSlot:done] pub_id={publication.id} status={publication.status}"
         )
+
+        await self.transaction_manager.commit()

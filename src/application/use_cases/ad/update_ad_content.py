@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import logging
 
+from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.ad import AdType
@@ -9,6 +10,7 @@ from src.domain.value_objects.ad_content import AdContent
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.store_content import StoreContent, StoreItem
+from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 logger = logging.getLogger(__name__)
@@ -28,18 +30,22 @@ class UpdateAdContentRequest(UseCaseRequest):
 
     # магазин
     shop_name: str | None = None
-    store_items: list[tuple[str, str]] | None = None 
+    store_items: list[tuple[str, Price]] | None = None 
 
 
 
 @dataclass(kw_only=True)
 class UpdateAdContentUseCase(UseCase[UpdateAdContentRequest, None]):
     ad_repo: AdRepository
+    transaction_manager: TransactionManager
 
     async def __call__(self, command: UpdateAdContentRequest) -> None:
         logger.info(f"[UpdateAdContent] ad_id={command.ad_id}")
 
         ad = await self.ad_repo.get_by_id(command.ad_id)
+        if ad is None:
+            raise AdNotFoundException(command.ad_id)
+        
         logger.info(f"[UpdateAdContent] ad_type={ad.ad_type} current_content={ad.content}")
 
         if ad.ad_type == AdType.STORE:
@@ -83,3 +89,5 @@ class UpdateAdContentUseCase(UseCase[UpdateAdContentRequest, None]):
 
         await self.ad_repo.save(ad)
         logger.info(f"[UpdateAdContent:done] ad_id={ad.id}")
+
+        await self.transaction_manager.commit()

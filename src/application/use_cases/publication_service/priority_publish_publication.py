@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceType
+from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 @dataclass(frozen=True, eq=False)
@@ -21,11 +23,12 @@ class PriorityPublishPublicationUseCase(
 ):
     publication_repo: PublicationRepository
     scheduler: Scheduler
+    transaction_manager: TransactionManager
 
     async def __call__(self, command: PriorityPublishPublicationRequest) -> None:
-        _ = command.now_utc or datetime.now(timezone.utc)
-
         publication = await self.publication_repo.get_by_id(command.publication_id)
+        if publication is None:
+            raise PublicationNotFoundException(command.publication_id)
 
         # 1) добавляем услугу PRIORITY (если ещё нет) — чтобы воркер знал контекст
         if not publication.has_service(PublicationServiceType.PRIORITY_PUBLISH):
@@ -41,3 +44,6 @@ class PriorityPublishPublicationUseCase(
 
         # 3) ставим задачу "publish now"
         await self.scheduler.schedule_publish_now(publication_id=publication.id)
+
+        await self.publication_repo.save(publication)
+        await self.transaction_manager.commit()

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication_service.service_definition_repo import (
     ServiceDefinitionRepository,
@@ -8,6 +9,7 @@ from src.application.ports.publication_service.service_definition_repo import (
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.publication_service import PublicationServiceType
+from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 @dataclass(frozen=True, eq=False)
@@ -22,16 +24,17 @@ class AddServiceToPublicationRequest(UseCaseRequest):
 class AddServiceToPublicationUseCase(UseCase[AddServiceToPublicationRequest, None]):
     publication_repo: PublicationRepository
     service_def_repo: ServiceDefinitionRepository
+    transaction_manager: TransactionManager
 
     async def __call__(self, command: AddServiceToPublicationRequest) -> None:
-        _now = command.now_utc or datetime.now(timezone.utc)
-
         # 1) проверяем каталог услуг (существует и активна)
         definition = await self.service_def_repo.get_by_type(command.service_type)
         if not definition.is_active:
             raise ValueError("Услуга отключена админом")
 
         publication = await self.publication_repo.get_by_id(command.publication_id)
+        if publication is None:
+            raise PublicationNotFoundException(command.publication_id)
 
         # 2) создаём applied service
         service = PublicationService(
@@ -43,3 +46,4 @@ class AddServiceToPublicationUseCase(UseCase[AddServiceToPublicationRequest, Non
         publication.add_service(service)
 
         await self.publication_repo.save(publication)
+        await self.transaction_manager.commit()

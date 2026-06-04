@@ -9,6 +9,7 @@ from src.domain.services.slots.slot_reservation_service import (
     SlotReservationService,
 )
 from src.domain.value_objects.slot_key import SlotKey
+from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 @dataclass(frozen=True, eq=False)
@@ -25,6 +26,7 @@ class HoldSlotUseCase(UseCase[HoldSlotRequest, HoldResult]):
     region_repo: RegionRepository
     calendar_builder: CalendarBuilder
     reservation_service: SlotReservationService
+    transaction_manager: TransactionManager
 
     async def __call__(self, command: HoldSlotRequest) -> HoldResult:
         now = command.now_utc or datetime.now(timezone.utc)
@@ -35,10 +37,13 @@ class HoldSlotUseCase(UseCase[HoldSlotRequest, HoldResult]):
             now_utc=now,
         )
 
-        return await self.reservation_service.hold_slot(
+        result = await self.reservation_service.hold_slot(
             slot=command.slot,
             user_id=command.user_id,
             ad_id=command.ad_id,
             ordered_future_slots=ordered_future_slots,
             now_utc=now,
         )
+        await self.transaction_manager.commit()
+
+        return result

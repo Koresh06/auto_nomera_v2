@@ -22,3 +22,4 @@ class UnpinMessageUseCase(UseCase[UnpinMessageRequest, None]):
             channel_id=command.channel_id,
             message_id=command.message_id,
         )
+        

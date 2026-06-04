@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
+from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.publication_service.image_processor import ImageProcessor
 from src.application.ports.publication.publication_repo import PublicationRepository
@@ -41,6 +42,8 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         now = command.now_utc or datetime.now(timezone.utc)
 
         pub = await self.publication_repo.get_by_id(command.publication_id)
+        if pub is None:
+            raise PublicationNotFoundException(command.publication_id)
 
         # уже опубликовано/отменено/замещено — ничего не делаем
         if pub.status in (

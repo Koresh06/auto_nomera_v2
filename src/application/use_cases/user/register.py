@@ -4,6 +4,7 @@ from src.application.exceptions.user import UserAlreadyExistsException
 from src.domain.entities.user import User
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 @dataclass(frozen=True, eq=False)
@@ -17,6 +18,7 @@ class UserRegisterRequest(UseCaseRequest):
 @dataclass(kw_only=True)
 class RegisterUserUseCase(UseCase[UserRegisterRequest, None]):
     user_repo: UserRepository
+    transaction_manager: TransactionManager
 
     async def __call__(self, command: UserRegisterRequest) -> None:
         existing = await self.user_repo.get_by_tg_id(command.tg_id)
@@ -31,3 +33,4 @@ class RegisterUserUseCase(UseCase[UserRegisterRequest, None]):
         )
 
         await self.user_repo.add(user)
+        await self.transaction_manager.commit()
