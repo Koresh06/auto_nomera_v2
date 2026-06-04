@@ -13,10 +13,12 @@ from sqlalchemy import (
     DateTime,
 )
 
+from src.domain.entities.publication import Publication
+from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.publication import PublicationStatus
+from src.domain.value_objects.slot_key import SlotKey
 
 from .base import BaseModel, CreatedAtMixin, UpdatedAtMixin
-
 
 if TYPE_CHECKING:
     from src.infrastructure.database.models import PublicationServiceModel, AdModel
@@ -78,10 +80,81 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
     )
     services: Mapped[list["PublicationServiceModel"]] = relationship(
         "PublicationServiceModel",
-        back_populates="publication",
+        back_populates="publication_rel",
         lazy="selectin",
         cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:
         return f"PublicationModel(id={self.id}, status={self.status})"
+
+    @classmethod
+    def from_entity(cls, pub: "Publication") -> "PublicationModel":
+        model = PublicationModel(
+            ad_id=pub.ad_id,
+            region_id=pub.region_id,
+        )
+        cls._update_model(model, pub)
+        return model
+    
+    def to_entity(self) -> Publication:
+        slot = None
+        if self.slot_day is not None and self.slot_time is not None:
+            slot = SlotKey(
+                region_id=self.region_id,
+                local_day=self.slot_day,
+                local_time=self.slot_time,
+            )
+    
+        services = [
+            PublicationService(
+                id=s.id,
+                type=s.type,
+                status=s.status,
+                params=s.params or {},
+            )
+            for s in (self.services or [])
+        ]
+    
+        return Publication(
+            id=self.id,
+            ad_id=self.ad_id,
+            region_id=self.region_id,
+            status=self.status,
+            slot=slot,
+            publish_at_utc=self.publish_at_utc,
+            channel_message_id=self.channel_message_id,
+            published_at_utc=self.published_at_utc,
+            scheduler_job_id=self.scheduler_job_id,
+            services=services,
+        )
+
+    @staticmethod
+    def _update_model(model: "PublicationModel", pub: "Publication") -> None:
+        model.status = pub.status
+        model.slot_day = pub.slot.local_day if pub.slot else None
+        model.slot_time = pub.slot.local_time if pub.slot else None
+        model.publish_at_utc = pub.publish_at_utc
+        model.scheduler_job_id = pub.scheduler_job_id
+        model.channel_message_id = pub.channel_message_id
+        model.published_at_utc = pub.published_at_utc
+
+        # синхронизируем services
+        existing = {s.id: s for s in (model.services or [])}
+        new_services = []
+        for svc in pub.services:
+            if svc.id and svc.id in existing:
+                # обновляем существующую
+                existing[svc.id].status = svc.status
+                existing[svc.id].params = svc.params
+                new_services.append(existing[svc.id])
+            else:
+                # добавляем новую
+                new_services.append(
+                    PublicationServiceModel(
+                        type=svc.type,
+                        status=svc.status,
+                        params=svc.params or {},
+                    )
+                )
+        model.services = new_services

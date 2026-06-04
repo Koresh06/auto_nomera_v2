@@ -2,6 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Integer, Boolean, Enum as SaEnum, String, VARCHAR
 from sqlalchemy.dialects.postgresql import JSONB
 
+from src.domain.entities.service_definition import ServiceDefinition
 from src.domain.enums.publication_service import PublicationServiceType
 
 from .base import BaseModel, CreatedAtMixin, UpdatedAtMixin
@@ -36,3 +37,25 @@ class ServiceDefinitionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
 
     def __repr__(self) -> str:
         return f"ServiceDefinitionModel(type={self.type}, price={self.price}, active={self.is_active})"
+    
+    @classmethod
+    def from_entity(cls, service: "ServiceDefinition") -> "ServiceDefinitionModel":
+        return cls(
+            type=service.type,
+            title=service.title,
+            price=service.price,
+            is_active=service.is_active,
+            description=service.description,
+            params_schema=service.params_schema,
+        )
+    
+    def to_entity(self) -> "ServiceDefinition":
+        return ServiceDefinition(
+            id=self.id,
+            type=self.type,
+            title=self.title,
+            price=self.price,
+            is_active=self.is_active,
+            description=self.description,
+            params_schema=self.params_schema,
+        )

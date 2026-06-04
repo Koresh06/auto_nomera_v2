@@ -36,3 +36,7 @@ class InMemoryRegionRepo(RegionRepository):
 
     async def get_all(self) -> list[Region]:
         return list(self._items.values())
+
+    async def create(self, region: Region) -> Region:
+        self._items[region.id] = region
+        return region

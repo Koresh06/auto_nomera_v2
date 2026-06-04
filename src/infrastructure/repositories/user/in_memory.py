@@ -12,11 +12,11 @@ class InMemoryUserRepo(UserRepository):
         self._items: dict[int, User] = {}
         self._by_tg: dict[int, int] = {}
 
-    async def add(self, user: User) -> None:
+    async def add(self, user: User) -> User:
         user.id = self._ids.next()
         self._items[user.id] = user
         self._by_tg[user.tg_id] = user.id
-        print(self._items)
+        return user
 
     async def get_by_id(self, user_id: int) -> User | None:
         return self._items.get(user_id)
@@ -25,13 +25,11 @@ class InMemoryUserRepo(UserRepository):
         user_id = self._by_tg.get(tg_id)
         return None if user_id is None else self._items[user_id]
     
-    async def update(self, tg_id: int, data: UpdateUserDTO) -> None:
-        user_id = self._by_tg.get(tg_id)
-        if user_id is None:
-            return None
-        
+    async def update(self, user_id: int, data: UpdateUserDTO) -> User:
         user = self._items[user_id]
         for field in fields(data):
             value = getattr(data, field.name)
             if value is not None:
                 setattr(user, field.name, value)
+
+        return user

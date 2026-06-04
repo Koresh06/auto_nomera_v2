@@ -46,8 +46,8 @@ class PublicationServiceModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
     )
 
     publication_rel: Mapped["PublicationModel"] = relationship(
-        "Publication",
-        back_populates="publication_service_rel",
+        "PublicationModel",
+        back_populates="services",
     )
 
 
