@@ -12,7 +12,7 @@ class PostgresSettings(BaseSettings):
     max_overflow: int = 10
 
     @property
-    def db_url(self) -> str:
+    def url(self) -> str:
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
     
 
@@ -22,7 +22,7 @@ class RedisSettings(BaseSettings):
     db: int = 0
 
     @property
-    def redis_url(self) -> str:
+    def url(self) -> str:
         return f"redis://{self.host}:{self.port}/{self.db}"
     
 

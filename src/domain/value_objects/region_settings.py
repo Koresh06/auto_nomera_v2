@@ -11,7 +11,13 @@ from src.domain.exceptions.region import (
 @dataclass(frozen=True, slots=True)
 class RegionSettings:
     slot_times: tuple[time, ...] = field(
-        default=tuple((time(10, 0), time(14, 0), time(18, 0)))
+        default=tuple(
+            (
+                time(10, 0),
+                time(14, 0),
+                time(18, 0),
+            ),
+        )
     )  # (10:00, 14:00, 18:00)
     days_range: int = 7
     system_paid_slots_count: int = 3

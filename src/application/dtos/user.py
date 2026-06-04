@@ -34,7 +34,7 @@ class UserDTO(BaseUserDTO):
 
 
 @dataclass(frozen=True, slots=True)
-class UpdateUserDTO(BaseUserDTO):
+class UpdateUserDTO:
     region_id: int | None = None
     username: str | None = None
     full_name: str | None = None

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from src.domain.exceptions.region import InvalidTimezone
 
@@ -11,5 +11,5 @@ class TimezoneName:
     def __post_init__(self) -> None:
         try:
             ZoneInfo(self.value)
-        except ValueError:
+        except (KeyError, ZoneInfoNotFoundError):
             raise InvalidTimezone(f"Unknown timezone: {self.value}")

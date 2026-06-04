@@ -16,3 +16,5 @@ class ServiceDefinition(Entity):
     title: str
     price: int
     is_active: bool = True
+    description: str | None = None
+    params_schema: dict | None = None
