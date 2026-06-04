@@ -8,8 +8,8 @@ from src.core.config import settings
 
 
 engine: AsyncEngine = create_async_engine(
-    settings.db.db_url,
-    echo=settings.db.echo,
+    settings.db.postgres.url,
+    echo=settings.db.postgres.echo,
 )
 
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
