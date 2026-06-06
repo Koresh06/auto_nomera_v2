@@ -17,7 +17,6 @@ class HoldSlotRequest(UseCaseRequest):
     region_id: int
     slot: SlotKey
     user_id: int
-    ad_id: int | None = None
     now_utc: datetime | None = None
 
 
@@ -40,7 +39,6 @@ class HoldSlotUseCase(UseCase[HoldSlotRequest, HoldResult]):
         result = await self.reservation_service.hold_slot(
             slot=command.slot,
             user_id=command.user_id,
-            ad_id=command.ad_id,
             ordered_future_slots=ordered_future_slots,
             now_utc=now,
         )

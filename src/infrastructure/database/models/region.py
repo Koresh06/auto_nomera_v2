@@ -1,4 +1,6 @@
+from dataclasses import asdict
 from typing import TYPE_CHECKING
+from datetime import time
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import BigInteger, Integer, VARCHAR, Enum as SaEnum
@@ -44,18 +46,25 @@ class RegionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
 
     @classmethod
     def from_entity(cls, region: "Region"):
+        settings_dict = asdict(region.settings)
+        settings_dict["slot_times"] = [
+            t.strftime("%H:%M") for t in region.settings.slot_times
+        ]
         return cls(
-            id=region.id,
             title=region.title,
-            timezone=region.timezone,
+            timezone=region.timezone.value,
             channel_id=region.channel_id,
             channel_username=region.channel_username,
             status=region.status,
-            settings=region.settings,
-            metadata_=region.metadata,
+            settings=settings_dict,
+            metadata_=asdict(region.metadata),
         )
     
     def to_entity(self) -> "Region":
+        settings_data = dict(self.settings or {})
+        settings_data["slot_times"] = tuple(
+            time.fromisoformat(t) for t in settings_data.get("slot_times", [])
+        )
         return Region(
             id=self.id,
             title=self.title,
@@ -63,6 +72,6 @@ class RegionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             channel_id=self.channel_id,
             channel_username=self.channel_username,
             status=self.status,
-            settings=RegionSettings(**self.settings) if self.settings else None,
-            metadata=RegionMetadata(**self.metadata_) if self.metadata_ else None,
+            settings=RegionSettings(**settings_data),
+            metadata=RegionMetadata(**(self.metadata_ or {})),
         )

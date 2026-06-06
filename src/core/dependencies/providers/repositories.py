@@ -1,5 +1,6 @@
 from dishka import Provider, Scope, provide
 
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.ports.ad.ad_repo import AdRepository
@@ -35,13 +36,14 @@ from src.infrastructure.repositories.slot.sqlalchemy import SQLAlchemySlotBookin
 from src.infrastructure.repositories.user.in_memory import InMemoryUserRepo
 from src.infrastructure.repositories.user.sqlalchemy import SQLAlchemyUserRepo
 from src.infrastructure.slots.holt_store.in_memory import InMemorySlotHoldStore
+from src.infrastructure.slots.holt_store.redis import RedisSlotHoldStore
 
 
 class RepositoriesProvider(Provider):
 
     @provide(scope=Scope.APP)
-    def get_slot_hold_store(self) -> SlotHoldStore:
-        return InMemorySlotHoldStore()
+    def get_slot_hold_store(self, redis: Redis) -> SlotHoldStore:
+        return RedisSlotHoldStore(redis)
 
     @provide(scope=Scope.REQUEST)
     def get_user_repository(self, session: AsyncSession) -> UserRepository:

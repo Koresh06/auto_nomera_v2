@@ -48,10 +48,10 @@ class InMemorySlotConvertedRepo(SlotConvertedRepository):
     async def is_converted(self, slot: SlotKey) -> bool:
         return self._k(slot) in self._converted
 
-    async def mark_converted(self, slot: SlotKey, *, user_id: int, ad_id: int) -> None:
+    async def mark_converted(self, slot: SlotKey, *, user_id: int, ad_id: int | None = None) -> None:
         self._converted.add(self._k(slot))
 
-    async def unmark_converted(self, slot: SlotKey) -> None:
+    async def unmark_converted(self, slot: SlotKey, user_id: int) -> None:
         self._converted.discard(self._k(slot))
 
     async def get_converted_set(self, slots: Iterable[SlotKey]) -> set[SlotKey]:

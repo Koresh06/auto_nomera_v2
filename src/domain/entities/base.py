@@ -8,7 +8,7 @@ from src.utils.get_datetime_utc_now import get_datetime_utc_now
 
 @dataclass(kw_only=True)
 class Entity(ABC):
-    id: int = field(default_factory=int)
+    id: int = field(default=0)
     created_at: datetime = field(default_factory=get_datetime_utc_now)
     updated_at: datetime = field(default_factory=get_datetime_utc_now)
 

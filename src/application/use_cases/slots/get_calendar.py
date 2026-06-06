@@ -42,7 +42,7 @@ class GetCalendarUseCase(UseCase[GetCalendarRequest, CalendarDTO]):
             now_utc=now,
             held_slots=held,
             booked_slots=booked,
-            converted_paid_slots=converted,
+            converted_paid_slots=converted & held,
         )
 
         slots_dto = [

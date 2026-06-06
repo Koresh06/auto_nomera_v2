@@ -44,6 +44,7 @@ class SQLAlchemyServiceDefinitionRepo(ServiceDefinitionRepository):
         )
         self._session.add(model)
         await self._session.flush()
+        await self._session.refresh(model)
         return model.to_entity()
 
     async def update(
@@ -74,4 +75,5 @@ class SQLAlchemyServiceDefinitionRepo(ServiceDefinitionRepository):
             model.description = description
 
         await self._session.flush()
+        await self._session.refresh(model)
         return model.to_entity()

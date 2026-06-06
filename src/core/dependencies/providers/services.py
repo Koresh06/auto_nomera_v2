@@ -19,7 +19,7 @@ class ServicesProvider(Provider):
 
     @provide(scope=Scope.APP)
     def slot_hold_ttl(self) -> timedelta:
-        return timedelta(minutes=15)
+        return timedelta(seconds=30)
 
     @provide(scope=Scope.APP)
     def calendar_builder(self) -> CalendarBuilder:

@@ -18,20 +18,24 @@ class SQLAlchemyUserRepo(UserRepository):
         user_model = UserModel.from_entity(user)
         self._session.add(user_model)
         await self._session.flush()
+        await self._session.refresh(user_model)
         return user_model.to_entity()
 
     async def get_by_id(self, user_id: int) -> User | None:
-        user_model = await self._session.get(UserModel, user_id)
-        return None if user_model is None else user_model.to_entity()
+        query = select(UserModel).where(UserModel.id == user_id)
+        result = await self._session.execute(query)
+        user_model = result.scalar_one_or_none()
+        return user_model.to_entity() if user_model else None
 
     async def get_by_tg_id(self, tg_id: int) -> User | None:
-        user_model = await self._session.get(UserModel, tg_id)
-        return None if user_model is None else user_model.to_entity()
+        query = select(UserModel).where(UserModel.tg_id == tg_id)
+        result = await self._session.execute(query)
+        user_model = result.scalar_one_or_none()
+        return user_model.to_entity() if user_model else None
 
     async def update(self, tg_id: int, data: UpdateUserDTO) -> User:
-        result = await self._session.execute(
-            select(UserModel).where(UserModel.tg_id == tg_id)
-        )
+        query = select(UserModel).where(UserModel.tg_id == tg_id)
+        result = await self._session.execute(query)
         user_model = result.scalar_one_or_none()
         if user_model is None:
             raise UserNotFoundException(tg_id)
@@ -42,4 +46,5 @@ class SQLAlchemyUserRepo(UserRepository):
                 setattr(user_model, field.name, value)
     
         await self._session.flush()
+        await self._session.refresh(user_model)
         return user_model.to_entity()

@@ -15,8 +15,8 @@ class Region(Entity):
     channel_id: int
     channel_username: str
     status: RegionStatus = RegionStatus.ACTIVE
-    settings: RegionSettings | None = None
-    metadata: RegionMetadata | None = None
+    metadata: RegionMetadata
+    settings: RegionSettings
 
     @classmethod
     def create(
@@ -26,7 +26,7 @@ class Region(Entity):
         timezone: str,
         channel_id: int,
         channel_username: str,
-        settings: RegionSettings,
+        metadata: RegionMetadata,
     ) -> "Region":
         if not title.strip():
             raise ValueError("Название региона не может быть пустым")
@@ -39,7 +39,8 @@ class Region(Entity):
             timezone=TimezoneName(timezone),
             channel_username=channel_username,
             channel_id=channel_id,
-            settings=settings,
+            metadata=metadata,
+            settings=RegionSettings(),
         )
         return region
 

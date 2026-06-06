@@ -24,9 +24,10 @@ class SlotBookingModel(BaseModel, CreatedAtMixin):
     )
     slot_day: Mapped[date] = mapped_column(Date, nullable=False)
     slot_time: Mapped[time] = mapped_column(Time, nullable=False)
-    ad_id: Mapped[int] = mapped_column(
+    ad_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("ads.id", ondelete="CASCADE"),
+        nullable=True,
     )
     user_id: Mapped[int] = mapped_column(
         Integer,
@@ -58,12 +59,13 @@ class SlotConvertedModel(BaseModel, CreatedAtMixin):
     )
     slot_day: Mapped[date] = mapped_column(Date)
     slot_time: Mapped[time] = mapped_column(Time)
-    ad_id: Mapped[int] = mapped_column(
+    ad_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey(
             "ads.id",
             ondelete="CASCADE",
         ),
+        nullable=True,
     )
     user_id: Mapped[int] = mapped_column(
         Integer,

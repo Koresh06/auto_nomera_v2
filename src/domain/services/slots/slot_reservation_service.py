@@ -30,14 +30,13 @@ class SlotReservationService:
     hold_store: SlotHoldStore
 
     pricing_policy: SlotPricingPolicy
-    hold_ttl: timedelta = timedelta(minutes=15)
+    hold_ttl: timedelta
 
     async def hold_slot(
         self,
         *,
         slot: SlotKey,
         user_id: int,
-        ad_id: int | None = None,
         ordered_future_slots: list[SlotKey],
         now_utc: datetime | None = None,
     ) -> HoldResult:
@@ -49,7 +48,7 @@ class SlotReservationService:
         - если слот не system и не converted -> mark converted (для всех в регионе)
         """
         now = now_utc or get_datetime_utc_now()
-        owner = HoldOwner(user_id=user_id, ad_id=ad_id)
+        owner = HoldOwner(user_id=user_id)
 
         # 1) booked?
         if await self.booking_repo.is_booked(slot):
@@ -73,7 +72,7 @@ class SlotReservationService:
 
         pricing_changed = False
         if (not is_system_paid) and (not is_converted):
-            await self.converted_repo.mark_converted(slot, user_id=user_id, ad_id=ad_id)
+            await self.converted_repo.mark_converted(slot, user_id=user_id)
             pricing_changed = True
 
         return HoldResult(
@@ -87,21 +86,19 @@ class SlotReservationService:
         *,
         slot: SlotKey,
         user_id: int,
-        ad_id: int | None = None,
     ) -> None:
         existing = await self.hold_store.get(slot)
         if existing is None:
             raise SlotHoldNotFound()
 
-        if ad_id is None:
-            if existing.user_id != user_id:
-                raise SlotHoldOwnerMismatch()
+        if existing.user_id != user_id:
+            raise SlotHoldOwnerMismatch()
         else:
-            if existing != HoldOwner(user_id=user_id, ad_id=ad_id):
+            if existing != HoldOwner(user_id=user_id):
                 raise SlotHoldOwnerMismatch()
 
         await self.hold_store.delete(slot)
-        await self.converted_repo.unmark_converted(slot)
+        await self.converted_repo.unmark_converted(slot, user_id)
 
     async def book_after_payment(
         self,

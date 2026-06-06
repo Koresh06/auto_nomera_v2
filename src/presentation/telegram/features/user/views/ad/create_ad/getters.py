@@ -57,7 +57,7 @@ async def getter_user_phone(
     **kwargs,
 ) -> dict:
     tg_id = dialog_manager.event.from_user.id
-
+    
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
     dialog_manager.dialog_data["current_phone"] = user.phone
     dialog_manager.dialog_data["user"] = user

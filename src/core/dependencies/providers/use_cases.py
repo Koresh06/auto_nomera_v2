@@ -102,7 +102,7 @@ class UseCasesProvider(Provider):
         region_repo: RegionRepository,
     ) -> GegByIdRegionUseCase:
         return GegByIdRegionUseCase(region_repo=region_repo)
-    
+
     @provide
     def create_region_use_case(
         self,
@@ -188,8 +188,12 @@ class UseCasesProvider(Provider):
     def release_hold_use_case(
         self,
         reservation_service: SlotReservationService,
+        transaction_manager: TransactionManager,
     ) -> ReleaseHoldUseCase:
-        return ReleaseHoldUseCase(reservation_service=reservation_service)
+        return ReleaseHoldUseCase(
+            reservation_service=reservation_service,
+            transaction_manager=transaction_manager,
+        )
 
     @provide
     def add_service_to_publication_use_case(

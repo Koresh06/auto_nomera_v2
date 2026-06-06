@@ -15,12 +15,10 @@ region_1 = Region(
     status=RegionStatus.ACTIVE,
     settings=RegionSettings(),
     metadata=RegionMetadata(
-        data={
-            "tg_group_url": "https://t.me/avtonomera126_26",
-            "vk_group_url": "https://vk.com/26gosnomera126",
-            "max_channel_url": "https://t.me/avtonomera126_26",
-        }
-    ),
+        tg_group_url="https://t.me/avtonomera126_26",
+        vk_group_url="https://vk.com/26gosnomera126",
+        max_channel_url="https://t.me/avtonomera126_26",
+    )
 )
 
 

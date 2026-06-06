@@ -21,12 +21,14 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         model = PublicationModel.from_entity(publication)
         self._session.add(model)
         await self._session.flush()
+        await self._session.refresh(model)
         return model.to_entity()
  
     async def save(self, publication: Publication) -> None:
         model = PublicationModel.from_entity(publication)
         self._session.add(model)
         await self._session.flush()
+        await self._session.refresh(model)
  
     async def list_scheduled_by_ad(self, ad_id: int) -> list[Publication]:
         query = select(PublicationModel).where(PublicationModel.ad_id == ad_id)

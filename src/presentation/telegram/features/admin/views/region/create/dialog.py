@@ -7,7 +7,9 @@ from aiogram_dialog.widgets.kbd import Back, Cancel, Next, Button
 from src.presentation.telegram.features.admin.views.region.create.getters import (
     confirm_region_getter,
 )
-from src.presentation.telegram.features.admin.views.region.create.handlers import on_confirm_region
+from src.presentation.telegram.features.admin.views.region.create.handlers import (
+    on_confirm_region,
+)
 from src.presentation.telegram.features.admin.views.region.create.states import (
     CreateRegionSG,
 )
@@ -15,9 +17,11 @@ from src.presentation.telegram.features.admin.views.region.create.validators imp
     validate_channel_id,
     validate_channel_username,
     validate_timezone,
+    validate_tg_url,
+    validate_vk_url,
+    validate_max_url,
 )
 from src.presentation.telegram.features.error_handlers import on_input_error
-
 
 create_region_dialog = Dialog(
     Window(
@@ -83,12 +87,61 @@ create_region_dialog = Dialog(
         state=CreateRegionSG.channel_username,
     ),
     Window(
+        Const(
+            "💬 <b>Ссылка на группу Telegram</b>\n\n"
+            "Формат: <code>https://t.me/mygroup</code>"
+        ),
+        TextInput(
+            id="tg_group_url",
+            type_factory=validate_tg_url,
+            on_success=Next(),
+            on_error=on_input_error,
+        ),
+        Next(Const("⏭️ Пропустить")),
+        Back(Const("⬅️ Назад")),
+        state=CreateRegionSG.tg_group_url,
+    ),
+    Window(
+        Const(
+            "🔵 <b>Ссылка на группу ВКонтакте</b>\n\n"
+            "Формат: <code>https://vk.com/mygroup</code>"
+        ),
+        TextInput(
+            id="vk_group_url",
+            type_factory=validate_vk_url,
+            on_success=Next(),
+            on_error=on_input_error,
+        ),
+        Next(Const("⏭️ Пропустить")),
+        Back(Const("⬅️ Назад")),
+        state=CreateRegionSG.vk_group_url,
+    ),
+    Window(
+        Const(
+            "📱 <b>Ссылка на канал в Макс</b>\n\n"
+            "Формат: <code>https://max.ru/...</code>"
+        ),
+        TextInput(
+            id="max_channel_url",
+            type_factory=validate_max_url,
+            on_success=Next(),
+            on_error=on_input_error,
+        ),
+        Next(Const("⏭️ Пропустить")),
+        Back(Const("⬅️ Назад")),
+        state=CreateRegionSG.max_channel_url,
+    ),
+    Window(
         Const("Подтвердите создание региона"),
         Format(
-            "Название: {title}\n"
-            "Часовой пояс: {timezone}\n"
-            "ID канала: {channel_id}\n"
-            "Username канала: {channel_username}",
+            "📋 <b>Данные региона:</b>\n\n"
+            "🏙️ Название: <b>{title}</b>\n"
+            "🌍 Часовой пояс: <b>{timezone}</b>\n"
+            "📢 ID канала: <b>{channel_id}</b>\n"
+            "🔗 Username канала: <b>{channel_username}</b>\n\n"
+            "💬 Telegram группа: <b>{tg_group_url}</b>\n"
+            "🔵 ВКонтакте: <b>{vk_group_url}</b>\n"
+            "📱 Макс: <b>{max_channel_url}</b>",
         ),
         Button(
             Const("✅ Подтвердить"),

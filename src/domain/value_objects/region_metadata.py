@@ -3,20 +3,16 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class RegionMetadata:
-    data: dict
+    tg_group_url: str | None = None
+    vk_group_url: str | None = None
+    max_channel_url: str | None = None
 
-    def get_str(self, key: str) -> str | None:
-        v = self.data.get(key)
-        return v if isinstance(v, str) and v.strip() else None
-
-    @property
-    def tg_group_url(self) -> str | None:
-        return self.get_str("tg_group_url")
-
-    @property
-    def vk_group_url(self) -> str | None:
-        return self.get_str("vk_group_url")
+    def __post_init__(self) -> None:
+        for field_name in ("tg_group_url", "vk_group_url", "max_channel_url"):
+            value = getattr(self, field_name)
+            if value is not None and not value.strip():
+                object.__setattr__(self, field_name, None)
 
     @property
-    def max_channel_url(self) -> str | None:
-        return self.get_str("max_channel_url")
+    def has_any(self) -> bool:
+        return any([self.tg_group_url, self.vk_group_url, self.max_channel_url])

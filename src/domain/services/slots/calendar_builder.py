@@ -11,10 +11,6 @@ from src.domain.value_objects.slot_key import SlotKey
 
 @dataclass(frozen=True, slots=True)
 class CalendarBuilder:
-    """
-    Собирает "вид" календаря для UI.
-    Не ходит в Redis/DB — всё состояние передаётся параметрами.
-    """
 
     def build(
         self,
@@ -89,7 +85,12 @@ class CalendarBuilder:
             else:
                 day_label = f"{slot.local_day.day:02d}.{slot.local_day.month:02d}"
 
-            prefix = "💰" if pricing.value != "free" else ""
+            if availability == SlotAvailability.HELD:
+                prefix = "💰"
+            elif pricing.value != "free":
+                prefix = "💰"
+            else:
+                prefix = ""
             text = f"{prefix}{day_label}-{slot.local_time.strftime('%H:%M')}"
 
             views.append(

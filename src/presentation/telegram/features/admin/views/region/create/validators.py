@@ -1,3 +1,5 @@
+import re
+from dataclasses import dataclass
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
@@ -34,3 +36,33 @@ def validate_channel_username(value: str) -> str:
         raise ValueError("Username может содержать только буквы, цифры и подчёркивание")
     
     return username
+
+
+@dataclass(frozen=True)
+class UrlValidator:
+    pattern: re.Pattern
+    error_message: str
+
+    def __call__(self, value: str) -> str:
+        value = value.strip()
+
+        if not self.pattern.match(value):
+            raise ValueError(self.error_message)
+
+        return value
+
+
+validate_tg_url = UrlValidator(
+    pattern=re.compile(r'^https://t\.me/[\w\-]+$'),
+    error_message="❌ Неверный формат. Пример: https://t.me/mygroup",
+)
+
+validate_vk_url = UrlValidator(
+    pattern=re.compile(r'^https://vk\.com/[\w\-]+$'),
+    error_message="❌ Неверный формат. Пример: https://vk.com/mygroup",
+)
+
+validate_max_url = UrlValidator(
+    pattern=re.compile(r'^https?://[\w\-.]+(?:\.[a-z]{2,})(?:/[^\s]*)?$', re.IGNORECASE),
+    error_message="❌ Неверный формат. Пример: https://max.ru/channel",
+)

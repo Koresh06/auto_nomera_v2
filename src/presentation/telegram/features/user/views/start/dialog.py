@@ -94,7 +94,7 @@ start_dialog = Dialog(
         #     ),
         # ),
         Column(
-            Next(Format("♻️ Смена региона ({user.region_id})")),
+            Next(Format("♻️ Смена региона ({title_region})")),
             Url(
                 Const("👨‍💻 Поддержка 24/7"),
                 url=Const("https://t.me/mlnora"),

@@ -25,4 +25,5 @@ class SQLAlchemyRegionRepository(RegionRepository):
         region_model = RegionModel.from_entity(region)
         self._session.add(region_model)
         await self._session.flush()
+        await self._session.refresh(region_model)
         return region_model.to_entity()

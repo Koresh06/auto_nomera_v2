@@ -22,6 +22,7 @@ class SQLAlchemyAdRepo(AdRepository):
         model = AdModel.from_entity(ad)
         self._session.add(model)
         await self._session.flush()
+        await self._session.refresh(model)
         return model.to_entity()
         
  
@@ -29,3 +30,4 @@ class SQLAlchemyAdRepo(AdRepository):
         model = AdModel.from_entity(ad)
         self._session.add(model)
         await self._session.flush()
+        await self._session.refresh(model)

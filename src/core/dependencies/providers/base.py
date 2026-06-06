@@ -1,12 +1,14 @@
 from typing import AsyncGenerator
 
 from dishka import Provider, provide, Scope
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # from redis.asyncio import Redis
 
 from src.core.config import AppSettings
 
+from src.infrastructure.database.redis.connection import get_redis_client
 from src.infrastructure.database.sqlalchemy.connection import async_session_maker
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 from src.infrastructure.database.transaction_manager.sqlalchemy import SQLAlchemyTransactionManager
@@ -36,9 +38,9 @@ class BaseAppProvider(Provider):
         return AppSettings()
 
     # REDIS
-    # @provide(scope=Scope.APP)
-    # def get_redis_client(self) -> Redis:
-    #     return get_redis_client()
+    @provide(scope=Scope.APP)
+    def get_redis_client(self) -> Redis:
+        return get_redis_client()
 
     # MESSAGE BROKER
     # @provide(scope=Scope.APP)

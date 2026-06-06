@@ -2,13 +2,15 @@ import logging
 from dishka.integrations.aiogram_dialog import inject
 from dishka.integrations.aiogram import FromDishka
 from aiogram.types import CallbackQuery
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.widgets.kbd import Select
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 
+from src.application.dtos.user import UpdateUserDTO
 from src.application.exceptions.user import UserAlreadyExistsException
 from src.application.mediator import Mediator
 from src.application.use_cases.user.register import UserRegisterRequest
+from src.application.use_cases.user.update import UpdateUserRequest
 from src.presentation.telegram.features.user.views.start.states import StartSG
 
 
@@ -32,10 +34,17 @@ async def on_register_user(
                 full_name=callback.from_user.full_name,
             )
         )
-        logger.info(
-            f"Регистрация пользователя tg_id: {callback.from_user.id} успешно завершена!"
+        logger.info(f"Регистрация пользователя tg_id: {callback.from_user.id} успешно завершена!")
+    except UserAlreadyExistsException:
+        await mediator.handle(
+            UpdateUserRequest(
+                tg_id=callback.from_user.id,
+                data=UpdateUserDTO(region_id=int(item_id)),
+            )
         )
-        await dialog_manager.switch_to(StartSG.menu)
-    except UserAlreadyExistsException as ex:
-        logger.info(str(ex))
-        await callback.message.answer("Ошибка регистрации, обратитесь в поддержку!")
+        logger.info(f"Смена региона пользователя tg_id: {callback.from_user.id} на region_id={item_id}")
+
+    await dialog_manager.start(
+        StartSG.menu,
+        mode=StartMode.RESET_STACK,
+    )

@@ -31,7 +31,7 @@ from src.application.use_cases.slots.hold_slot import HoldSlotRequest
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
 from src.application.use_cases.user.update import UpdateUserRequest
 from src.domain.enums.ad import AdStatus, AdType
-from src.domain.exceptions.slot import SlotAlreadyBooked, SlotAlreadyHeld
+from src.domain.exceptions.slot_reservation import SlotAlreadyBooked, SlotAlreadyHeld
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.services.slots.slot_reservation_service import HoldResult
 from src.domain.value_objects.contacts import Contacts
@@ -170,15 +170,25 @@ async def on_pick_slot(
             HoldSlotRequest(
                 region_id=user.region_id,
                 slot=slot,
-                user_id=callback.from_user.id,
+                user_id=user.id,
             )
         )
     except (SlotAlreadyHeld, SlotAlreadyBooked):
-        await callback.answer(
-            "⚠️ Этот слот уже занят, выберите другой.",
-            show_alert=True,
-        )
-        return  # остаёмся на календаре
+        if dialog_manager.dialog_data.get("held_warning") == item_id:
+            dialog_manager.dialog_data["slot_id"] = item_id
+            dialog_manager.dialog_data["slot_day"] = str(slot.local_day)
+            dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime("%H:%M")
+            dialog_manager.dialog_data["is_paid"] = True
+            dialog_manager.dialog_data.pop("held_warning", None)
+            # await dialog_manager.next()
+            await callback.answer("💰 Опата слота", show_alert=True)
+        else:
+            dialog_manager.dialog_data["held_warning"] = item_id
+            await callback.answer(
+                "💰 Этот слот платный. Нажмите ещё раз для продолжения к оплате.",
+                show_alert=True,
+            )
+        return
 
     dialog_manager.dialog_data["slot_id"] = item_id
     dialog_manager.dialog_data["slot_day"] = str(slot.local_day)
@@ -196,6 +206,8 @@ async def on_back_to_calendar(
     mediator: FromDishka[Mediator],
 ) -> None:
     data = dialog_manager.dialog_data
+    user: UserDTO = data["user"]
+
     if "slot_id" in data:
         day, t = _decode_slot_id(data["slot_id"])
         slot = SlotKey(region_id=data["region_id"], local_day=day, local_time=t)
@@ -203,7 +215,7 @@ async def on_back_to_calendar(
             await mediator.handle(
                 ReleaseHoldRequest(
                     slot=slot,
-                    user_id=callback.from_user.id,
+                    user_id=user.id,
                 )
             )
             logger.info("[ReleaseHold:done] slot released")
