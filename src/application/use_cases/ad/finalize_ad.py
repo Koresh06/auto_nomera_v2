@@ -16,17 +16,13 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True, eq=False)
 class FinalizeAdRequest(UseCaseRequest):
     ad_id: int
-    chat_id: int 
-
 
 @dataclass(kw_only=True)
 class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
     ad_repo: AdRepository
-    region_repo: RegionRepository
-    transaction_manager: TransactionManager
 
     async def __call__(self, command: FinalizeAdRequest) -> None:
-        logger.info(f"[FinalizeAd] ad_id={command.ad_id} chat_id={command.chat_id}")
+        logger.info(f"[FinalizeAd] ad_id={command.ad_id}")
 
         ad = await self.ad_repo.get_by_id(command.ad_id)
         if ad is None:
@@ -71,5 +67,3 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
 
         await self.ad_repo.save(ad)
         logger.info(f"[FinalizeAd:done] ad_id={ad.id}")
-
-        await self.transaction_manager.commit()

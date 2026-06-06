@@ -31,8 +31,6 @@ class ConfirmPaidSlotAndSchedulePublicationUseCase(
     async def __call__(
         self, command: ConfirmPaidSlotAndSchedulePublicationRequest
     ) -> None:
-        now = command.now_utc or datetime.now(timezone.utc)
-
         publication = await self.publication_repo.get_by_id(command.publication_id)
         if publication is None:
             raise PublicationNotFoundException(command.publication_id)
@@ -61,7 +59,8 @@ class ConfirmPaidSlotAndSchedulePublicationUseCase(
 
         # 3) Переводим публикацию в scheduled и ставим задачу
         publication.schedule(
-            slot=publication.slot, publish_at_utc=publication.publish_at_utc
+            slot=publication.slot,
+            publish_at_utc=publication.publish_at_utc,
         )
         await self.publication_repo.save(publication)
 

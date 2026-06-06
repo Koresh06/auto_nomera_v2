@@ -6,7 +6,10 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram_dialog import setup_dialogs
 from dishka import make_async_container
 from dishka.integrations.aiogram import AiogramProvider, setup_dishka
+from taskiq_redis import RedisStreamBroker
 
+from src.application.mediator import Mediator
+from src.infrastructure.broker.taskiq import register_taskiq_tasks
 from src.utils.logging import setup_logging
 from src.core.dependencies.providers import make_base_providers
 from src.presentation.telegram.common.custom_message_manager import CustomMessageManager
@@ -32,26 +35,32 @@ async def create_app():
         AiogramProvider(),
     )
 
+    # регистрируем задачи на брокере бота
+    broker: RedisStreamBroker = await container.get(RedisStreamBroker)
+
+    async def get_mediator() -> Mediator:
+        async with container() as request_container:
+            return await request_container.get(Mediator)
+
+    register_taskiq_tasks(broker, get_mediator=get_mediator)
+    await broker.startup()  # ← важно запустить брокер
+
     bot: Bot = await container.get(Bot)
     dp: Dispatcher = await container.get(Dispatcher)
 
     await set_commands(bot)
-
     setup_dishka(container=container, router=dp)
-
     setup_middlewares(dp=dp, container=container)
-
     dp.include_routers(*get_all_routers())
     dp.include_routers(*get_all_dialogs())
-
     setup_dialogs(dp, message_manager=CustomMessageManager())
-
     await bot.delete_webhook(drop_pending_updates=True)
 
     try:
         logger.info("🤖 Бот запущен…")
         await dp.start_polling(bot)
     finally:
+        await broker.shutdown()  # ← закрываем брокер
         await bot.session.close()
         logger.info("🧹 Бот остановлены.")
 

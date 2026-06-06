@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.tasks.task_queue import TaskQueue
@@ -16,9 +17,15 @@ class TaskQueueScheduler(Scheduler):
         self._publication_repo = publication_repo
 
     async def schedule_publication(
-        self, *, publication_id: int, run_at_utc: datetime
+        self,
+        *,
+        publication_id: int,
+        run_at_utc: datetime,
     ) -> None:
         pub = await self._publication_repo.get_by_id(publication_id)
+        if pub is None:
+            raise PublicationNotFoundException(publication_id)
+
 
         job_id = await self._queue.schedule(
             task_name="publish_publication",
@@ -31,6 +38,9 @@ class TaskQueueScheduler(Scheduler):
 
     async def cancel_publication(self, *, publication_id: int) -> None:
         pub = await self._publication_repo.get_by_id(publication_id)
+        if pub is None:
+            raise PublicationNotFoundException(publication_id)
+        
         if not pub.scheduler_job_id:
             return
         await self._queue.cancel(job_id=pub.scheduler_job_id)

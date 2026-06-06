@@ -77,7 +77,6 @@ class CalendarBuilder:
                 is_system_paid=is_system_paid, is_converted_paid=is_converted_paid
             )
 
-            # label (Сегодня/Завтра/дд.мм) — строго по локальной дате региона
             if slot.local_day == today_local:
                 day_label = "Сегодня"
             elif slot.local_day == today_local + timedelta(days=1):

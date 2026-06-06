@@ -13,6 +13,9 @@ from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefUseCase
 from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase
+from src.application.use_cases.publication.create_ad_publication import (
+    CreateAndScheduleAdUseCase,
+)
 from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdUseCase,
 )
@@ -238,10 +241,10 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             region_repo=region_repo,
             telegram=telegram,
-            image_processor=image_processor,
-            scheduler=scheduler,
+            # image_processor=image_processor,
+            # scheduler=scheduler,
             renderer=renderer,
-            time_resolver=time_resolver,
+            # time_resolver=time_resolver,
         )
 
     @provide
@@ -259,19 +262,18 @@ class UseCasesProvider(Provider):
 
     @provide
     def create_ad_draft_use_case(
-        self,
-        ad_repo: AdRepository,
-        transaction_manager: TransactionManager,
+        self, ad_repo: AdRepository, transaction_manager: TransactionManager
     ) -> CreateAdDraftUseCase:
         return CreateAdDraftUseCase(
-            ad_repo=ad_repo, transaction_manager=transaction_manager
+            ad_repo=ad_repo,
+            transaction_manager=transaction_manager,
         )
 
     @provide
     def update_ad_content_use_case(
         self,
         ad_repo: AdRepository,
-        transaction_manager: TransactionManager,
+        transaction_manager: TransactionManager
     ) -> UpdateAdContentUseCase:
         return UpdateAdContentUseCase(
             ad_repo=ad_repo,
@@ -282,13 +284,9 @@ class UseCasesProvider(Provider):
     def finalize_ad_use_case(
         self,
         ad_repo: AdRepository,
-        region_repo: RegionRepository,
-        transaction_manager: TransactionManager,
     ) -> FinalizeAdUseCase:
         return FinalizeAdUseCase(
             ad_repo=ad_repo,
-            region_repo=region_repo,
-            transaction_manager=transaction_manager,
         )
 
     @provide
@@ -302,4 +300,21 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             publication_repo=publication_repo,
             transaction_manager=transaction_manager,
+        )
+
+    @provide
+    def create_and_schedule_use_case(
+        self,
+        create_draft: CreateAdDraftUseCase,
+        update_content: UpdateAdContentUseCase,
+        finalize_ad: FinalizeAdUseCase,
+        create_publication: CreatePublicationFromAdUseCase,
+        select_slot: SelectSlotForPublicationUseCase,
+    ) -> CreateAndScheduleAdUseCase:
+        return CreateAndScheduleAdUseCase(
+            create_draft=create_draft,
+            update_content=update_content,
+            finalize_ad=finalize_ad,
+            create_publication=create_publication,
+            select_slot=select_slot,
         )

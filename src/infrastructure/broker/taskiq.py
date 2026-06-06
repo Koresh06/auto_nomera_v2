@@ -15,6 +15,7 @@ def register_taskiq_tasks(broker, *, get_mediator: Callable[[], Awaitable[Mediat
     @broker.task(name="publish_publication")
     async def publish_publication(publication_id: int) -> None:
         mediator = await get_mediator()
+        print(f"[WORKER] executing publish_publication id={publication_id}")
         await mediator.handle(PublishPublicationRequest(publication_id=publication_id))
 
     @broker.task(name="unpin_message")

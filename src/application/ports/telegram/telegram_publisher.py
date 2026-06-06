@@ -13,7 +13,7 @@ class TelegramPublisher(Protocol):
         self,
         *,
         channel_id: int,
-        file_id_or_input: str,  # file_id или url my://... (message_manager подхватит)
+        image_file_id: str,
         caption: str,
     ) -> PublishResult: ...
 

@@ -14,12 +14,12 @@ class AiogramTelegramPublisher(TelegramPublisher):
         self,
         *,
         channel_id: int,
-        file_id_or_input: str,
+        image_file_id: str,
         caption: str,
     ) -> PublishResult:
         msg = await self.bot.send_photo(
             chat_id=channel_id,
-            photo=file_id_or_input,
+            photo=image_file_id,
             caption=caption,
         )
         return PublishResult(channel_id=channel_id, message_id=msg.message_id)

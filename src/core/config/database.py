@@ -20,11 +20,15 @@ class RedisSettings(BaseSettings):
     host: str = "0.0.0.0"
     port: str = "6379"
     db: int = 0
+    taskiq_db: int = 1
 
     @property
     def url(self) -> str:
         return f"redis://{self.host}:{self.port}/{self.db}"
-    
+
+    @property
+    def taskiq_url(self) -> str:
+        return f"redis://{self.host}:{self.port}/{self.taskiq_db}"
 
 class DatabaseSettings(BaseSettings):
     postgres: PostgresSettings = PostgresSettings()

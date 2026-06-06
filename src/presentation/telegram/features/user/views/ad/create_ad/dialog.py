@@ -219,24 +219,24 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.confirm,
         getter=getter_confirm,
     ),
-    # Window(
-    #     Const(
-    #         "💎 <b>Сделайте своё объявление заметнее! Выберите услуги, чтобы выделить его перед публикацией:</b>"
-    #     ),
-    #     Group(
-    #         Select(
-    #             Format("{item[0]}"),
-    #             id="selected_services",
-    #             item_id_getter=lambda x: str(x[1]),
-    #             items="available_services",
-    #             on_click=on_service_paid_selected,
-    #         ),
-    #         width=1,
-    #     ),
-    #     Next(Const("⏭ Пропустить")),
-    #     state=CreateAdSG.publication_service,
-    #     getter=getter_publication_service,
-    # ),
+    Window(
+        Const(
+            "💎 <b>Сделайте своё объявление заметнее! Выберите услуги, чтобы выделить его перед публикацией:</b>"
+        ),
+        # Group(
+        #     Select(
+        #         Format("{item[0]}"),
+        #         id="selected_services",
+        #         item_id_getter=lambda x: str(x[1]),
+        #         items="available_services",
+        #         on_click=on_service_paid_selected,
+        #     ),
+        #     width=1,
+        # ),
+        Next(Const("⏭ Пропустить")),
+        state=CreateAdSG.publication_service,
+        # getter=getter_publication_service,
+    ),
     # Window(
     #     Const("🤝 <b>Спасибо что выбрали Нас.</b>\n\n"),
     #     Format(

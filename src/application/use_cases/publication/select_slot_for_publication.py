@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import logging
 
 from src.application.exceptions.publication import PublicationNotFoundException
@@ -16,7 +16,6 @@ from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.infrastructure.database.transaction_manager.base import TransactionManager
-
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +56,14 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         publication = await self.publication_repo.get_by_id(command.publication_id)
         if publication is None:
             raise PublicationNotFoundException(command.publication_id)
-        
+
         region = await self.region_repo.get_by_id(publication.region_id)
         if region is None:
             raise RegionNotFoundException(publication.region_id)
 
-        logger.info(f"[SelectSlot] region={region.title!r} tz={region.timezone.value!r}")
+        logger.info(
+            f"[SelectSlot] region={region.title!r} tz={region.timezone.value!r}"
+        )
 
         ordered_future_slots = self.calendar_builder.generate_future_slots(
             region=region,
@@ -73,6 +74,7 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             tz=region.timezone,
             slot=command.slot,
         )
+        # publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
         logger.info(f"[SelectSlot] publish_at_utc={publish_at_utc.isoformat()}")
 
         is_system_paid = self.pricing_policy.is_system_paid(
@@ -94,14 +96,26 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
 
         if is_paid_slot and not command.payment_confirmed:
             publication.set_slot_pending_payment(
-                slot=command.slot, publish_at_utc=publish_at_utc
+                slot=command.slot,
+                publish_at_utc=publish_at_utc,
             )
             await self.publication_repo.save(publication)
+            await self.transaction_manager.commit()
             logger.info(f"[SelectSlot:awaiting_payment] pub_id={publication.id}")
             return
 
         publication.schedule(slot=command.slot, publish_at_utc=publish_at_utc)
         await self.publication_repo.save(publication)
+
+        await self.reservation_service.converted_repo.mark_converted(
+            slot=command.slot,
+            user_id=command.user_id,
+            ad_id=command.ad_id,
+        )
+        logger.info(
+            f"[SelectSlot:converted] slot={command.slot.local_day} {command.slot.local_time} user_id={command.user_id} ad_id={command.ad_id}"
+        )
+        await self.transaction_manager.commit()
 
         await self.scheduler.schedule_publication(
             publication_id=publication.id,
@@ -110,5 +124,3 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         logger.info(
             f"[SelectSlot:done] pub_id={publication.id} status={publication.status}"
         )
-
-        await self.transaction_manager.commit()

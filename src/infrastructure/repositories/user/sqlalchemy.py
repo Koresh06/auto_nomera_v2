@@ -45,6 +45,6 @@ class SQLAlchemyUserRepo(UserRepository):
             if value is not None and hasattr(user_model, field.name):
                 setattr(user_model, field.name, value)
     
+        await self._session.merge(user_model)
         await self._session.flush()
-        await self._session.refresh(user_model)
         return user_model.to_entity()

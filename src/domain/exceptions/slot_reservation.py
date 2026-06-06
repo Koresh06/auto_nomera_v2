@@ -12,6 +12,11 @@ class SlotAlreadyHeld(SlotReservationError):
     pass
 
 
+class SlotAlreadyConverted(SlotReservationError):
+    """Слот конвертирован."""
+    pass
+
+
 class SlotHoldNotFound(SlotReservationError):
     """Нет активного HOLD (например, истёк TTL)."""
     pass

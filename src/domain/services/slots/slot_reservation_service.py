@@ -6,6 +6,7 @@ from src.application.ports.slots.slot_converted_repo import SlotConvertedReposit
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.domain.exceptions.slot_reservation import (
     SlotAlreadyBooked,
+    SlotAlreadyConverted,
     SlotAlreadyHeld,
     SlotHoldNotFound,
     SlotHoldOwnerMismatch,
@@ -40,13 +41,6 @@ class SlotReservationService:
         ordered_future_slots: list[SlotKey],
         now_utc: datetime | None = None,
     ) -> HoldResult:
-        """
-        Логика на нажатие кнопки:
-        - если booked -> ошибка
-        - если hold другого -> ошибка
-        - если hold этого же owner -> продлеваем TTL
-        - если слот не system и не converted -> mark converted (для всех в регионе)
-        """
         now = now_utc or get_datetime_utc_now()
         owner = HoldOwner(user_id=user_id)
 
@@ -54,31 +48,31 @@ class SlotReservationService:
         if await self.booking_repo.is_booked(slot):
             raise SlotAlreadyBooked()
 
-        # 2) hold?
+        # 2) hold чужого?
         existing = await self.hold_store.get(slot)
         if existing is not None and existing != owner:
             raise SlotAlreadyHeld()
+        
+        # 3) converted?
+        is_converted = await self.converted_repo.is_converted(slot)
+        if is_converted:
+            raise SlotAlreadyConverted()
 
-        # 3) поставить/продлить hold
+        # 4) поставить/продлить hold
         hold_until = now + self.hold_ttl
         await self.hold_store.set(slot, owner, self.hold_ttl)
 
-        # 4) pricing converted?
-        # system paid считается политикой, converted — хранится как состояние
+        # 5) проверяем pricing для UI (показать пользователю платный или нет)
         is_system_paid = self.pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots, slot=slot
         )
         is_converted = await self.converted_repo.is_converted(slot)
-
-        pricing_changed = False
-        if (not is_system_paid) and (not is_converted):
-            await self.converted_repo.mark_converted(slot, user_id=user_id)
-            pricing_changed = True
+        is_paid = is_system_paid or is_converted
 
         return HoldResult(
             slot=slot,
             hold_until_utc=hold_until,
-            pricing_changed_to_converted=pricing_changed,
+            pricing_changed_to_converted=is_paid,
         )
 
     async def release_hold(
@@ -98,7 +92,6 @@ class SlotReservationService:
                 raise SlotHoldOwnerMismatch()
 
         await self.hold_store.delete(slot)
-        await self.converted_repo.unmark_converted(slot, user_id)
 
     async def book_after_payment(
         self,

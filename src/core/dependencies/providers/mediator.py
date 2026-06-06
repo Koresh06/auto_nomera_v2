@@ -17,6 +17,7 @@ from src.application.use_cases.ad.update_ad_content import (
     UpdateAdContentRequest,
     UpdateAdContentUseCase,
 )
+from src.application.use_cases.publication.create_ad_publication import CreateAndScheduleAdRequest, CreateAndScheduleAdUseCase
 from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdRequest,
     CreatePublicationFromAdUseCase,
@@ -94,6 +95,7 @@ class MediatorProvider(Provider):
         update_ad_content_use_case: UpdateAdContentUseCase,
         finalize_ad_use_case: FinalizeAdUseCase,
         create_publication_from_ad_use_case: CreatePublicationFromAdUseCase,
+        create_and_schedule_use_case: CreateAndScheduleAdUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -132,5 +134,6 @@ class MediatorProvider(Provider):
         mediator.register(
             CreatePublicationFromAdRequest, create_publication_from_ad_use_case
         )
+        mediator.register(CreateAndScheduleAdRequest, create_and_schedule_use_case)
 
         return mediator

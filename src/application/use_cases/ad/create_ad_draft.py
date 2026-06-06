@@ -8,7 +8,6 @@ from src.domain.entities.ad import Ad
 from src.domain.enums.ad import AdStatus, AdType
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,16 +30,16 @@ class CreateAdDraftUseCase(UseCase[CreateAdDraftRequest, AdDTO]):
             f"region_id={command.region_id} ad_type={command.ad_type}"
         )
 
-        ad = Ad(
-            user_id=command.user_id,
-            region_id=command.region_id,
-            ad_type=command.ad_type,
-            status=command.status,
+        ad: Ad = await self.ad_repo.create(
+            Ad(
+                user_id=command.user_id,
+                region_id=command.region_id,
+                ad_type=command.ad_type,
+                status=command.status,
+            )
         )
-        await self.ad_repo.create(ad)
+
         await self.transaction_manager.commit()
 
         logger.info(f"[CreateAdDraft:done] ad_id={ad.id}")
         return AdDTO.from_entity(ad)
-
-

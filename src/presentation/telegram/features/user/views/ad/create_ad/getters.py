@@ -14,6 +14,7 @@ from src.application.use_cases.slots.get_calendar import GetCalendarRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
 from src.domain.value_objects.price import Price
+from src.domain.value_objects.slot_key import SlotKey
 
 
 REGION_ID_DEV = 1
@@ -96,9 +97,8 @@ async def getter_confirm(
     plate = data.get("plate")
     city = dialog_manager.find("city").get_value()
     price = dialog_manager.find("price").get_value() or data["price"]
-    phone = data.get("phone") or data.get("")
-    slot_day = data.get("slot_day")
-    slot_time = data.get("slot_time")
+    phone = data.get("phone") or data.get("current_phone")
+    slot: SlotKey = data["slot"]
     channel_username = data["channel_username"]
 
     media = data.get("media")
@@ -121,7 +121,7 @@ async def getter_confirm(
         "city": city,
         "price": Price.format(price),
         "phone": phone,
-        "slot_day": slot_day,
-        "slot_time": slot_time,
+        "slot_day": slot.date_display,
+        "slot_time": slot.time_display,
         "media": media,
     }
