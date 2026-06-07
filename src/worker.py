@@ -22,3 +22,5 @@ broker = RedisStreamBroker(
 ).with_result_backend(result_backend)
 
 register_taskiq_tasks(broker, get_mediator=get_mediator)
+
+# taskiq worker src.worker:broker

@@ -32,11 +32,14 @@ from .handlers import (
     on_phone_received_contact,
     on_plate_success,
     on_pick_slot,
+    on_reuse_old_click,
 )
 from .getters import (
     calendar_getter,
     getter_confirm,
     getter_default_ad,
+    getter_duplicate_ad,
+    getter_finish,
     getter_media_plate,
     getter_user_phone,
 )
@@ -60,25 +63,30 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.plate,
         getter=getter_default_ad,
     ),
-    # Window(
-    #     Const(
-    #         "🔁 <b>Вы уже публиковали этот номер ранее.</b>\n\n"
-    #         "Вот найденное объявление:\n"
-    #     ),
-    #     DynamicMedia(selector="media", when="media"),
-    #     Format("{ad_text}"),
-    #     Column(
-    #         Button(
-    #             Const("♻️ Опубликовать снова"),
-    #             id="reuse_old",
-    #             on_click=on_reuse_old_click,
-    #         ),
-    #         Next(Const("🆕 Создать новое объявление")),
-    #     ),
-    #     Back(Const("⬅️ Назад")),
-    #     state=SellNumberSG.duplicate_preview,
-    #     getter=getter_duplicate_ad,
-    # ),
+    Window(
+        Const(
+            "🔁 <b>Вы уже публиковали этот номер ранее.</b>\n\n"
+            "Вот найденное объявление:\n"
+        ),
+        DynamicMedia(selector="media", when="media"),
+        Format(
+            "🚘 <b>Номер</b>: {plate}\n"
+            "🌎 <b>Город</b>: {city}\n"
+            "💰 <b>Цена</b>: {price}\n"
+            "📲 <b>Контакты</b>: {contacts}"
+        ),
+        Column(
+            Button(
+                Const("♻️ Опубликовать снова"),
+                id="reuse_old",
+                on_click=on_reuse_old_click,
+            ),
+            Next(Const("🆕 Создать новое объявление")),
+        ),
+        Back(Const("⬅️ Назад")),
+        state=CreateAdSG.duplicate_preview,
+        getter=getter_duplicate_ad,
+    ),
     Window(
         Const(
             '📸 <b>Пришлите фото вашего номера (если есть) или нажмите кнопку "Пропустить".</b>',
@@ -199,11 +207,11 @@ create_ad_dialog = Dialog(
         ),
         Format(
             "📋 <b>Проверьте данные:</b>\n\n"
-            "🚘 Номер: {plate}\n"
-            "🌎 Город: {city}\n"
-            "💰 Цена: {price}\n"
-            "📲 Телефон: {phone}\n\n"
-            "🕐 Слот: {slot_day} в {slot_time}\n"
+            "🚘 <b>Номер</b>: {plate}\n"
+            "🌎 <b>Город</b>: {city}\n"
+            "💰 <b>Цена</b>: {price}\n"
+            "📲 <b>Контакты</b>: {contacts}\n\n"
+            "🕐 <b>Слот</b>: {slot_day} в {slot_time}\n"
         ),
         DynamicMedia(selector="media", when="media"),
         Button(
@@ -237,33 +245,33 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.publication_service,
         # getter=getter_publication_service,
     ),
-    # Window(
-    #     Const("🤝 <b>Спасибо что выбрали Нас.</b>\n\n"),
-    #     Format(
-    #         "✅ Ваше объявление о продаже будет опубликовано {published_text} в нашем телеграм канале: <a href='{channel}'>{region_name}</a>\n",
-    #         when=~F["is_auto_pub"],
-    #     ),
-    #     Format(
-    #         "✅ Ваше объявление о продаже опубликовано в нашем телеграм канале: <a href='{channel}'>{region_name}</a>\n",
-    #         when="is_auto_pub",
-    #     ),
-    #     Const("‼️ Подписывайтесь на канал, чтобы не потерять объявление!\n\n"),
-    #     Const(
-    #         "Для быстрой продажи рекомендуем воспользоваться платными услугами, выбрав раздел «🚀 Платные Топ услуги (NEW)» в общем меню, чтобы выделить Ваше объявление среди других.\n\n"
-    #     ),
-    #     Format("🔝 Подключённые услуги:\n{selected_services_text}"),
-    #     DynamicMedia(selector="media", when="media"),
-    #     Back(Const("Назад к Услугам!")),
-    #     Column(
-    #         Button(
-    #             Const("📝 Редактировать объявление"),
-    #             id="edit_ad",
-    #             on_click=on_edit_ad_click,
-    #         ),
-    #         Cancel(Const("🏠 Главное меню")),
-    #     ),
-    #     state=CreateAdSG.finish,
-    #     getter=getter_finish,
-    #     on_process_result=on_process_result,
-    # )
+    Window(
+        Const("🤝 <b>Спасибо что выбрали Нас.</b>\n\n"),
+        Format(
+            "✅ Ваше объявление о продаже будет опубликовано {slot_day} в {slot_time} в нашем телеграм канале: <a href='https://t.me/{channel_username}'>{region_title}</a>\n",
+            when=~F["is_auto_pub"],
+        ),
+        Format(
+            "✅ Ваше объявление о продаже опубликовано в нашем телеграм канале: <a href='{channel_username}'>{region_title}</a>\n",
+            when="is_auto_pub",
+        ),
+        Const("‼️ Подписывайтесь на канал, чтобы не потерять объявление!\n\n"),
+        Const(
+            "Для быстрой продажи рекомендуем воспользоваться платными услугами, выбрав раздел «🚀 Платные Топ услуги (NEW)» в общем меню, чтобы выделить Ваше объявление среди других.\n\n"
+        ),
+        Format("🔝 Подключённые услуги:\n{selected_services}"),
+        DynamicMedia(selector="media", when="media"),
+        Back(Const("Назад к Услугам!")),
+        Column(
+            Button(
+                Const("📝 Редактировать объявление"),
+                id="edit_ad",
+                # on_click=on_edit_ad_click,
+            ),
+            Cancel(Const("🏠 Главное меню")),
+        ),
+        state=CreateAdSG.finish,
+        getter=getter_finish,
+        # on_process_result=on_process_result,
+    )
 )

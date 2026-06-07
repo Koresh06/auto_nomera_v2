@@ -1,25 +1,22 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
+import logging
 
 from src.application.exceptions.ad import AdNotFoundException
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.region import RegionNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
-from src.application.ports.publication_service.image_processor import ImageProcessor
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.region.region_repo import RegionRepository
-from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.use_cases.base import UseCase, UseCaseRequest
-from src.domain.entities.publication import Publication
-from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.ad import AdType
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
-from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
-from src.domain.value_objects.slot_key import SlotKey
-from src.domain.value_objects.timezone_name import TimezoneName
+from src.infrastructure.database.transaction_manager.base import TransactionManager
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, eq=False)
@@ -40,6 +37,7 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
 
     renderer: AdTextRenderer
     # time_resolver: PublishTimeResolver
+    transaction_manager: TransactionManager
 
 
     async def __call__(self, command: PublishPublicationRequest) -> None:
@@ -89,6 +87,8 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
 
         pub.mark_published(message_id=result.message_id, published_at_utc=now)
         await self.publication_repo.save(pub)
+        await self.transaction_manager.commit()
+        logger.info(f"[Publish:done] pub_id={pub.id} message_id={result.message_id}")
 
 #     async def __call__(self, command: PublishPublicationRequest) -> None:
 #         now = command.now_utc or datetime.now(timezone.utc)

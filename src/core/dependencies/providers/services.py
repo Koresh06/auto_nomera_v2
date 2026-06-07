@@ -35,7 +35,10 @@ class ServicesProvider(Provider):
 
     @provide(scope=Scope.APP)
     def renderer(self) -> AdTextRenderer:
-        return AdTextRenderer(settings.telegram.bot_url)
+        return AdTextRenderer(
+            settings.telegram.bot_url,
+            settings.telegram.buyout_url,
+        )
 
     @provide(scope=Scope.REQUEST)
     def slot_reservation_service(

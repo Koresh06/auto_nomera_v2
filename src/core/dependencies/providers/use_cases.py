@@ -1,6 +1,7 @@
 from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.publication.get_user import GetUserPublicationsUseCase
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.publication_service.image_processor import ImageProcessor
@@ -12,6 +13,8 @@ from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefUseCase
 from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase
+from src.application.use_cases.ad.find_by_plate import FindAdByPlateUseCase
+from src.application.use_cases.ad.get_by_id import GetByIdAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase
 from src.application.use_cases.publication.create_ad_publication import (
     CreateAndScheduleAdUseCase,
@@ -19,9 +22,11 @@ from src.application.use_cases.publication.create_ad_publication import (
 from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdUseCase,
 )
+from src.application.use_cases.publication.edit_published import EditPublishedAdUseCase
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationUseCase,
 )
+from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdAndScheduleUseCase
 from src.application.use_cases.publication_service.add_service_to_publication import (
     AddServiceToPublicationUseCase,
 )
@@ -235,6 +240,7 @@ class UseCasesProvider(Provider):
         scheduler: Scheduler,
         renderer: AdTextRenderer,
         time_resolver: PublishTimeResolver,
+        transaction_manager: TransactionManager,
     ) -> PublishPublicationUseCase:
         return PublishPublicationUseCase(
             publication_repo=publication_repo,
@@ -245,6 +251,33 @@ class UseCasesProvider(Provider):
             # scheduler=scheduler,
             renderer=renderer,
             # time_resolver=time_resolver,
+            transaction_manager=transaction_manager,
+        )
+
+    @provide
+    def get_user_publications_use_case(
+        self,
+        publication_repo: PublicationRepository,
+    ) -> GetUserPublicationsUseCase:
+        return GetUserPublicationsUseCase(publication_repo=publication_repo)
+
+    @provide
+    def edit_published_ad_use_case(
+        self,
+        ad_repo: AdRepository,
+        publication_repo: PublicationRepository,
+        region_repo: RegionRepository,
+        telegram: TelegramPublisher,
+        renderer: AdTextRenderer,
+        transaction_manager: TransactionManager,
+    ) -> EditPublishedAdUseCase:
+        return EditPublishedAdUseCase(
+            ad_repo=ad_repo,
+            publication_repo=publication_repo,
+            region_repo=region_repo,
+            telegram=telegram,
+            renderer=renderer,
+            transaction_manager=transaction_manager,
         )
 
     @provide
@@ -279,6 +312,13 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
         )
+    
+    @provide
+    def get_by_id_ad_use_case(
+        self,
+        ad_repo: AdRepository,
+    ) -> GetByIdAdUseCase:
+        return GetByIdAdUseCase(ad_repo=ad_repo)
 
     @provide
     def finalize_ad_use_case(
@@ -286,6 +326,15 @@ class UseCasesProvider(Provider):
         ad_repo: AdRepository,
     ) -> FinalizeAdUseCase:
         return FinalizeAdUseCase(
+            ad_repo=ad_repo,
+        )
+    
+    @provide
+    def find_ad_by_plate_use_case(
+        self,
+        ad_repo: AdRepository,
+    ) -> FindAdByPlateUseCase:
+        return FindAdByPlateUseCase(
             ad_repo=ad_repo,
         )
 
@@ -315,6 +364,17 @@ class UseCasesProvider(Provider):
             create_draft=create_draft,
             update_content=update_content,
             finalize_ad=finalize_ad,
+            create_publication=create_publication,
+            select_slot=select_slot,
+        )
+
+    @provide
+    def reuse_ad_and_schedule_use_case(
+        self,
+        create_publication: CreatePublicationFromAdUseCase,
+        select_slot: SelectSlotForPublicationUseCase,
+    ) -> ReuseAdAndScheduleUseCase:
+        return ReuseAdAndScheduleUseCase(
             create_publication=create_publication,
             select_slot=select_slot,
         )

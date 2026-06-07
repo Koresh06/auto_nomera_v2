@@ -8,43 +8,43 @@ from src.domain.services.ad.plate_hashtags import generate_hashtags
 
 @dataclass(frozen=True, slots=True)
 class AdTextRenderer:
-    bot_url: str  # "https://t.me/Snomerami_bot"
+    bot_url: str
+    buyout_url: str
 
     def render(self, *, ad: Ad, region: Region) -> str:
-        # нижний блок ссылок — из Region.links (мы ранее обсуждали)
-        links_block = self._render_links(region)
-
         if ad.ad_type == AdType.STORE:
-            return self._render_store(ad) + "\n" + links_block
+            body = self._render_store(ad)
+        else:
+            body = self._render_standard(ad)
 
-        return self._render_standard(ad) + "\n" + links_block
+        hashtags = self._render_hashtags(ad)
+        links = self._render_links(region)
+
+        parts = [body]
+        parts.append(links)
+        if hashtags:
+            parts.append(hashtags)
+
+        return "\n\n".join(parts)
 
     def _render_standard(self, ad: Ad) -> str:
         c = ad.content
         assert c is not None
 
-        header = "📌 ПРОДАМ НОМЕРА"
-        if ad.ad_type == AdType.BUY:
-            header = "📌 КУПЛЮ НОМЕРА"
-        elif ad.ad_type == AdType.URGENT_BUYOUT:
-            header = "📌 СРОЧНЫЙ ВЫКУП"
+        header = ad.ad_type.display
 
         lines = [
-            header,
+            f"<b>{header}</b>",
             "",
-            f"🚘 Номер: {c.plate_number}",
-            f"🌎 Город: {c.city}",
-            f"💰 Цена: {c.price.display}",
+            f"🚘 <b>Номер:</b> {c.plate_number}",
+            f"🌎 <b>Город:</b> {c.city}",
+            f"💰 <b>Цена:</b> {c.price.display}",
             "",
-            f"📲 Связь: {c.contacts.display}",
+            f"📲 <b>Связь:</b> {c.contacts.display}",
         ]
 
         if c.caption:
             lines.extend(["", c.caption])
-
-        tags = generate_hashtags(c.plate_number)
-        if tags:
-            lines.extend(["", " ".join(tags)])
 
         return "\n".join(lines)
 
@@ -53,13 +53,13 @@ class AdTextRenderer:
         assert s is not None
 
         lines = [
-            "📌 ПРОДАМ НОМЕРА",
+            "<b>📌 МАГАЗИН НОМЕРОВ</b>",
             "",
-            f"🏦 Магазин: {s.shop_name}",
-            f"🌎 Город: {s.city}",
-            f"📲 Связь: {s.contacts.display}",
+            f"🏦 <b>Магазин:</b> {s.shop_name}",
+            f"🌎 <b>Город:</b> {s.city}",
+            f"📲 <b>Связь:</b> {s.contacts.display}",
             "",
-            "Список доступных номеров:",
+            "<b>Список доступных номеров:</b>",
             "",
         ]
 
@@ -68,19 +68,40 @@ class AdTextRenderer:
 
         return "\n".join(lines)
 
+    def _render_hashtags(self, ad: Ad) -> str:
+        plates: list[str] = []
+
+        if ad.ad_type == AdType.STORE and ad.store_content:
+            plates = [item.plate for item in ad.store_content.items]
+        elif ad.content and ad.content.plate_number:
+            plates = [ad.content.plate_number]
+
+        all_tags: list[str] = []
+        for plate in plates:
+            for tag in generate_hashtags(plate):
+                if tag not in all_tags:
+                    all_tags.append(tag)
+
+        return " ".join(all_tags) if all_tags else ""
+
     def _render_links(self, region: Region) -> str:
-        bot_line = f"⚠️ РАЗМЕСТИТЬ ОБЪЯВЛЕНИЕ ({self.bot_url})"
-        sep = "—————————————————"
+        lines = [
+            f"<b><a href='{self.bot_url}'>⚠️ РАЗМЕСТИТЬ ОБЪЯВЛЕНИЕ</a></b>",
+            "—————————————————",
+            f"<b><a href='{self.buyout_url}'>💸 ВЫКУП ВАШИХ НОМЕРОВ</a></b>",
+            "—————————————————",
+        ]
 
-        links = [bot_line, sep]
+        if region.metadata is not None:
+            m = region.metadata
+            lines.append(
+                f"✅ <b><a href='https://t.me/{region.channel_username}'>Наш канал</a></b>"
+            )
+            if m.tg_group_url:
+                lines.append(f"✅ <b><a href='{m.tg_group_url}'>Наш Чат</a></b>")
+            if m.vk_group_url:
+                lines.append(f"✅ <b><a href='{m.vk_group_url}'>Наша группа VK</a></b>")
+            if m.max_channel_url:
+                lines.append(f"✅ <b><a href='{m.max_channel_url}'>Мы в MAX</a></b>")
 
-        if getattr(region, "metadata", None) is not None:
-            rl = region.metadata
-            if rl.tg_group_url:
-                links.append(f"✅ Наш Чат ({rl.tg_group_url})")
-            if rl.vk_group_url:
-                links.append(f"✅ Наша группа VK ({rl.vk_group_url})")
-            if rl.max_channel_url:
-                links.append(f"✅ Наш канал MAX ({rl.max_channel_url})")
-
-        return "\n".join(links)
+        return "\n".join(lines)

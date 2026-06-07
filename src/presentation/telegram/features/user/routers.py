@@ -8,7 +8,7 @@ from dishka.integrations.aiogram import FromDishka, inject
 from src.application.exceptions.user import UserNotFoundException
 from src.application.mediator import Mediator
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
-from src.presentation.telegram.features.user.views.start.states import StartSG
+from src.presentation.telegram.features.user.views.menu.states import UserMenuSG
 
 
 logger = logging.getLogger(__name__)
@@ -27,12 +27,12 @@ async def process_start_command(
     try:
         await mediator.handle(GetTgIdRequest(tg_id=message.from_user.id))
         await dialog_manager.start(
-            StartSG.menu,
+            UserMenuSG.menu,
             mode=StartMode.RESET_STACK,
         )
     except UserNotFoundException as ex:
         logger.info(str(ex))
         await dialog_manager.start(
-            StartSG.chooise_region,
+            UserMenuSG.chooise_region,
             mode=StartMode.RESET_STACK,
         )

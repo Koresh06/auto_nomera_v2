@@ -25,3 +25,11 @@ class PublicationService(Entity):
     def cancel(self) -> None:
         self.status = PublicationServiceStatus.CANCELED
         self.touch()
+
+    def to_dict(self) -> dict:
+        return {
+            "type": self.type.value,
+            "status": self.status.value,
+            "price_paid": self.price_paid,
+            "params": self.params,
+        }

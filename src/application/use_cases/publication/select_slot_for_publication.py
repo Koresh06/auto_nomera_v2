@@ -24,12 +24,9 @@ logger = logging.getLogger(__name__)
 class SelectSlotForPublicationRequest(UseCaseRequest):
     publication_id: int
     slot: SlotKey
-
-    user_id: int  # кто выбрал
-    ad_id: int  # объявление (у тебя это id Ad)
+    user_id: int  
+    ad_id: int  
     now_utc: datetime | None = None
-
-    # если ты хочешь поддержать сценарий "оплата уже подтверждена"
     payment_confirmed: bool = False
 
 
@@ -70,11 +67,11 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             now_utc=now,
         )
 
-        publish_at_utc = self.time_resolver.resolve_publish_at_utc(
-            tz=region.timezone,
-            slot=command.slot,
-        )
-        # publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
+        # publish_at_utc = self.time_resolver.resolve_publish_at_utc(
+        #     tz=region.timezone,
+        #     slot=command.slot,
+        # )
+        publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
         logger.info(f"[SelectSlot] publish_at_utc={publish_at_utc.isoformat()}")
 
         is_system_paid = self.pricing_policy.is_system_paid(

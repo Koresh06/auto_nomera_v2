@@ -4,7 +4,7 @@ from src.domain.entities.user import User
 from src.domain.enums.role import UserRole
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class BaseUserDTO:
     username: str | None
     full_name: str | None
@@ -12,7 +12,7 @@ class BaseUserDTO:
     region_id: int
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class UserDTO(BaseUserDTO):
     id: int
     tg_id: int
@@ -33,7 +33,7 @@ class UserDTO(BaseUserDTO):
         )
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class UpdateUserDTO:
     region_id: int | None = None
     username: str | None = None

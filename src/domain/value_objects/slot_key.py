@@ -19,7 +19,7 @@ class SlotKey:
 
     @property
     def to_display(self) -> str:
-        return f"{self.date_display} {self.time_display}"
+        return f"{self.date_display}-{self.time_display}"
     
     @staticmethod
     def decode_slot_id(slot_id: str, region_id: int) -> "SlotKey":

@@ -16,12 +16,10 @@ from src.application.use_cases.publication.select_slot_for_publication import (
     SelectSlotForPublicationRequest,
     SelectSlotForPublicationUseCase,
 )
-from src.domain.entities.ad import Ad
 from src.domain.enums.ad import AdStatus, AdType
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
-from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 logger = logging.getLogger(__name__)

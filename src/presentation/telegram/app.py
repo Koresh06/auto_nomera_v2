@@ -49,11 +49,15 @@ async def create_app():
     dp: Dispatcher = await container.get(Dispatcher)
 
     await set_commands(bot)
+
     setup_dishka(container=container, router=dp)
     setup_middlewares(dp=dp, container=container)
+
     dp.include_routers(*get_all_routers())
     dp.include_routers(*get_all_dialogs())
+
     setup_dialogs(dp, message_manager=CustomMessageManager())
+    
     await bot.delete_webhook(drop_pending_updates=True)
 
     try:

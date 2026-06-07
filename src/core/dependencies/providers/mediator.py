@@ -1,6 +1,7 @@
 from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
+from src.application.ports.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
 from src.application.use_cases.ad.create_ad_draft import (
     CreateAdDraftRequest,
     CreateAdDraftUseCase,
@@ -13,6 +14,8 @@ from src.application.use_cases.ad.finalize_ad import (
     FinalizeAdRequest,
     FinalizeAdUseCase,
 )
+from src.application.use_cases.ad.find_by_plate import FindAdByPlateRequest, FindAdByPlateUseCase
+from src.application.use_cases.ad.get_by_id import GetByIdAdRequest, GetByIdAdUseCase
 from src.application.use_cases.ad.update_ad_content import (
     UpdateAdContentRequest,
     UpdateAdContentUseCase,
@@ -22,10 +25,12 @@ from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdRequest,
     CreatePublicationFromAdUseCase,
 )
+from src.application.use_cases.publication.edit_published import EditPublishedAdRequest, EditPublishedAdUseCase
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationRequest,
     PublishPublicationUseCase,
 )
+from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdAndScheduleRequest, ReuseAdAndScheduleUseCase
 from src.application.use_cases.publication_service.add_service_to_publication import (
     AddServiceToPublicationRequest,
     AddServiceToPublicationUseCase,
@@ -89,13 +94,18 @@ class MediatorProvider(Provider):
         add_service_to_publication_use_case: AddServiceToPublicationUseCase,
         priority_publish_publication_use_case: PriorityPublishPublicationUseCase,
         publish_publication_use_case: PublishPublicationUseCase,
+        get_user_publications_use_case: GetUserPublicationsUseCase,
+        edit_published_ad_use_case: EditPublishedAdUseCase,
         unpin_message_use_case: UnpinMessageUseCase,
         ensure_ad_image_ref_use_case: EnsureAdImageRefUseCase,
         create_ad_draft_use_case: CreateAdDraftUseCase,
         update_ad_content_use_case: UpdateAdContentUseCase,
+        get_by_id_ad_use_case: GetByIdAdUseCase,
         finalize_ad_use_case: FinalizeAdUseCase,
+        find_ad_by_plate_use_case: FindAdByPlateUseCase,
         create_publication_from_ad_use_case: CreatePublicationFromAdUseCase,
         create_and_schedule_use_case: CreateAndScheduleAdUseCase,
+        reuse_ad_and_schedule_use_case: ReuseAdAndScheduleUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -126,14 +136,19 @@ class MediatorProvider(Provider):
             PriorityPublishPublicationRequest, priority_publish_publication_use_case
         )
         mediator.register(PublishPublicationRequest, publish_publication_use_case)
+        mediator.register(GetUserPublicationsRequest, get_user_publications_use_case)
+        mediator.register(EditPublishedAdRequest, edit_published_ad_use_case)
         mediator.register(UnpinMessageRequest, unpin_message_use_case)
         mediator.register(EnsureAdImageRefRequest, ensure_ad_image_ref_use_case)
         mediator.register(CreateAdDraftRequest, create_ad_draft_use_case)
         mediator.register(UpdateAdContentRequest, update_ad_content_use_case)
+        mediator.register(GetByIdAdRequest, get_by_id_ad_use_case)
         mediator.register(FinalizeAdRequest, finalize_ad_use_case)
+        mediator.register(FindAdByPlateRequest, find_ad_by_plate_use_case)
         mediator.register(
             CreatePublicationFromAdRequest, create_publication_from_ad_use_case
         )
         mediator.register(CreateAndScheduleAdRequest, create_and_schedule_use_case)
+        mediator.register(ReuseAdAndScheduleRequest, reuse_ad_and_schedule_use_case)
 
         return mediator

@@ -10,3 +10,8 @@ class PublicationStatus(str, Enum):
     FAILED = "failed"
     CANCELED = "canceled"
     REPLACED = "replaced"  # вытеснена приоритетной публикацией (publish now)
+
+
+class PublicationPlanMode(str, Enum):
+    SINGLE = "single"        # обычная одиночная публикация
+    AUTODAILY = "autodaily"  # автопубликация N дней подряд

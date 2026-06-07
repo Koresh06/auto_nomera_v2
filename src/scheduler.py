@@ -6,3 +6,5 @@ from src.worker import broker
 
 schedule_source = RedisScheduleSource(settings.db.redis.taskiq_url)
 scheduler = TaskiqScheduler(broker=broker, sources=[schedule_source])
+
+# taskiq scheduler src.scheduler:scheduler

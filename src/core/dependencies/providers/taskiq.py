@@ -6,6 +6,7 @@ from src.core.config import AppSettings
 
 from src.application.ports.tasks.task_queue import TaskQueue
 from src.application.ports.publication.scheduler import Scheduler
+from src.infrastructure.database.transaction_manager.base import TransactionManager
 from src.infrastructure.scheduler.taskiq_queue_scheduler import TaskQueueScheduler
 from src.infrastructure.tasks.taskiq_queue import TaskiqTaskQueue
 
@@ -29,10 +30,12 @@ class TaskiqProvider(Provider):
         self,
         task_queue: TaskQueue,
         publication_repo: PublicationRepository,
+        transaction_manager: TransactionManager,
     ) -> Scheduler:
         return TaskQueueScheduler(
             queue=task_queue,
             publication_repo=publication_repo,
+            transaction_manager=transaction_manager
         )
 
     # @provide(scope=Scope.REQUEST)

@@ -7,32 +7,27 @@ from aiogram_dialog.widgets.kbd import Select, Button
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 from aiogram_dialog.api.entities import MediaAttachment
 
-from dishka.integrations.aiogram_dialog import inject
-from dishka.integrations.aiogram import FromDishka
+from dishka.integrations.aiogram_dialog import inject, FromDishka
 
-from src.application.use_cases.publication.create_ad_publication import CreateAndScheduleAdRequest
-from src.domain.enums.ad import AdStatus, AdType
-from src.domain.exceptions.slot_reservation import SlotAlreadyBooked, SlotAlreadyConverted, SlotAlreadyHeld, SlotHoldNotFound, SlotHoldOwnerMismatch
+from src.application.dtos.ad import AdDTO
+from src.application.use_cases.ad.find_by_plate import FindAdByPlateRequest
+from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdAndScheduleRequest
+from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
+from src.domain.enums.ad import AdType
+from src.domain.exceptions.slot_reservation import  SlotAlreadyConverted, SlotAlreadyHeld, SlotHoldNotFound, SlotHoldOwnerMismatch
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.services.slots.slot_reservation_service import HoldResult
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
-from src.application.dtos.ad import AdDTO
-from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.user import UpdateUserDTO, UserDTO
 from src.application.exceptions.user import UserNotFoundException
 from src.application.mediator import Mediator
-
-from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
-from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
-from src.application.use_cases.ad.finalize_ad import FinalizeAdRequest
-from src.application.use_cases.publication.create_publication_from_ad import CreatePublicationFromAdRequest
-
-from src.application.use_cases.publication.select_slot_for_publication import SelectSlotForPublicationRequest
+from src.application.use_cases.publication.create_ad_publication import CreateAndScheduleAdRequest
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
 from src.application.use_cases.user.update import UpdateUserRequest
+from src.presentation.telegram.features.user.views.ad.create_ad.states import CreateAdSG
 
 
 logger = logging.getLogger(__name__)
@@ -48,6 +43,7 @@ async def on_plate_success(
 ) -> None:
     ad_type = dialog_manager.dialog_data["ad_type"]
     allow_mask = ad_type == AdType.BUY
+    tg_id = dialog_manager.event.from_user.id
 
     try:
         validated = validate_plate(value, allow_mask=allow_mask)
@@ -56,7 +52,34 @@ async def on_plate_success(
         return
 
     dialog_manager.dialog_data["plate"] = validated
-    await dialog_manager.next()
+
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
+    dialog_manager.dialog_data["user"] = user
+
+    if ad_type != AdType.BUY:
+        existing_ad: AdDTO | None = await mediator.handle(
+            FindAdByPlateRequest(
+                user_id=user.id,
+                region_id=user.region_id,
+                plate_number=validated,
+            )
+        )
+        if existing_ad:
+            dialog_manager.dialog_data["existing_ad_id"] = existing_ad.id
+            dialog_manager.dialog_data["existing_ad"] = existing_ad
+            await dialog_manager.next()
+            return
+
+    await dialog_manager.switch_to(CreateAdSG.image)
+
+
+async def on_reuse_old_click(
+    callback: CallbackQuery,
+    widget: Button,
+    dialog_manager: DialogManager,
+) -> None:
+    dialog_manager.dialog_data["reuse_ad"] = True
+    await dialog_manager.switch_to(CreateAdSG.calendar)
 
 
 async def on_input_photo(
@@ -227,28 +250,40 @@ async def on_confirm(
 
     user: UserDTO = data["user"]
     region_id: int = data["region_id"]
-    ad_type: AdType = data["ad_type"]
-    plate: str = data["plate"]
-    city: str = data["city"]
-    price: Price = Price(int(data["price"]))
-    phone: str = data["phone"]
-    media: MediaAttachment = data["media"]
     slot: SlotKey = data["slot"]
-    contacts = Contacts.from_user(username=user.username, phone=phone)
 
-    await mediator.handle(
-        CreateAndScheduleAdRequest(
-            user_id=user.id,
-            region_id=region_id,
-            ad_type=ad_type,
-            plate=plate,
-            city=city,
-            price=price,
-            contacts=contacts,
-            image_file_id=media.file_id.file_id if media else None,
-            slot=slot,
-            chat_id=tg_id,
+    if data.get("reuse_ad"):
+        ad_id: int = data["existing_ad_id"]
+        await mediator.handle(
+            ReuseAdAndScheduleRequest(
+                ad_id=ad_id,
+                slot=slot,
+                user_id=user.id,
+            )
         )
-    )
-    logger.info("[CreateAndScheduleAd:done] ad created")
+    else:
+        ad_type: AdType = data["ad_type"]
+        plate: str = data["plate"]
+        city: str = data["city"]
+        price: Price = Price(int(data["price"]))
+        phone: str = data["phone"]
+        media: MediaAttachment = data["media"]
+        contacts = Contacts.from_user(username=user.username, phone=phone)
+
+        await mediator.handle(
+            CreateAndScheduleAdRequest(
+                user_id=user.id,
+                region_id=region_id,
+                ad_type=ad_type,
+                plate=plate,
+                city=city,
+                price=price,
+                contacts=contacts,
+                image_file_id=media.file_id.file_id if media and media.file_id else None,
+                slot=slot,
+                chat_id=tg_id,
+            )
+        )
+
+    logger.info("[on_confirm:done] ad created/reused")
     await dialog_manager.next()

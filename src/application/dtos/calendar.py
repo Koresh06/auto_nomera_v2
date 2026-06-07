@@ -4,7 +4,7 @@ from src.domain.enums.slot import SlotAvailability, SlotPricing
 from src.domain.value_objects.slot_key import SlotKey
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CalendarSlotDTO:
     id: str  # удобно для callback_data (строка ключа)
     text: str
@@ -14,7 +14,7 @@ class CalendarSlotDTO:
     disabled: bool
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class CalendarDTO:
     region_id: int
     slots: list[CalendarSlotDTO]

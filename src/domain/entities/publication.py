@@ -4,7 +4,10 @@ from datetime import datetime
 from src.domain.entities.base import Entity
 from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 from src.domain.exceptions.publication import (
     InvalidPublicationState,
     ServiceAlreadyAdded,
@@ -124,7 +127,10 @@ class Publication(Entity):
         self.touch()
 
     def set_slot_pending_payment(
-        self, *, slot: SlotKey, publish_at_utc: datetime
+        self,
+        *,
+        slot: SlotKey,
+        publish_at_utc: datetime,
     ) -> None:
         if self.status not in (
             PublicationStatus.DRAFT,

@@ -50,9 +50,4 @@ class CreatePublicationFromAdUseCase(
 
         await self.transaction_manager.commit()
 
-        return PublicationDTO(
-            id=pub.id,
-            ad_id=pub.ad_id,
-            region_id=pub.region_id,
-            status=pub.status,
-        )
+        return PublicationDTO.from_entity(pub)

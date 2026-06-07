@@ -5,7 +5,7 @@ from src.domain.enums.region import RegionStatus
 from src.domain.value_objects.timezone_name import TimezoneName
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class RegionDTO:
     id: int
     title: str

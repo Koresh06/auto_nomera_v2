@@ -24,6 +24,14 @@ class TelegramPublisher(Protocol):
         text: str,
     ) -> PublishResult: ...
 
+    async def edit_caption(
+        self,
+        *,
+        channel_id: int,
+        message_id: int,
+        caption: str,
+    ) -> None: ...
+
     async def pin_message(self, *, channel_id: int, message_id: int) -> None: ...
 
     async def unpin_message(self, *, channel_id: int, message_id: int) -> None: ...

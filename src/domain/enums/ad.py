@@ -14,3 +14,13 @@ class AdType(str, Enum):
     BUY = "buy"
     URGENT_BUYOUT = "urgent_buyout"
     STORE = "store"
+
+    @property
+    def display(self) -> str:
+        labels = {
+            "sale": "📌 ПРОДАМ НОМЕРА",
+            "buy": "📌 КУПЛЮ НОМЕРА",
+            "urgent_buyout": "📌 СРОЧНЫЙ ВЫКУП",
+            "store": "📌 МАГАЗИН",
+        }
+        return labels.get(self.value, "📌 ОБЪЯВЛЕНИЕ")

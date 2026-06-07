@@ -27,6 +27,19 @@ class AiogramTelegramPublisher(TelegramPublisher):
     async def publish_text(self, *, channel_id: int, text: str) -> PublishResult:
         msg = await self.bot.send_message(chat_id=channel_id, text=text)
         return PublishResult(channel_id=channel_id, message_id=msg.message_id)
+    
+    async def edit_caption(
+        self,
+        *,
+        channel_id: int,
+        message_id: int,
+        caption: str,
+    ) -> None:
+        await self.bot.edit_message_caption(
+            chat_id=channel_id,
+            message_id=message_id,
+            caption=caption,
+        )
 
     async def pin_message(self, *, channel_id: int, message_id: int) -> None:
         await self.bot.pin_chat_message(chat_id=channel_id, message_id=message_id)

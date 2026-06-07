@@ -1,7 +1,6 @@
 from typing import Protocol
 
 from src.domain.entities.publication import Publication
-from src.domain.entities.publication_service import PublicationService
 
 
 class PublicationRepository(Protocol):
@@ -12,3 +11,9 @@ class PublicationRepository(Protocol):
     async def create(self, publication: Publication) -> Publication: ...
 
     async def list_scheduled_by_ad(self, ad_id: int) -> list[Publication]: ...
+
+    async def list_by_user(
+        self,
+        user_id: int,
+        region_id: int,
+    ) -> list[tuple[Publication, str | None]]: ...
