@@ -1,6 +1,9 @@
+from decimal import Decimal
+
 from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.publication.get_user import GetUserPublicationsUseCase
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
@@ -16,6 +19,8 @@ from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase
 from src.application.use_cases.ad.find_by_plate import FindAdByPlateUseCase
 from src.application.use_cases.ad.get_by_id import GetByIdAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase
+from src.application.use_cases.payment.confirm import ConfirmPaymentUseCase
+from src.application.use_cases.payment.create import CreatePaymentUseCase
 from src.application.use_cases.publication.create_ad_publication import (
     CreateAndScheduleAdUseCase,
 )
@@ -30,6 +35,8 @@ from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdA
 from src.application.use_cases.publication_service.add_service_to_publication import (
     AddServiceToPublicationUseCase,
 )
+from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceUseCase
+from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceUseCase
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationUseCase,
 )
@@ -247,10 +254,10 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             region_repo=region_repo,
             telegram=telegram,
-            # image_processor=image_processor,
-            # scheduler=scheduler,
+            image_processor=image_processor,
+            scheduler=scheduler,
             renderer=renderer,
-            # time_resolver=time_resolver,
+            time_resolver=time_resolver,
             transaction_manager=transaction_manager,
         )
 
@@ -278,6 +285,34 @@ class UseCasesProvider(Provider):
             telegram=telegram,
             renderer=renderer,
             transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def buy_publication_service_use_case(
+        self,
+        user_repo: UserRepository,
+        publication_repo: PublicationRepository,
+        service_def_repo: ServiceDefinitionRepository,
+        transaction_manager: TransactionManager,
+    ) -> BuyPublicationServiceUseCase:
+        return BuyPublicationServiceUseCase(
+            user_repo=user_repo,
+            publication_repo=publication_repo,
+            service_def_repo=service_def_repo,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def buy_pre_publication_service_use_case(
+        self,
+        user_repo: UserRepository,
+        transaction_manager: TransactionManager,
+        price_per_month: Decimal,
+    ) -> BuyPrePublicationServiceUseCase:
+        return BuyPrePublicationServiceUseCase(
+            user_repo=user_repo,
+            transaction_manager=transaction_manager,
+            price_per_month=Decimal(100),
         )
 
     @provide
@@ -377,4 +412,32 @@ class UseCasesProvider(Provider):
         return ReuseAdAndScheduleUseCase(
             create_publication=create_publication,
             select_slot=select_slot,
+        )
+    
+    @provide
+    def create_payment_use_case(
+        self,
+        payment_repo: PaymentRepository,
+        transaction_manager: TransactionManager,
+    ) -> CreatePaymentUseCase:
+        return CreatePaymentUseCase(
+            payment_repo=payment_repo,
+            transaction_manager=transaction_manager,
+        )
+
+    @provide
+    def confirm_payment_use_case(
+        self,
+        payment_repo: PaymentRepository,
+        user_repo: UserRepository,
+        publication_repo: PublicationRepository,
+        service_def_repo: ServiceDefinitionRepository,
+        transaction_manager: TransactionManager,
+    ) -> ConfirmPaymentUseCase:
+        return ConfirmPaymentUseCase(
+            payment_repo=payment_repo,
+            user_repo=user_repo,
+            publication_repo=publication_repo,
+            service_def_repo=service_def_repo,
+            transaction_manager=transaction_manager,
         )

@@ -10,6 +10,9 @@ from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.database.models import UserModel
 
 
+
+
+
 class SQLAlchemyUserRepo(UserRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -32,6 +35,15 @@ class SQLAlchemyUserRepo(UserRepository):
         result = await self._session.execute(query)
         user_model = result.scalar_one_or_none()
         return user_model.to_entity() if user_model else None
+
+    async def save(self, user: User) -> None:
+        query = select(UserModel).where(UserModel.id == user.id)
+        result = await self._session.execute(query)
+        model = result.scalar_one_or_none()
+        if model is None:
+            raise UserNotFoundException(user.id)
+        UserModel._update_model(model, user)
+        await self._session.flush()
 
     async def update(self, tg_id: int, data: UpdateUserDTO) -> User:
         query = select(UserModel).where(UserModel.tg_id == tg_id)

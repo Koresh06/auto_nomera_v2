@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.ports.publication.publication_repo import PublicationRepository
@@ -31,7 +31,7 @@ class PriorityPublishPublicationUseCase(
             raise PublicationNotFoundException(command.publication_id)
 
         # 1) добавляем услугу PRIORITY (если ещё нет) — чтобы воркер знал контекст
-        if not publication.has_service(PublicationServiceType.PRIORITY_PUBLISH):
+        if not publication.has_active_service(PublicationServiceType.PRIORITY_PUBLISH):
             publication.add_service(
                 PublicationService(type=PublicationServiceType.PRIORITY_PUBLISH)
             )

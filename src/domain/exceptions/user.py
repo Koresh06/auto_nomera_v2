@@ -41,3 +41,8 @@ class InvalidTelegramId(UserDomainException):
 class EmptyUsername(UserDomainException):
     """Имя пользователя пустое"""
     message = "Имя пользователя не может быть пустым"
+
+
+class InsufficientBalance(DomainException):
+    """Недостаточно средств"""
+    message = "Недостаточно средств"

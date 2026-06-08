@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from decimal import Decimal
 
 from src.domain.entities.base import Entity
 from src.domain.enums.role import UserRole
-from src.domain.exceptions.user import InvalidTelegramId, EmptyUsername
+from src.domain.exceptions.user import InsufficientBalance, InvalidTelegramId, EmptyUsername
 
 
 @dataclass(kw_only=True)
@@ -13,7 +15,24 @@ class User(Entity):
     role: UserRole = UserRole.USER
     phone: str | None
     region_id: int
+    balance: Decimal = Decimal("0.00")
     is_blocked: bool = False
+    pre_publication_expires_at: datetime | None = None
+
+    @property
+    def has_pre_publication(self) -> bool:
+        if self.pre_publication_expires_at is None:
+            return False
+        return self.pre_publication_expires_at > datetime.now(timezone.utc)
+
+    def activate_pre_publication(self, months: int = 1) -> None:
+        from datetime import timedelta
+        now = datetime.now(timezone.utc)
+        base = self.pre_publication_expires_at
+        if base is None or base <= now:
+            base = now
+        self.pre_publication_expires_at = base + timedelta(days=30 * months)
+        self.touch()
 
     @classmethod
     def register(
@@ -54,4 +73,18 @@ class User(Entity):
 
     def change_region(self, region_id: int) -> None:
         self.region_id = region_id
+        self.touch()
+
+    def top_up(self, amount: Decimal) -> None:
+        if amount <= 0:
+            raise ValueError("Amount must be positive")
+        self.balance += amount
+        self.touch()
+    
+    def charge(self, amount: Decimal) -> None:
+        if amount <= 0:
+            raise ValueError("Amount must be positive")
+        if self.balance < amount:
+            raise InsufficientBalance
+        self.balance -= amount
         self.touch()

@@ -13,6 +13,7 @@ from src.domain.exceptions.publication import (
     ServiceAlreadyAdded,
     ServiceNotAllowed,
 )
+from src.domain.value_objects.publication_plan import PublicationPlan
 from src.domain.value_objects.slot_key import SlotKey
 
 
@@ -40,6 +41,7 @@ class Publication(Entity):
 
     scheduler_job_id: str | None = None
 
+    plan: PublicationPlan | None = None
     services: list[PublicationService] = field(default_factory=list)
 
     def schedule(self, *, slot: SlotKey, publish_at_utc: datetime) -> None:
@@ -75,12 +77,6 @@ class Publication(Entity):
 
         self.services.append(service)
         self.touch()
-
-    def has_service(self, service_type: PublicationServiceType) -> bool:
-        return any(
-            s.type == service_type and s.status == s.status.ACTIVE
-            for s in self.services
-        )
 
     def mark_publishing(self) -> None:
         if self.status != PublicationStatus.SCHEDULED:
@@ -151,3 +147,9 @@ class Publication(Entity):
     def clear_scheduler_job(self) -> None:
         self.scheduler_job_id = None
         self.touch()
+
+    def has_active_service(self, service_type: PublicationServiceType) -> bool:
+        return any(
+            s.type == service_type and s.status == PublicationServiceStatus.ACTIVE
+            for s in self.services
+        )

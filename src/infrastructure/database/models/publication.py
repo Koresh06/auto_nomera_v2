@@ -111,6 +111,7 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
                 id=s.id,
                 type=s.type,
                 status=s.status,
+                price_paid=s.price_paid,
                 params=s.params or {},
             )
             for s in (self.services or [])
@@ -154,6 +155,7 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
                     PublicationServiceModel(
                         type=svc.type,
                         status=svc.status,
+                        price_paid=svc.price_paid,
                         params=svc.params or {},
                     )
                 )
