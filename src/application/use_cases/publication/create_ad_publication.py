@@ -40,14 +40,14 @@ class CreateAndScheduleAdRequest(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class CreateAndScheduleAdUseCase(UseCase[CreateAndScheduleAdRequest, None]):
+class CreateAndScheduleAdUseCase(UseCase[CreateAndScheduleAdRequest, PublicationDTO]):
     create_draft: CreateAdDraftUseCase
     update_content: UpdateAdContentUseCase
     finalize_ad: FinalizeAdUseCase
     create_publication: CreatePublicationFromAdUseCase
     select_slot: SelectSlotForPublicationUseCase
 
-    async def __call__(self, command: CreateAndScheduleAdRequest) -> None:
+    async def __call__(self, command: CreateAndScheduleAdRequest) -> PublicationDTO:
         logger.info(
             f"[CreateAndScheduleAd] user_id={command.user_id} "
             f"region_id={command.region_id} ad_type={command.ad_type} "
@@ -95,3 +95,5 @@ class CreateAndScheduleAdUseCase(UseCase[CreateAndScheduleAdRequest, None]):
         logger.info(f"[CreateAndScheduleAd:slot_selected] pub_id={pub.id}")
 
         logger.info(f"[CreateAndScheduleAd:done] ad_id={ad.id} pub_id={pub.id}")
+
+        return pub

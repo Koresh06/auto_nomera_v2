@@ -18,3 +18,5 @@ class ServiceContext:
     publication_repo: PublicationRepository
     time_resolver: PublishTimeResolver
     image_processor: ImageProcessor
+    tg_id: int
+    caption: str

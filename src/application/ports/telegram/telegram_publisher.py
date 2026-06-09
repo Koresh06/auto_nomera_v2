@@ -32,6 +32,25 @@ class TelegramPublisher(Protocol):
         caption: str,
     ) -> None: ...
 
-    async def pin_message(self, *, channel_id: int, message_id: int) -> None: ...
+    async def pin_message(
+        self,
+        *,
+        channel_id: int,
+        message_id: int,
+    ) -> None: ...
 
-    async def unpin_message(self, *, channel_id: int, message_id: int) -> None: ...
+    async def unpin_message(
+        self,
+        *,
+        channel_id: int,
+        message_id: int,
+    ) -> None: ...
+
+    async def edit_media(
+        self,
+        *,
+        channel_id: int,
+        message_id: int,
+        file_id: str,
+        caption: str,
+    ) -> None: ...

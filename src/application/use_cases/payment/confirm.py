@@ -2,20 +2,28 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from src.application.exceptions.payment import PaymentNotFoundException
+from src.application.exceptions.payment import (
+    PaymentNotFoundByExternalException,
+    PaymnetNotFountPurposeException,
+)
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
-from src.application.ports.publication_service.service_definition_repo import ServiceDefinitionRepository
+from src.application.ports.publication_service.service_definition_repo import (
+    ServiceDefinitionRepository,
+)
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.application.use_cases.publication.confirm_paid_slot_and_schedule_publication import (
+    ConfirmPaidSlotAndSchedulePublicationRequest,
+    ConfirmPaidSlotAndSchedulePublicationUseCase,
+)
 from src.domain.entities.payment import PaymentStatus
 from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.payment import PaymentPurpose
 from src.domain.enums.publication_service import PublicationServiceType
 from src.infrastructure.database.transaction_manager.base import TransactionManager
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +40,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
     user_repo: UserRepository
     publication_repo: PublicationRepository
     service_def_repo: ServiceDefinitionRepository
+    confirm_paid_slot: ConfirmPaidSlotAndSchedulePublicationUseCase
     transaction_manager: TransactionManager
 
     async def __call__(self, command: ConfirmPaymentRequest) -> None:
@@ -39,7 +48,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
 
         payment = await self.payment_repo.get_by_external_id(command.external_id)
         if payment is None:
-            raise PaymentNotFoundException(command.external_id)
+            raise PaymentNotFoundByExternalException(command.external_id)
 
         if payment.status == PaymentStatus.PAID:
             return  # идемпотентность — уже обработан
@@ -61,6 +70,9 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             definition = await self.service_def_repo.get_by_type(
                 PublicationServiceType(payment.meta["service_type"])
             )
+            if not payment.purpose_id:
+                raise PaymnetNotFountPurposeException(command.external_id)
+
             publication = await self.publication_repo.get_by_id(payment.purpose_id)
             if publication is None:
                 raise PublicationNotFoundException(payment.purpose_id)
@@ -78,8 +90,22 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             await self.user_repo.save(user)
 
         elif payment.purpose == PaymentPurpose.SLOT:
-            # подтверждение оплаты слота — отдельный use case
-            pass  # TODO: ConfirmPaidSlotAndSchedulePublication
+            if not payment.purpose_id:
+                raise PaymnetNotFountPurposeException(command.external_id)
+
+            publication = await self.publication_repo.get_by_id(payment.purpose_id)
+            if publication is None:
+                raise PublicationNotFoundException(payment.purpose_id)
+
+            await self.confirm_paid_slot(
+                ConfirmPaidSlotAndSchedulePublicationRequest(
+                    publication_id=publication.id,
+                    user_id=payment.user_id,
+                    ad_id=publication.ad_id,
+                )
+            )
 
         await self.transaction_manager.commit()
-        logger.info(f"[ConfirmPayment:done] external_id={command.external_id} purpose={payment.purpose}")
+        logger.info(
+            f"[ConfirmPayment:done] external_id={command.external_id} purpose={payment.purpose}"
+        )

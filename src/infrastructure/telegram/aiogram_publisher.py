@@ -1,4 +1,5 @@
 from aiogram import Bot
+from aiogram.types import InputMediaPhoto
 
 from src.application.ports.telegram.telegram_publisher import (
     TelegramPublisher,
@@ -24,10 +25,21 @@ class AiogramTelegramPublisher(TelegramPublisher):
         )
         return PublishResult(channel_id=channel_id, message_id=msg.message_id)
 
-    async def publish_text(self, *, channel_id: int, text: str) -> PublishResult:
-        msg = await self.bot.send_message(chat_id=channel_id, text=text)
-        return PublishResult(channel_id=channel_id, message_id=msg.message_id)
-    
+    async def publish_text(
+        self,
+        *,
+        channel_id: int,
+        text: str,
+    ) -> PublishResult:
+        msg = await self.bot.send_message(
+            chat_id=channel_id,
+            text=text,
+        )
+        return PublishResult(
+            channel_id=channel_id,
+            message_id=msg.message_id,
+        )
+
     async def edit_caption(
         self,
         *,
@@ -41,8 +53,41 @@ class AiogramTelegramPublisher(TelegramPublisher):
             caption=caption,
         )
 
-    async def pin_message(self, *, channel_id: int, message_id: int) -> None:
-        await self.bot.pin_chat_message(chat_id=channel_id, message_id=message_id)
+    async def pin_message(
+        self,
+        *,
+        channel_id: int,
+        message_id: int,
+    ) -> None:
+        await self.bot.pin_chat_message(
+            chat_id=channel_id,
+            message_id=message_id,
+        )
 
-    async def unpin_message(self, *, channel_id: int, message_id: int) -> None:
-        await self.bot.unpin_chat_message(chat_id=channel_id, message_id=message_id)
+    async def unpin_message(
+        self,
+        *,
+        channel_id: int,
+        message_id: int,
+    ) -> None:
+        await self.bot.unpin_chat_message(
+            chat_id=channel_id,
+            message_id=message_id,
+        )
+
+    async def edit_media(
+        self,
+        *,
+        channel_id: int,
+        message_id: int,
+        file_id: str,
+        caption: str,
+    ) -> None:
+        await self.bot.edit_message_media(
+            chat_id=channel_id,
+            message_id=message_id,
+            media=InputMediaPhoto(
+                media=file_id,
+                caption=caption,
+            ),
+        )

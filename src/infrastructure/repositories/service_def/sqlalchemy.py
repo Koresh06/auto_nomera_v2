@@ -23,7 +23,15 @@ class SQLAlchemyServiceDefinitionRepo(ServiceDefinitionRepository):
             raise ServiceDefinitionException(f"ServiceDefinition type={service_type} not found")
         return model.to_entity()
 
-    async def get_all(self) -> list[ServiceDefinition]:
+    async def get_all(self, is_active: bool | None = None) -> list[ServiceDefinition]:
+        if is_active is not None:
+            result = await self._session.execute(
+                select(ServiceDefinitionModel).where(
+                    ServiceDefinitionModel.is_active == is_active
+                )
+            )
+            return [m.to_entity() for m in result.scalars().all()]
+
         result = await self._session.execute(select(ServiceDefinitionModel))
         return [m.to_entity() for m in result.scalars().all()]
 

@@ -2,15 +2,18 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
 
+from src.application.dtos.user import UserDTO
 from src.application.exceptions.ad import AdNotFoundException
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.region import RegionNotFoundException
+from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.publication_service.image_processor import ImageProcessor
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.telegram.telegram_publisher import TelegramPublisher
+from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.publication import Publication
 from src.domain.entities.publication_service import PublicationService
@@ -38,9 +41,11 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
     publication_repo: PublicationRepository
     ad_repo: AdRepository
     region_repo: RegionRepository
+    user_repo: UserRepository
 
     telegram: TelegramPublisher
     image_processor: ImageProcessor
+    renderer: AdTextRenderer
     scheduler: Scheduler
 
     renderer: AdTextRenderer
@@ -51,14 +56,17 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         now = command.now_utc or datetime.now(timezone.utc)
 
         pub = await self.publication_repo.get_by_id(command.publication_id)
+        logger.info(f"[Publish] pub_id={command.publication_id} status={pub.status if pub else None}")
+    
         if pub is None:
             raise PublicationNotFoundException(command.publication_id)
-
+    
         if pub.status in (
             PublicationStatus.PUBLISHED,
             PublicationStatus.CANCELED,
             PublicationStatus.REPLACED,
         ):
+            logger.info(f"[Publish:skip] pub_id={pub.id} status={pub.status} — already done")
             return
 
         pub.mark_publishing()
@@ -71,6 +79,12 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         region = await self.region_repo.get_by_id(pub.region_id)
         if region is None:
             raise RegionNotFoundException(pub.region_id)
+        
+        user = await self.user_repo.get_by_id(ad.user_id)
+        if user is None:
+            raise UserNotFoundException(ad.user_id)
+        
+        text = self.renderer.render(ad=ad, region=region)
 
         ctx = ServiceContext(
             region=region,
@@ -80,6 +94,8 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
             publication_repo=self.publication_repo,
             time_resolver=self.time_resolver,
             image_processor=self.image_processor,
+            tg_id=user.tg_id,
+            caption=text,
         )
 
         # 1) HIGHLIGHT — до публикации

@@ -29,21 +29,14 @@ class PriorityPublishPublicationUseCase(
         publication = await self.publication_repo.get_by_id(command.publication_id)
         if publication is None:
             raise PublicationNotFoundException(command.publication_id)
-
-        # 1) добавляем услугу PRIORITY (если ещё нет) — чтобы воркер знал контекст
-        if not publication.has_active_service(PublicationServiceType.PRIORITY_PUBLISH):
-            publication.add_service(
-                PublicationService(type=PublicationServiceType.PRIORITY_PUBLISH)
-            )
-
-        # 2) если было запланировано — отменяем задачу и помечаем как REPLACED
+    
+        # отменяем старую задачу из планировщика
         if publication.status == PublicationStatus.SCHEDULED:
             await self.scheduler.cancel_publication(publication_id=publication.id)
-            publication.mark_replaced_by_priority()
-            await self.publication_repo.save(publication)
-
-        # 3) ставим задачу "publish now"
+    
+        # НЕ меняем статус — оставляем SCHEDULED
+        # ставим задачу немедленно
         await self.scheduler.schedule_publish_now(publication_id=publication.id)
-
+    
         await self.publication_repo.save(publication)
         await self.transaction_manager.commit()

@@ -28,6 +28,7 @@ from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdUseCase,
 )
 from src.application.use_cases.publication.edit_published import EditPublishedAdRequest, EditPublishedAdUseCase
+from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest, GetPublicationByIdUseCase
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationRequest,
     PublishPublicationUseCase,
@@ -37,6 +38,10 @@ from src.application.use_cases.publication_service.add_service_to_publication im
     AddServiceToPublicationRequest,
     AddServiceToPublicationUseCase,
 )
+from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedRequest, ApplyServiceToPublishedUseCase
+from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceRequest, BuyPrePublicationServiceUseCase
+from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest, BuyPublicationServiceUseCase
+from src.application.use_cases.publication_service.get_all import GetAllServicesRequest, GetAllServicesUseCase
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationRequest,
     PriorityPublishPublicationUseCase,
@@ -59,6 +64,7 @@ from src.application.use_cases.region.get_all import (
     GetRegionsRequest,
 )
 from src.application.use_cases.region.get_by_id import GegByIdRegionUseCase, IdRegionRequest
+from src.application.use_cases.seeds.service_definitions import SeedServiceDefinitionsRequest, SeedServiceDefinitionsUseCase
 from src.application.use_cases.slots.get_calendar import (
     GetCalendarRequest,
     GetCalendarUseCase,
@@ -98,6 +104,10 @@ class MediatorProvider(Provider):
         publish_publication_use_case: PublishPublicationUseCase,
         get_user_publications_use_case: GetUserPublicationsUseCase,
         edit_published_ad_use_case: EditPublishedAdUseCase,
+        buy_publication_service_use_case: BuyPublicationServiceUseCase,
+        buy_pre_publication_service_use_case: BuyPrePublicationServiceUseCase,
+        get_publication_by_id_use_case: GetPublicationByIdUseCase,
+        get_all_services_use_case: GetAllServicesUseCase,
         unpin_message_use_case: UnpinMessageUseCase,
         ensure_ad_image_ref_use_case: EnsureAdImageRefUseCase,
         create_ad_draft_use_case: CreateAdDraftUseCase,
@@ -110,6 +120,8 @@ class MediatorProvider(Provider):
         reuse_ad_and_schedule_use_case: ReuseAdAndScheduleUseCase,
         create_payment_use_case: CreatePaymentUseCase,
         confirm_payment_use_case: ConfirmPaymentUseCase,
+        seed_service_definitons_use_case: SeedServiceDefinitionsUseCase,
+        apply_service_to_published_use_case: ApplyServiceToPublishedUseCase
     ) -> Mediator:
         mediator = Mediator()
 
@@ -142,6 +154,10 @@ class MediatorProvider(Provider):
         mediator.register(PublishPublicationRequest, publish_publication_use_case)
         mediator.register(GetUserPublicationsRequest, get_user_publications_use_case)
         mediator.register(EditPublishedAdRequest, edit_published_ad_use_case)
+        mediator.register(BuyPublicationServiceRequest, buy_publication_service_use_case)
+        mediator.register(BuyPrePublicationServiceRequest, buy_pre_publication_service_use_case)
+        mediator.register(GetPublicationByIdRequest, get_publication_by_id_use_case)
+        mediator.register(GetAllServicesRequest, get_all_services_use_case)
         mediator.register(UnpinMessageRequest, unpin_message_use_case)
         mediator.register(EnsureAdImageRefRequest, ensure_ad_image_ref_use_case)
         mediator.register(CreateAdDraftRequest, create_ad_draft_use_case)
@@ -156,5 +172,7 @@ class MediatorProvider(Provider):
         mediator.register(ReuseAdAndScheduleRequest, reuse_ad_and_schedule_use_case)
         mediator.register(CreatePaymentRequest, create_payment_use_case)
         mediator.register(ConfirmPaymentRequest, confirm_payment_use_case)
+        mediator.register(SeedServiceDefinitionsRequest, seed_service_definitons_use_case)
+        mediator.register(ApplyServiceToPublishedRequest, apply_service_to_published_use_case)
 
         return mediator

@@ -10,6 +10,9 @@ class PinStrategy:
         service: PublicationService,
         context: ServiceContext,
     ) -> None: 
+        if publication.channel_message_id is None:
+            service.mark_used()
+            return
         unpin_at = context.time_resolver.resolve_unpin_time(
             publication.published_at_utc, service.params
         )

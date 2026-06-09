@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.ports.publication.publication_repo import PublicationRepository

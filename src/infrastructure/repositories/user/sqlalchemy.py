@@ -10,9 +10,6 @@ from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.database.models import UserModel
 
 
-
-
-
 class SQLAlchemyUserRepo(UserRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session

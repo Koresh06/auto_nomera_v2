@@ -10,7 +10,7 @@ class PillowImageProcessor(ImageProcessor):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
 
-    async def add_red_frame(self, *, file_id: str) -> str:
+    async def add_red_frame(self, chat_id: int, file_id: str) -> str:
         # 1. Скачать файл из Telegram
         file = await self.bot.get_file(file_id)
         file_bytes = await self.bot.download_file(file.file_path)
@@ -33,7 +33,7 @@ class PillowImageProcessor(ImageProcessor):
         # 4. Отправить в Telegram, чтобы получить новый file_id
         input_file = BufferedInputFile(out.read(), filename="highlight.png")
         temp_msg = await self.bot.send_photo(
-            chat_id=self.bot.id,  # можно любой технический чат
+            chat_id=chat_id,  # можно любой технический чат
             photo=input_file,
         )
 
@@ -41,16 +41,16 @@ class PillowImageProcessor(ImageProcessor):
 
         # (по желанию) удалить временное сообщение
         await self.bot.delete_message(
-            chat_id=self.bot.id,
+            chat_id=chat_id,
             message_id=temp_msg.message_id,
         )
 
         return new_file_id
 
 
-def draw_debug_red_border(
+def darawing_red_border(
     img: Image.Image,
-    border_width: int = 40,
+    border_width: int = 20,
     color: tuple[int, int, int, int] = (255, 0, 0, 255),
     mutate: bool = False,
 ) -> Image.Image:

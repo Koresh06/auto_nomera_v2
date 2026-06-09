@@ -1,3 +1,4 @@
+from decimal import Decimal
 import logging
 
 from aiogram.types import Message, CallbackQuery
@@ -10,10 +11,19 @@ from aiogram_dialog.api.entities import MediaAttachment
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 
 from src.application.dtos.ad import AdDTO
+from src.application.dtos.publication import PublicationDTO
+from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.use_cases.ad.find_by_plate import FindAdByPlateRequest
+from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdAndScheduleRequest
+from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedRequest
+from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest
+from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
+from src.application.use_cases.publication_service.priority_publish_publication import PriorityPublishPublicationRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
+from src.domain.enums.publication import PublicationStatus
+from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.exceptions.slot_reservation import  SlotAlreadyConverted, SlotAlreadyHeld, SlotHoldNotFound, SlotHoldOwnerMismatch
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.services.slots.slot_reservation_service import HoldResult
@@ -254,7 +264,7 @@ async def on_confirm(
 
     if data.get("reuse_ad"):
         ad_id: int = data["existing_ad_id"]
-        await mediator.handle(
+        pub: PublicationDTO = await mediator.handle(
             ReuseAdAndScheduleRequest(
                 ad_id=ad_id,
                 slot=slot,
@@ -270,7 +280,7 @@ async def on_confirm(
         media: MediaAttachment = data["media"]
         contacts = Contacts.from_user(username=user.username, phone=phone)
 
-        await mediator.handle(
+        pub: PublicationDTO = await mediator.handle(
             CreateAndScheduleAdRequest(
                 user_id=user.id,
                 region_id=region_id,
@@ -285,5 +295,94 @@ async def on_confirm(
             )
         )
 
+    data["publication_id"] = pub.id
+
     logger.info("[on_confirm:done] ad created/reused")
     await dialog_manager.next()
+
+
+@inject
+async def on_service_paid_selected(
+    callback: CallbackQuery,
+    widget: OnItemClick[Select[str], str],
+    dialog_manager: DialogManager,
+    item_id: str,
+    mediator: FromDishka[Mediator],
+) -> None:
+    user: UserDTO = dialog_manager.dialog_data["user"]
+    pub_id: int = dialog_manager.dialog_data["publication_id"]
+    service_type = PublicationServiceType(item_id)
+
+    logger.info(f"[ServiceSelected] user_id={user.id} pub_id={pub_id} service={service_type}")
+
+    # проверяем уже куплена ли
+    pub: PublicationDTO = await mediator.handle(GetPublicationByIdRequest(publication_id=pub_id))
+    bought_types = {s["type"] for s in pub.services if s["status"] == "active"}
+    if item_id in bought_types:
+        await callback.answer("⚠️ Эта услуга уже активна.", show_alert=True)
+        return
+
+    # получаем определение услуги
+    services: list[ServiceDefinitionDTO] = await mediator.handle(GetAllServicesRequest())
+    service = next((s for s in services if s.type == service_type), None)
+    if not service:
+        await callback.answer("❌ Услуга не найдена.", show_alert=True)
+        return
+
+    # двойное подтверждение
+    pending_key = "pending_service"
+    if dialog_manager.dialog_data.get(pending_key) != item_id:
+        dialog_manager.dialog_data[pending_key] = item_id
+        duration = f" на {service.duration_days} дн." if service.duration_days else ""
+        await callback.answer(
+            f"💳 {service.title}{duration}\n"
+            f"Стоимость: {service.price // 100} руб.\n\n"
+            f"Нажмите ещё раз для подтверждения.",
+            show_alert=True,
+        )
+        logger.info(f"[ServiceSelected:confirm] waiting second click for {service_type}")
+        return
+    logger.info(f"[ServiceSelected:second_click] service={service_type} user_id={user.id}")
+
+    # проверяем баланс
+    price_decimal = Decimal(service.price) / 100
+    if user.balance < price_decimal:
+        diff = int(price_decimal - user.balance)
+        logger.warning(f"[ServiceSelected:insufficient] user_id={user.id} balance={user.balance} need={price_decimal}")
+        await callback.answer(
+            f"😔 Недостаточно средств.\n"
+            f"Пополните баланс на {diff} руб. и попробуйте снова.",
+            show_alert=True,
+        )
+        dialog_manager.dialog_data.pop(pending_key, None)
+        return
+
+    # покупаем
+    logger.info(f"[ServiceSelected:buy] user_id={user.id} pub_id={pub_id} service={service_type}")
+    await mediator.handle(
+        BuyPublicationServiceRequest(
+            publication_id=pub_id,
+            service_type=service_type,
+            user_id=user.id,
+        )
+    )
+
+    # получаем актуальный статус публикации
+    pub = await mediator.handle(GetPublicationByIdRequest(publication_id=pub_id))
+
+    if service_type == PublicationServiceType.PRIORITY_PUBLISH:
+        logger.info(f"[ServiceSelected:priority] publishing now pub_id={pub_id}")
+        await mediator.handle(PriorityPublishPublicationRequest(publication_id=pub_id))
+
+    elif pub.status == PublicationStatus.PUBLISHED:
+        logger.info(f"[ServiceSelected:apply_to_published] pub_id={pub_id} service={service_type}")
+        await mediator.handle(
+            ApplyServiceToPublishedRequest(
+                publication_id=pub_id,
+                service_type=service_type,
+            )
+        )
+
+    dialog_manager.dialog_data.pop(pending_key, None)
+    logger.info(f"[ServiceSelected:done] user_id={user.id} pub_id={pub_id} service={service_type}")
+    await callback.answer(f"✅ {service.title} активирована!", show_alert=True)

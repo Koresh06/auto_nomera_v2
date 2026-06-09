@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 10ac4f57ed85
+Revision ID: 1081222fff4c
 Revises: 
-Create Date: 2026-06-04 23:02:20.984485
+Create Date: 2026-06-09 23:34:57.293983
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '10ac4f57ed85'
+revision: str = '1081222fff4c'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,11 +37,12 @@ def upgrade() -> None:
     )
     op.create_table('service_definitions',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('type', sa.Enum('AUTOPUBLISH', 'PRIORITY_PUBLISH', 'PIN', 'HIGHLIGHT', name='publicationservicetype'), nullable=False),
     sa.Column('title', sa.VARCHAR(length=128), nullable=False),
+    sa.Column('type', sa.Enum('AUTOPUBLISH', 'PRIORITY_PUBLISH', 'PIN', 'HIGHLIGHT', 'PRE_PUBLICATION', name='publicationservicetype'), nullable=False),
     sa.Column('price', sa.Integer(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('duration_days', sa.Integer(), nullable=True),
     sa.Column('description', sa.String(length=256), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('params_schema', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -55,7 +56,9 @@ def upgrade() -> None:
     sa.Column('full_name', sa.VARCHAR(length=128), nullable=True),
     sa.Column('phone', sa.VARCHAR(length=16), nullable=True),
     sa.Column('role', sa.Enum('USER', 'ADMIN', name='userrole'), nullable=False),
+    sa.Column('balance', sa.NUMERIC(precision=12, scale=2), server_default='0.00', nullable=False),
     sa.Column('is_blocked', sa.Boolean(), nullable=False),
+    sa.Column('pre_publication_expires_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('region_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -84,6 +87,28 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('ads_user_id_fkey'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk__ads'))
     )
+    op.create_table('payments',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('external_id', sa.String(length=64), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('method', sa.Enum('MANUAL_CARD', 'CRYPTO', 'TELEGRAM_STARS', 'YOOKASSA', name='paymentmethod'), nullable=False),
+    sa.Column('amount', sa.Numeric(precision=12, scale=2), nullable=False),
+    sa.Column('currency', sa.String(length=8), nullable=False),
+    sa.Column('status', sa.Enum('PENDING', 'WAITING_CONFIRMATION', 'PAID', 'FAILED', 'EXPIRED', name='paymentstatus'), nullable=False),
+    sa.Column('purpose', sa.Enum('BALANCE_TOPUP', 'PUBLICATION_SERVICE', 'PRE_PUBLICATION', 'SLOT', name='paymentpurpose'), nullable=False),
+    sa.Column('purpose_id', sa.Integer(), nullable=True),
+    sa.Column('description', sa.String(length=256), nullable=True),
+    sa.Column('meta', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('paid_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('payments_user_id_fkey'), ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk__payments'))
+    )
+    op.create_index(op.f('ix__payments_external_id'), 'payments', ['external_id'], unique=True)
+    op.create_index(op.f('ix__payments_status'), 'payments', ['status'], unique=False)
+    op.create_index(op.f('ix__payments_user_id'), 'payments', ['user_id'], unique=False)
     op.create_table('publications',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('ad_id', sa.Integer(), nullable=False),
@@ -106,7 +131,7 @@ def upgrade() -> None:
     sa.Column('region_id', sa.Integer(), nullable=False),
     sa.Column('slot_day', sa.Date(), nullable=False),
     sa.Column('slot_time', sa.Time(), nullable=False),
-    sa.Column('ad_id', sa.Integer(), nullable=False),
+    sa.Column('ad_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['ad_id'], ['ads.id'], name=op.f('slot_bookings_ad_id_fkey'), ondelete='CASCADE'),
@@ -120,7 +145,7 @@ def upgrade() -> None:
     sa.Column('region_id', sa.Integer(), nullable=False),
     sa.Column('slot_day', sa.Date(), nullable=False),
     sa.Column('slot_time', sa.Time(), nullable=False),
-    sa.Column('ad_id', sa.Integer(), nullable=False),
+    sa.Column('ad_id', sa.Integer(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['ad_id'], ['ads.id'], name=op.f('slot_converted_ad_id_fkey'), ondelete='CASCADE'),
@@ -132,7 +157,7 @@ def upgrade() -> None:
     op.create_table('publication_services',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('publication_id', sa.Integer(), nullable=False),
-    sa.Column('type', sa.Enum('AUTOPUBLISH', 'PRIORITY_PUBLISH', 'PIN', 'HIGHLIGHT', name='publicationservicetype'), nullable=False),
+    sa.Column('type', sa.Enum('AUTOPUBLISH', 'PRIORITY_PUBLISH', 'PIN', 'HIGHLIGHT', 'PRE_PUBLICATION', name='publicationservicetype'), nullable=False),
     sa.Column('status', sa.Enum('ACTIVE', 'USED', 'CANCELED', 'EXPIRED', name='publicationservicestatus'), nullable=False),
     sa.Column('price_paid', sa.Integer(), nullable=True),
     sa.Column('params', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
@@ -151,6 +176,10 @@ def downgrade() -> None:
     op.drop_table('slot_converted')
     op.drop_table('slot_bookings')
     op.drop_table('publications')
+    op.drop_index(op.f('ix__payments_user_id'), table_name='payments')
+    op.drop_index(op.f('ix__payments_status'), table_name='payments')
+    op.drop_index(op.f('ix__payments_external_id'), table_name='payments')
+    op.drop_table('payments')
     op.drop_table('ads')
     op.drop_index(op.f('ix__users_tg_id'), table_name='users')
     op.drop_table('users')

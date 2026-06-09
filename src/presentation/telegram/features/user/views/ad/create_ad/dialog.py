@@ -33,6 +33,7 @@ from .handlers import (
     on_plate_success,
     on_pick_slot,
     on_reuse_old_click,
+    on_service_paid_selected,
 )
 from .getters import (
     calendar_getter,
@@ -41,11 +42,11 @@ from .getters import (
     getter_duplicate_ad,
     getter_finish,
     getter_media_plate,
+    getter_publication_service,
     getter_user_phone,
 )
 from .validators import capitalize_word, validate_phone_number, validate_price
 from .texts import PLATE_BUY_TEXT, PLATE_SALE_TEXT
-
 
 create_ad_dialog = Dialog(
     Window(
@@ -228,22 +229,21 @@ create_ad_dialog = Dialog(
         getter=getter_confirm,
     ),
     Window(
-        Const(
-            "💎 <b>Сделайте своё объявление заметнее! Выберите услуги, чтобы выделить его перед публикацией:</b>"
+        Const("💎 <b>Сделайте своё объявление заметнее!</b>\n"),
+        Format("💰 Ваш баланс: {balance}\n"),
+        Group(
+            Select(
+                Format("{item[0]}"),
+                id="selected_services",
+                item_id_getter=lambda x: str(x[1]),
+                items="available_services",
+                on_click=on_service_paid_selected,
+            ),
+            width=1,
         ),
-        # Group(
-        #     Select(
-        #         Format("{item[0]}"),
-        #         id="selected_services",
-        #         item_id_getter=lambda x: str(x[1]),
-        #         items="available_services",
-        #         on_click=on_service_paid_selected,
-        #     ),
-        #     width=1,
-        # ),
         Next(Const("⏭ Пропустить")),
         state=CreateAdSG.publication_service,
-        # getter=getter_publication_service,
+        getter=getter_publication_service,
     ),
     Window(
         Const("🤝 <b>Спасибо что выбрали Нас.</b>\n\n"),
@@ -273,5 +273,5 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.finish,
         getter=getter_finish,
         # on_process_result=on_process_result,
-    )
+    ),
 )

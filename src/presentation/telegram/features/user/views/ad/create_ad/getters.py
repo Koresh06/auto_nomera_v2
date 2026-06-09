@@ -5,14 +5,19 @@ from aiogram_dialog.api.entities import MediaAttachment, MediaId
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.calendar import CalendarDTO
+from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.region import RegionDTO
+from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefRequest
+from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
+from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
+from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest
-from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
+from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
@@ -162,6 +167,61 @@ async def getter_confirm(
     }
 
 
+@inject
+async def getter_publication_service(
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+    **kwargs,
+) -> dict:
+    user: UserDTO = dialog_manager.dialog_data["user"]
+    pub_id: int = dialog_manager.dialog_data["publication_id"]
+
+    services: list[ServiceDefinitionDTO] = await mediator.handle(
+        GetAllServicesRequest(is_active=True)
+    )
+
+    # получаем уже купленные услуги для этой публикации
+    pub: PublicationDTO = await mediator.handle(
+        GetPublicationByIdRequest(publication_id=pub_id)
+    )
+    bought_types = {
+        s["type"] for s in pub.services
+        if s["status"] == PublicationServiceStatus.ACTIVE.value
+    }
+
+    ORDER = {
+        PublicationServiceType.PRIORITY_PUBLISH: 1,
+        PublicationServiceType.HIGHLIGHT: 2,
+        PublicationServiceType.PIN: 3,
+        PublicationServiceType.AUTOPUBLISH: 4,
+    }
+
+    ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=pub.ad_id))
+
+    # фильтруем
+    filtered = [
+        s for s in services
+        if s.type != PublicationServiceType.PRE_PUBLICATION
+        and not (ad and ad.ad_type == AdType.STORE and s.type == PublicationServiceType.HIGHLIGHT)
+    ]
+
+    # сортируем
+    filtered.sort(key=lambda s: ORDER.get(s.type, 99))
+
+    # формируем отображение
+    display = [
+        (
+            f"{s.title} ✅" if s.type.value in bought_types
+            else f"{s.title} — {s.price // 100} руб.",
+            s.type.value,
+        )
+        for s in filtered
+    ]
+
+    return {
+        "available_services": display,
+        "balance": f"{user.balance:.0f} руб.",
+    }
 
 async def getter_finish(dialog_manager: DialogManager, **kwargs) -> dict:
     data = dialog_manager.dialog_data

@@ -6,10 +6,11 @@ class PublicationServiceType(str, Enum):
     PRIORITY_PUBLISH = "priority_publish"
     PIN = "pin"
     HIGHLIGHT = "highlight"
+    PRE_PUBLICATION = "pre_publication"
 
 
 class PublicationServiceStatus(str, Enum):
-    ACTIVE = "active"
-    USED = "used"
-    CANCELED = "canceled"
-    EXPIRED = "expired"
+    ACTIVE = "active" # активная услуга
+    USED = "used" # использована, но не оплачена
+    CANCELED = "canceled" # отменена
+    EXPIRED = "expired" # просрочена

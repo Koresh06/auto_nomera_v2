@@ -19,11 +19,11 @@ class ReuseAdAndScheduleRequest(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class ReuseAdAndScheduleUseCase(UseCase[ReuseAdAndScheduleRequest, None]):
+class ReuseAdAndScheduleUseCase(UseCase[ReuseAdAndScheduleRequest, PublicationDTO]):
     create_publication: CreatePublicationFromAdUseCase
     select_slot: SelectSlotForPublicationUseCase
 
-    async def __call__(self, command: ReuseAdAndScheduleRequest) -> None:
+    async def __call__(self, command: ReuseAdAndScheduleRequest) -> PublicationDTO:
         logger.info(f"[ReuseAdAndSchedule] ad_id={command.ad_id} slot={command.slot.local_day} {command.slot.local_time}")
 
         pub: PublicationDTO = await self.create_publication(
@@ -40,3 +40,5 @@ class ReuseAdAndScheduleUseCase(UseCase[ReuseAdAndScheduleRequest, None]):
             )
         )
         logger.info(f"[ReuseAdAndSchedule:done] pub_id={pub.id}")
+
+        return pub

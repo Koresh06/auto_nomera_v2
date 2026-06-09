@@ -132,6 +132,8 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
 
     @staticmethod
     def _update_model(model: "PublicationModel", pub: "Publication") -> None:
+        from src.infrastructure.database.models.publication_service import PublicationServiceModel
+        
         model.status = pub.status
         model.slot_day = pub.slot.local_day if pub.slot else None
         model.slot_time = pub.slot.local_time if pub.slot else None

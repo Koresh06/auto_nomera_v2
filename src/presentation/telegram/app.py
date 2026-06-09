@@ -10,6 +10,7 @@ from taskiq_redis import RedisStreamBroker
 
 from src.application.mediator import Mediator
 from src.infrastructure.broker.taskiq import register_taskiq_tasks
+from src.infrastructure.seeds.runner import run_seeds
 from src.utils.logging import setup_logging
 from src.core.dependencies.providers import make_base_providers
 from src.presentation.telegram.common.custom_message_manager import CustomMessageManager
@@ -35,14 +36,14 @@ async def create_app():
         AiogramProvider(),
     )
 
+    async with container() as request_container:
+        mediator = await request_container.get(Mediator)
+        await run_seeds(mediator)
+
     # регистрируем задачи на брокере бота
     broker: RedisStreamBroker = await container.get(RedisStreamBroker)
 
-    async def get_mediator() -> Mediator:
-        async with container() as request_container:
-            return await request_container.get(Mediator)
-
-    register_taskiq_tasks(broker, get_mediator=get_mediator)
+    register_taskiq_tasks(broker, container=container)
     await broker.startup()  # ← важно запустить брокер
 
     bot: Bot = await container.get(Bot)

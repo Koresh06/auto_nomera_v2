@@ -4,6 +4,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication_service.service_definition_repo import (
     ServiceDefinitionRepository,
@@ -15,6 +16,7 @@ from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.repositories.ad.in_memory import InMemoryAdRepo
 from src.infrastructure.repositories.ad.sqlalchemy import SQLAlchemyAdRepo
+from src.infrastructure.repositories.payment.sqlalchemy import SQLAlchemyPaymentRepo
 from src.infrastructure.repositories.publication.in_memory import (
     InMemoryPublicationRepo,
 )
@@ -72,3 +74,7 @@ class RepositoriesProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_service_definition_repository(self, session: AsyncSession) -> ServiceDefinitionRepository:
         return SQLAlchemyServiceDefinitionRepo(session)
+    
+    @provide(scope=Scope.REQUEST)
+    def get_payment_repository(self, session: AsyncSession) -> PaymentRepository:
+        return SQLAlchemyPaymentRepo(session)

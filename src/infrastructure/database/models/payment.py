@@ -1,10 +1,12 @@
+from decimal import Decimal
 from typing import TYPE_CHECKING
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Integer, String, Enum as SaEnum, BigInteger, DateTime
+from sqlalchemy import ForeignKey, Integer, Numeric, String, Enum as SaEnum, BigInteger, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.domain.entities.payment import Payment
 from src.domain.enums.payment import PaymentMethod, PaymentPurpose, PaymentStatus
 from src.infrastructure.database.models.base import (
     BaseModel,
@@ -27,7 +29,7 @@ class PaymentModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
         index=True,
     )
     method: Mapped[PaymentMethod] = mapped_column(SaEnum(PaymentMethod))
-    amount: Mapped[int] = mapped_column(BigInteger)  # в копейках
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(8), default="RUB")
     status: Mapped[PaymentStatus] = mapped_column(
         SaEnum(PaymentStatus),
@@ -48,3 +50,51 @@ class PaymentModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
     )
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="payments")
+
+
+    @classmethod
+    def from_entity(self, payment: "Payment") -> "PaymentModel":
+        return self(
+            external_id=payment.external_id,
+            user_id=payment.user_id,
+            method=payment.method,
+            amount=payment.amount,
+            currency=payment.currency,
+            status=payment.status,
+            purpose=payment.purpose,
+            purpose_id=payment.purpose_id,
+            description=payment.description,
+            meta=payment.meta,
+            expires_at=payment.expires_at,
+            paid_at=payment.paid_at,
+        )
+
+    def to_entity(self) -> "Payment":
+        return Payment(
+            external_id=self.external_id,
+            user_id=self.user_id,
+            method=self.method,
+            amount=self.amount,
+            currency=self.currency,
+            status=self.status,
+            purpose=self.purpose,
+            purpose_id=self.purpose_id,
+            description=self.description,
+            meta=self.meta,
+            expires_at=self.expires_at,
+            paid_at=self.paid_at,
+        )
+    
+    def _update_model(self, payment: "Payment") -> None:
+        self.external_id = payment.external_id
+        self.user_id = payment.user_id
+        self.method = payment.method
+        self.amount = payment.amount
+        self.currency = payment.currency
+        self.status = payment.status
+        self.purpose = payment.purpose
+        self.purpose_id = payment.purpose_id
+        self.description = payment.description
+        self.meta = payment.meta
+        self.expires_at = payment.expires_at
+        self.paid_at = payment.paid_at

@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
@@ -28,6 +26,7 @@ from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdUseCase,
 )
 from src.application.use_cases.publication.edit_published import EditPublishedAdUseCase
+from src.application.use_cases.publication.get_by_id import GetPublicationByIdUseCase
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationUseCase,
 )
@@ -35,8 +34,10 @@ from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdA
 from src.application.use_cases.publication_service.add_service_to_publication import (
     AddServiceToPublicationUseCase,
 )
+from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedUseCase
 from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceUseCase
 from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceUseCase
+from src.application.use_cases.publication_service.get_all import GetAllServicesUseCase
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationUseCase,
 )
@@ -56,6 +57,7 @@ from src.application.use_cases.publication_service.unpin_message import (
 from src.application.use_cases.region.create import CreateRegionUseCase
 from src.application.use_cases.region.get_all import GetAllRegionsUseCase
 from src.application.use_cases.region.get_by_id import GegByIdRegionUseCase
+from src.application.use_cases.seeds.service_definitions import SeedServiceDefinitionsUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
@@ -242,6 +244,7 @@ class UseCasesProvider(Provider):
         publication_repo: PublicationRepository,
         ad_repo: AdRepository,
         region_repo: RegionRepository,
+        user_repo: UserRepository,
         telegram: TelegramPublisher,
         image_processor: ImageProcessor,
         scheduler: Scheduler,
@@ -253,6 +256,7 @@ class UseCasesProvider(Provider):
             publication_repo=publication_repo,
             ad_repo=ad_repo,
             region_repo=region_repo,
+            user_repo=user_repo,
             telegram=telegram,
             image_processor=image_processor,
             scheduler=scheduler,
@@ -306,14 +310,28 @@ class UseCasesProvider(Provider):
     def buy_pre_publication_service_use_case(
         self,
         user_repo: UserRepository,
+        service_def_repo: ServiceDefinitionRepository,
         transaction_manager: TransactionManager,
-        price_per_month: Decimal,
     ) -> BuyPrePublicationServiceUseCase:
         return BuyPrePublicationServiceUseCase(
             user_repo=user_repo,
+            service_def_repo=service_def_repo,
             transaction_manager=transaction_manager,
-            price_per_month=Decimal(100),
         )
+    
+    @provide
+    def get_publication_by_id_use_case(
+        self,
+        publication_repo: PublicationRepository,
+    ) -> GetPublicationByIdUseCase:
+        return GetPublicationByIdUseCase(publication_repo=publication_repo)
+    
+    @provide
+    def get_all_services_use_case(
+        self,
+        service_def_repo: ServiceDefinitionRepository,
+    ) -> GetAllServicesUseCase:
+        return GetAllServicesUseCase(service_def_repo=service_def_repo)
 
     @provide
     def unpin_message_use_case(
@@ -432,6 +450,7 @@ class UseCasesProvider(Provider):
         user_repo: UserRepository,
         publication_repo: PublicationRepository,
         service_def_repo: ServiceDefinitionRepository,
+        confirm_paid_slot: ConfirmPaidSlotAndSchedulePublicationUseCase,
         transaction_manager: TransactionManager,
     ) -> ConfirmPaymentUseCase:
         return ConfirmPaymentUseCase(
@@ -439,5 +458,44 @@ class UseCasesProvider(Provider):
             user_repo=user_repo,
             publication_repo=publication_repo,
             service_def_repo=service_def_repo,
+            confirm_paid_slot=confirm_paid_slot,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def seed_service_definitons_use_case(
+        self, 
+        service_def_repo: ServiceDefinitionRepository,
+        transaction_manager: TransactionManager,
+    ) -> SeedServiceDefinitionsUseCase:
+        return SeedServiceDefinitionsUseCase(
+            service_def_repo=service_def_repo,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def apply_service_to_published_use_case(
+        self, 
+        publication_repo: PublicationRepository,
+        ad_repo: AdRepository,
+        region_repo: RegionRepository,
+        user_repo: UserRepository,
+        telegram: TelegramPublisher,
+        image_processor: ImageProcessor,
+        renderer: AdTextRenderer,
+        scheduler: Scheduler,
+        time_resolver: PublishTimeResolver,
+        transaction_manager: TransactionManager,
+    ) -> ApplyServiceToPublishedUseCase:
+        return ApplyServiceToPublishedUseCase(
+            publication_repo=publication_repo,
+            ad_repo=ad_repo,
+            region_repo=region_repo,
+            user_repo=user_repo,
+            telegram=telegram,
+            image_processor=image_processor,
+            renderer=renderer,
+            scheduler=scheduler,
+            time_resolver=time_resolver,
             transaction_manager=transaction_manager,
         )

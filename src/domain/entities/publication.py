@@ -13,7 +13,6 @@ from src.domain.exceptions.publication import (
     ServiceAlreadyAdded,
     ServiceNotAllowed,
 )
-from src.domain.value_objects.publication_plan import PublicationPlan
 from src.domain.value_objects.slot_key import SlotKey
 
 
@@ -41,7 +40,6 @@ class Publication(Entity):
 
     scheduler_job_id: str | None = None
 
-    plan: PublicationPlan | None = None
     services: list[PublicationService] = field(default_factory=list)
 
     def schedule(self, *, slot: SlotKey, publish_at_utc: datetime) -> None:

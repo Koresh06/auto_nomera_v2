@@ -16,19 +16,20 @@ class ServiceDefinitionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
         primary_key=True,
         autoincrement=True,
     )
+    title: Mapped[str] = mapped_column(VARCHAR(128))
     type: Mapped[PublicationServiceType] = mapped_column(
         SaEnum(PublicationServiceType),
         unique=True,
     )
-    title: Mapped[str] = mapped_column(VARCHAR(128))
     price: Mapped[int] = mapped_column(Integer)  # в копейках/рублях
-    is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        default=True,
-    )
+    duration_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
     description: Mapped[str | None] = mapped_column(
         String(256),
         nullable=True,
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
     )
     params_schema: Mapped[dict | None] = mapped_column(
         JSONB,
@@ -41,21 +42,23 @@ class ServiceDefinitionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
     @classmethod
     def from_entity(cls, service: "ServiceDefinition") -> "ServiceDefinitionModel":
         return cls(
-            type=service.type,
             title=service.title,
+            type=service.type,
             price=service.price,
-            is_active=service.is_active,
+            duration_days=service.duration_days,
             description=service.description,
+            is_active=service.is_active,
             params_schema=service.params_schema,
         )
     
     def to_entity(self) -> "ServiceDefinition":
         return ServiceDefinition(
             id=self.id,
-            type=self.type,
             title=self.title,
+            type=self.type,
             price=self.price,
-            is_active=self.is_active,
+            duration_days=self.duration_days,
             description=self.description,
+            is_active=self.is_active,
             params_schema=self.params_schema,
         )
