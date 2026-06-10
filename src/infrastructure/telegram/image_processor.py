@@ -18,9 +18,9 @@ class PillowImageProcessor(ImageProcessor):
 
         # 2. Обработать через Pillow
         img = Image.open(BytesIO(image_bytes))
-        processed = draw_debug_red_border(
+        processed = self._darawing_red_border(
             img,
-            border_width=40,
+            border_width=20,
             color=(255, 0, 0, 255),
             mutate=False,
         )
@@ -48,27 +48,28 @@ class PillowImageProcessor(ImageProcessor):
         return new_file_id
 
 
-def darawing_red_border(
-    img: Image.Image,
-    border_width: int = 20,
-    color: tuple[int, int, int, int] = (255, 0, 0, 255),
-    mutate: bool = False,
-) -> Image.Image:
-    if border_width <= 0:
-        return img if mutate else img.copy()
+    def _darawing_red_border(
+        self,
+        img: Image.Image,
+        border_width: int,
+        color: tuple[int, int, int, int] = (255, 0, 0, 255),
+        mutate: bool = False,
+    ) -> Image.Image:
+        if border_width <= 0:
+            return img if mutate else img.copy()
 
-    im = img if mutate else img.copy()
-    orig_mode = im.mode
-    if im.mode != "RGBA":
-        im = im.convert("RGBA")
+        im = img if mutate else img.copy()
+        orig_mode = im.mode
+        if im.mode != "RGBA":
+            im = im.convert("RGBA")
 
-    w, h = im.size
-    d = ImageDraw.Draw(im)
-    bw = min(border_width, w // 2, h // 2)
+        w, h = im.size
+        d = ImageDraw.Draw(im)
+        bw = min(border_width, w // 2, h // 2)
 
-    d.rectangle([0, 0, w, bw], fill=color)
-    d.rectangle([0, h - bw, w, h], fill=color)
-    d.rectangle([0, 0, bw, h], fill=color)
-    d.rectangle([w - bw, 0, w, h], fill=color)
+        d.rectangle([0, 0, w, bw], fill=color)
+        d.rectangle([0, h - bw, w, h], fill=color)
+        d.rectangle([0, 0, bw, h], fill=color)
+        d.rectangle([w - bw, 0, w, h], fill=color)
 
-    return im.convert(orig_mode) if orig_mode != "RGBA" else im
+        return im.convert(orig_mode) if orig_mode != "RGBA" else im
