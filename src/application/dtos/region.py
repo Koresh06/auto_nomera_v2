@@ -2,6 +2,8 @@ from dataclasses import dataclass
 
 from src.domain.entities.region import Region
 from src.domain.enums.region import RegionStatus
+from src.domain.value_objects.region_metadata import RegionMetadata
+from src.domain.value_objects.region_settings import RegionSettings
 from src.domain.value_objects.timezone_name import TimezoneName
 
 
@@ -13,6 +15,9 @@ class RegionDTO:
     channel_id: int
     channel_username: str
     status: RegionStatus
+    metadata: RegionMetadata
+    settings: RegionSettings
+
 
     @classmethod
     def from_entity(cls, region: Region) -> "RegionDTO":
@@ -23,4 +28,6 @@ class RegionDTO:
             channel_id=region.channel_id,
             channel_username=region.channel_username,
             status=region.status,
+            metadata=region.metadata,
+            settings=region.settings,
         )

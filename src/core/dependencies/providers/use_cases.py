@@ -19,6 +19,7 @@ from src.application.use_cases.ad.get_by_id import GetByIdAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase
 from src.application.use_cases.payment.confirm import ConfirmPaymentUseCase
 from src.application.use_cases.payment.create import CreatePaymentUseCase
+from src.application.use_cases.publication.check_limiter import CheckPublicationLimitUseCase
 from src.application.use_cases.publication.create_ad_publication import (
     CreateAndScheduleAdUseCase,
 )
@@ -402,6 +403,19 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             publication_repo=publication_repo,
             transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def check_publication_limit_use_case(
+        self,
+        publication_repo: PublicationRepository,
+        ad_repo: AdRepository,
+        region_repo: RegionRepository
+    ) -> CheckPublicationLimitUseCase:
+        return CheckPublicationLimitUseCase(
+            publication_repo=publication_repo,
+            ad_repo=ad_repo,
+            region_repo=region_repo,
         )
 
     @provide

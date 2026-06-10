@@ -1,6 +1,8 @@
+from datetime import datetime
 from typing import Protocol
 
 from src.domain.entities.publication import Publication
+from src.domain.enums.ad import AdType
 
 
 class PublicationRepository(Protocol):
@@ -17,3 +19,19 @@ class PublicationRepository(Protocol):
         user_id: int,
         region_id: int,
     ) -> list[tuple[Publication, str | None]]: ...
+
+    async def count_scheduled_by_user(
+    self,
+        user_id: int,
+        region_id: int,
+        ad_type: AdType,
+        from_utc: datetime,
+    ) -> int: ...
+    
+    async def find_last_by_plate(
+        self,
+        user_id: int,
+        region_id: int,
+        plate: str,
+        from_utc: datetime,
+    ) -> Publication | None: ...

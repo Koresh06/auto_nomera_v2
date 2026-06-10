@@ -12,20 +12,25 @@ from dishka.integrations.aiogram_dialog import inject, FromDishka
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
+from src.application.dtos.region import RegionDTO
 from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.use_cases.ad.find_by_plate import FindAdByPlateRequest
+from src.application.use_cases.publication.check_limiter import CheckPublicationLimitRequest
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdAndScheduleRequest
 from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedRequest
 from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest
 from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
 from src.application.use_cases.publication_service.priority_publish_publication import PriorityPublishPublicationRequest
+from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
 from src.domain.exceptions.slot_reservation import  SlotAlreadyConverted, SlotAlreadyHeld, SlotHoldNotFound, SlotHoldOwnerMismatch
 from src.domain.services.ad.plate_validator import validate_plate
+from src.domain.services.publication.limiter import LimitCheckResult
+from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.slot_reservation_service import HoldResult
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
@@ -190,6 +195,27 @@ async def on_pick_slot(
 ) -> None:
     user: UserDTO = dialog_manager.dialog_data["user"]
     slot: SlotKey = SlotKey.decode_slot_id(item_id, user.region_id)
+    ad_type: AdType = dialog_manager.dialog_data["ad_type"]
+    plate: str = dialog_manager.dialog_data["plate"]
+
+    region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
+    publish_at_utc = PublishTimeResolver().resolve_publish_at_utc(
+        tz=region.timezone, slot=slot
+    )
+
+    limit_result: LimitCheckResult = await mediator.handle(
+        CheckPublicationLimitRequest(
+            user_id=user.id,
+            region_id=user.region_id,
+            ad_type=ad_type,
+            plate=plate,
+            publish_at_utc=publish_at_utc,
+            region_timezone=region.timezone.value,
+        )
+    )
+    if not limit_result.allowed:
+        await callback.answer(limit_result.reason, show_alert=True)
+        return
 
     try:
         result: HoldResult = await mediator.handle(
@@ -202,12 +228,12 @@ async def on_pick_slot(
     except (SlotAlreadyHeld, SlotAlreadyConverted):
         if dialog_manager.dialog_data.get("held_warning") == item_id:
             dialog_manager.dialog_data["slot_id"] = item_id
+            dialog_manager.dialog_data["slot"] = slot
             dialog_manager.dialog_data["slot_day"] = slot.date_display
             dialog_manager.dialog_data["slot_time"] = slot.time_display
             dialog_manager.dialog_data["is_paid"] = True
             dialog_manager.dialog_data.pop("held_warning", None)
-            # await dialog_manager.next()
-            await callback.answer("💰 Опата слота", show_alert=True)
+            await callback.answer("💰 Оплата слота", show_alert=True)
         else:
             dialog_manager.dialog_data["held_warning"] = item_id
             await callback.answer(
@@ -218,6 +244,8 @@ async def on_pick_slot(
 
     dialog_manager.dialog_data["slot_id"] = item_id
     dialog_manager.dialog_data["slot"] = slot
+    dialog_manager.dialog_data["slot_day"] = slot.date_display
+    dialog_manager.dialog_data["slot_time"] = slot.time_display
     dialog_manager.dialog_data["is_paid"] = result.pricing_changed_to_converted
 
     await dialog_manager.next()

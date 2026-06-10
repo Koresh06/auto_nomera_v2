@@ -22,6 +22,7 @@ from src.application.use_cases.ad.update_ad_content import (
 )
 from src.application.use_cases.payment.confirm import ConfirmPaymentRequest, ConfirmPaymentUseCase
 from src.application.use_cases.payment.create import CreatePaymentRequest, CreatePaymentUseCase
+from src.application.use_cases.publication.check_limiter import CheckPublicationLimitRequest, CheckPublicationLimitUseCase
 from src.application.use_cases.publication.create_ad_publication import CreateAndScheduleAdRequest, CreateAndScheduleAdUseCase
 from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdRequest,
@@ -116,6 +117,7 @@ class MediatorProvider(Provider):
         finalize_ad_use_case: FinalizeAdUseCase,
         find_ad_by_plate_use_case: FindAdByPlateUseCase,
         create_publication_from_ad_use_case: CreatePublicationFromAdUseCase,
+        check_publication_limit_use_case: CheckPublicationLimitUseCase,
         create_and_schedule_use_case: CreateAndScheduleAdUseCase,
         reuse_ad_and_schedule_use_case: ReuseAdAndScheduleUseCase,
         create_payment_use_case: CreatePaymentUseCase,
@@ -168,6 +170,7 @@ class MediatorProvider(Provider):
         mediator.register(
             CreatePublicationFromAdRequest, create_publication_from_ad_use_case
         )
+        mediator.register(CheckPublicationLimitRequest, check_publication_limit_use_case)
         mediator.register(CreateAndScheduleAdRequest, create_and_schedule_use_case)
         mediator.register(ReuseAdAndScheduleRequest, reuse_ad_and_schedule_use_case)
         mediator.register(CreatePaymentRequest, create_payment_use_case)
