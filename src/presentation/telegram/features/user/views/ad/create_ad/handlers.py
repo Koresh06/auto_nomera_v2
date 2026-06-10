@@ -23,7 +23,7 @@ from src.application.use_cases.publication_service.priority_publish_publication 
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceType
+from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
 from src.domain.exceptions.slot_reservation import  SlotAlreadyConverted, SlotAlreadyHeld, SlotHoldNotFound, SlotHoldOwnerMismatch
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.services.slots.slot_reservation_service import HoldResult
@@ -317,7 +317,7 @@ async def on_service_paid_selected(
 
     # проверяем уже куплена ли
     pub: PublicationDTO = await mediator.handle(GetPublicationByIdRequest(publication_id=pub_id))
-    bought_types = {s["type"] for s in pub.services if s["status"] == "active"}
+    bought_types = {s.type for s in pub.services if s.status == PublicationServiceStatus.ACTIVE}
     if item_id in bought_types:
         await callback.answer("⚠️ Эта услуга уже активна.", show_alert=True)
         return

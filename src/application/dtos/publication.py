@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from src.application.dtos.publication_service import PublicationServiceDTO
 from src.domain.entities.publication import Publication
 from src.domain.enums.publication import PublicationStatus
 from src.domain.value_objects.slot_key import SlotKey
@@ -17,7 +18,7 @@ class PublicationDTO:
     channel_message_id: int | None
     published_at_utc: datetime | None
     scheduler_job_id: str | None
-    services: list
+    services: list[PublicationServiceDTO]
     plate_number: str | None = None
 
 
@@ -33,7 +34,7 @@ class PublicationDTO:
             channel_message_id=publication.channel_message_id,
             published_at_utc=publication.published_at_utc,
             scheduler_job_id=publication.scheduler_job_id,
-            services=[s.to_dict() for s in publication.services],
+            services=[PublicationServiceDTO.from_entity(s) for s in publication.services],
             plate_number=plate_number,
         )
     

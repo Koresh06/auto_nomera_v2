@@ -184,9 +184,12 @@ async def getter_publication_service(
     pub: PublicationDTO = await mediator.handle(
         GetPublicationByIdRequest(publication_id=pub_id)
     )
-    bought_types = {
-        s["type"] for s in pub.services
-        if s["status"] == PublicationServiceStatus.ACTIVE.value
+    bought_types: set[PublicationServiceType] = {
+        s.type for s in pub.services
+        if s.status in (
+            PublicationServiceStatus.ACTIVE,
+            PublicationServiceStatus.USED,
+        )
     }
 
     ORDER = {
