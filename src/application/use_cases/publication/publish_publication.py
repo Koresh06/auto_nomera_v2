@@ -48,7 +48,6 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
     renderer: AdTextRenderer
     scheduler: Scheduler
 
-    renderer: AdTextRenderer
     time_resolver: PublishTimeResolver
     transaction_manager: TransactionManager
 
@@ -105,15 +104,13 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
             await self.publication_repo.save(pub)
 
         # 2) публикация в канал
-        text = self.renderer.render(ad=ctx.ad, region=region)
-
         if ad.ad_type == AdType.STORE:
             result = await self.telegram.publish_text(
                 channel_id=region.channel_id,
                 text=text,
             )
         else:
-            image_file_id = ctx.ad.content.image_file_id if ctx.ad.content else None
+            image_file_id = ctx.highlight_file_id or (ad.content.image_file_id if ad.content else None)
             if not image_file_id:
                 pub.mark_failed()
                 await self.publication_repo.save(pub)

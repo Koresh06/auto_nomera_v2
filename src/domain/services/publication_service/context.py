@@ -20,3 +20,4 @@ class ServiceContext:
     image_processor: ImageProcessor
     tg_id: int
     caption: str
+    highlight_file_id: str | None = None

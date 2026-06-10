@@ -1,5 +1,5 @@
 from dishka import Provider, Scope, provide
-from taskiq_redis import RedisAsyncResultBackend, RedisScheduleSource, RedisStreamBroker
+from taskiq_redis import RedisScheduleSource, RedisStreamBroker
 
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.core.config import AppSettings
@@ -9,13 +9,13 @@ from src.application.ports.publication.scheduler import Scheduler
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 from src.infrastructure.scheduler.taskiq_queue_scheduler import TaskQueueScheduler
 from src.infrastructure.tasks.taskiq_queue import TaskiqTaskQueue
+from src.infrastructure.broker.instance import broker as shared_broker
 
 
 class TaskiqProvider(Provider):
     @provide(scope=Scope.APP)
-    def taskiq_broker(self, settings: AppSettings) -> RedisStreamBroker:
-        result_backend = RedisAsyncResultBackend(redis_url=settings.db.redis.taskiq_url)
-        return RedisStreamBroker(url=settings.db.redis.taskiq_url).with_result_backend(result_backend)
+    def taskiq_broker(self) -> RedisStreamBroker:
+        return shared_broker
     
     @provide(scope=Scope.APP)
     def schedule_source(self, settings: AppSettings) -> RedisScheduleSource:
@@ -37,7 +37,3 @@ class TaskiqProvider(Provider):
             publication_repo=publication_repo,
             transaction_manager=transaction_manager
         )
-
-    # @provide(scope=Scope.REQUEST)
-    # def scheduler(self) -> Scheduler:       
-    #     return DevScheduler() 
