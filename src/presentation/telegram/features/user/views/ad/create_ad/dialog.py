@@ -27,6 +27,7 @@ from .handlers import (
     on_back_to_calendar,
     on_confirm_ad,
     on_delete_photo,
+    on_edit_ad,
     on_input_photo,
     on_negotiable_price,
     on_phone_input_success,
@@ -297,7 +298,7 @@ create_ad_dialog = Dialog(
             Button(
                 Const("📝 Редактировать объявление"),
                 id="edit_ad",
-                # on_click=on_edit_ad_click,
+                on_click=on_edit_ad,
             ),
             Cancel(Const("🏠 Главное меню")),
         ),

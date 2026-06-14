@@ -3,6 +3,7 @@ from dishka.integrations.aiogram_dialog import FromDishka, inject
 
 from src.application.dtos.ad import AdDTO
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
+from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.domain.enums.publication import PublicationStatus
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.user import UserDTO
@@ -40,16 +41,37 @@ async def getter_detail(
     **kwargs,
 ) -> dict:
     data = dialog_manager.dialog_data
-    pub: PublicationDTO = data["selected_pub"]
-    pub_status = pub.status not in (
-        PublicationStatus.PUBLISHED,
-        PublicationStatus.CANCELED,
-        PublicationStatus.REPLACED,
-    )
-    ad_id: int = pub.ad_id
+    start_data = dialog_manager.start_data or {}
+
+    pub: PublicationDTO | None = data.get("selected_pub")
+    pub_status = False
+    # back_to_finish: bool | None = start_data.get("back_to_finish")
+
+    if pub is None:
+        pub_id: int | None = start_data.get("pub_id")
+        ad_id: int | None  = start_data.get("ad_id") or data.get("ad_id")
+
+        if pub_id:
+            pub: PublicationDTO = await mediator.handle(
+                GetPublicationByIdRequest(publication_id=pub_id)
+            )
+            pub_status = pub.status not in (
+                PublicationStatus.PUBLISHED,
+                PublicationStatus.CANCELED,
+                PublicationStatus.REPLACED,
+            )
+    else:
+        ad_id = pub.ad_id
+        pub_status = pub.status not in (
+            PublicationStatus.PUBLISHED,
+            PublicationStatus.CANCELED,
+            PublicationStatus.REPLACED,
+        )
+
     ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
     dialog_manager.dialog_data["selected_ad"] = ad
-    
+    dialog_manager.dialog_data["ad_id"] = ad_id
+
     return {
         "pub": pub,
         "pub_status": pub_status,
@@ -59,6 +81,7 @@ async def getter_detail(
         "price": ad.content.price.display if ad.content else None,
         "contacts": ad.content.contacts.display if ad.content else None,
         "media": build_media_attachment(ad.content.image_file_id if ad.content else None),
+        # "back_to_finish": back_to_finish,
     }
 
 

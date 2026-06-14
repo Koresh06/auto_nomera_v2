@@ -69,7 +69,7 @@ edit_ad_dialog = Dialog(
                 id="edit_plate",
                 on_click=on_edit_plate,
                 state=EditAdSG.edit_field,
-                when="can_edit_plate",
+                when="pub_status",
             ),
             SwitchTo(
                 Const("🌎 Изменить город"),
@@ -91,7 +91,14 @@ edit_ad_dialog = Dialog(
             ),
             width=2,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            when=~F["start_data"]["back_to_finish"],
+        ),
+        Cancel(
+            Const("⬅️ Назад"),
+            when=F["start_data"]["back_to_finish"],
+        ),
         state=EditAdSG.detail,
         getter=getter_detail,
     ),

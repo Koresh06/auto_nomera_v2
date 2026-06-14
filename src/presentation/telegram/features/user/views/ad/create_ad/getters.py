@@ -145,6 +145,7 @@ async def getter_confirm(
         media = data.get("media") or build_media_attachment(
             c.image_file_id if c else None
         )
+        dialog_manager.dialog_data["media"] = media
 
     else:
         plate = data.get("plate")

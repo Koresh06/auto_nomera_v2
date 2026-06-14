@@ -12,7 +12,9 @@ from dishka.integrations.aiogram_dialog import inject, FromDishka
 
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
-from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentRequest
+from src.application.use_cases.notification.notify_admins_urgent import (
+    NotifyAdminsAboutUrgentRequest,
+)
 from src.domain.enums.ad import AdStatus, AdType
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import (
@@ -66,8 +68,14 @@ from src.application.use_cases.slots.hold_slot import HoldSlotRequest
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
 from src.application.use_cases.user.update import UpdateUserRequest
 from src.presentation.telegram.features.user.views.ad.create_ad.states import CreateAdSG
-from src.presentation.telegram.features.user.views.ad.create_ad.validators import validate_price, validate_price_urgent_buyout
-from src.presentation.telegram.keyboards.urgent_moderation import build_urgent_moderation_kb
+from src.presentation.telegram.features.user.views.ad.create_ad.validators import (
+    validate_price,
+    validate_price_urgent_buyout,
+)
+from src.presentation.telegram.features.user.views.ad.edit.states import EditAdSG
+from src.presentation.telegram.keyboards.urgent_moderation import (
+    build_urgent_moderation_kb,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -360,7 +368,9 @@ async def on_confirm_ad(
                 plate_number=plate,
                 price=Price(int(price_raw)),
                 contacts=contacts,
-                image_file_id=media.file_id.file_id if media and media.file_id else None,
+                image_file_id=(
+                    media.file_id.file_id if media and media.file_id else None
+                ),
             )
         )
 
@@ -378,7 +388,7 @@ async def on_confirm_ad(
         return
     else:
         slot: SlotKey = data["slot"]
-        
+
         hold_valid = await mediator.handle(
             CheckHoldRequest(
                 region_id=region_id,
@@ -426,10 +436,28 @@ async def on_confirm_ad(
                 )
             )
 
+        data["ad_id"] = pub.ad_id
         data["publication_id"] = pub.id
 
         logger.info("[on_confirm:done] ad created/reused")
         await dialog_manager.next()
+
+
+async def on_edit_ad(
+    callback: CallbackQuery,
+    widget: Button,
+    dialog_manager: DialogManager,
+) -> None:
+    ad_id = dialog_manager.dialog_data["ad_id"]
+    pub_id = dialog_manager.dialog_data["publication_id"]
+    await dialog_manager.start(
+        state=EditAdSG.detail,
+        data={
+            "ad_id": ad_id,
+            "pub_id": pub_id,
+            "back_to_finish": True,
+        },
+    )
 
 
 @inject
