@@ -1,5 +1,22 @@
-
 services:
+
+  db:
+    image: postgres:16
+    container_name: auto_nomera_db
+    environment:
+      POSTGRES_USER: ${APP_CONFIG__DB__USER}
+      POSTGRES_PASSWORD: ${APP_CONFIG__DB__PASSWORD}
+      POSTGRES_DB: ${APP_CONFIG__DB__NAME}
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7
@@ -27,3 +44,17 @@ services:
     depends_on:
       - redis
     restart: always
+
+  sheduler:
+    build: .
+    container_name: auto_nomera_scheduler
+    command: taskiq scheduler src.scheduler:scheduler
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: always
+
+
+volumes:
+  postgres_data:

@@ -9,12 +9,13 @@ class PinStrategy:
         publication: Publication,
         service: PublicationService,
         context: ServiceContext,
-    ) -> None: 
+    ) -> None:
         if publication.channel_message_id is None:
             service.mark_used()
             return
         unpin_at = context.time_resolver.resolve_unpin_time(
-            publication.published_at_utc, service.params
+            publication.published_at_utc,
+            service.params,
         )
         await context.telegram.pin_message(
             channel_id=context.region.channel_id,

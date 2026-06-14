@@ -40,11 +40,10 @@ async def create_app():
         mediator = await request_container.get(Mediator)
         await run_seeds(mediator)
 
-    # регистрируем задачи на брокере бота
     broker: RedisStreamBroker = await container.get(RedisStreamBroker)
 
     register_taskiq_tasks(broker, container=container)
-    await broker.startup()  # ← важно запустить брокер
+    await broker.startup()
 
     bot: Bot = await container.get(Bot)
     dp: Dispatcher = await container.get(Dispatcher)
@@ -65,7 +64,7 @@ async def create_app():
         logger.info("🤖 Бот запущен…")
         await dp.start_polling(bot)
     finally:
-        await broker.shutdown()  # ← закрываем брокер
+        await broker.shutdown()
         await bot.session.close()
         logger.info("🧹 Бот остановлены.")
 
