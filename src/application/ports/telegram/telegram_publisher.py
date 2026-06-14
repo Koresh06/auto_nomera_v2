@@ -9,6 +9,7 @@ class PublishResult:
 
 
 class TelegramPublisher(Protocol):
+    
     async def publish_photo(
         self,
         *,

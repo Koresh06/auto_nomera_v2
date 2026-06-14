@@ -2,23 +2,27 @@ from datetime import timedelta
 from aiogram import Bot
 from dishka import Provider, Scope, provide
 
-from src.core.config import settings
+from src.application.services.notification.notification_service import (
+    NotificationService,
+)
 from src.application.ports.publication_service.image_processor import ImageProcessor
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
+from src.core.config import AppSettings
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.infrastructure.telegram.image_processor import PillowImageProcessor
+from src.infrastructure.telegram.notification_service import AiogramNotificationService
 
 
 class ServicesProvider(Provider):
 
     @provide(scope=Scope.APP)
-    def slot_hold_ttl(self) -> timedelta:
+    def slot_hold_ttl(self, settings: AppSettings) -> timedelta:
         return timedelta(seconds=settings.telegram.hold_slots_time)
 
     @provide(scope=Scope.APP)
@@ -34,7 +38,7 @@ class ServicesProvider(Provider):
         return PublishTimeResolver()
 
     @provide(scope=Scope.APP)
-    def renderer(self) -> AdTextRenderer:
+    def renderer(self, settings: AppSettings) -> AdTextRenderer:
         return AdTextRenderer(
             settings.telegram.bot_url,
             settings.telegram.buyout_url,
@@ -60,3 +64,14 @@ class ServicesProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def image_processor(self, bot: Bot) -> ImageProcessor:
         return PillowImageProcessor(bot)
+
+    @provide(scope=Scope.APP)
+    def notification_service(
+        self,
+        bot: Bot,
+        settings: AppSettings,
+    ) -> NotificationService:
+        return AiogramNotificationService(
+            bot=bot,
+            admin_ids=settings.telegram.admin_ids,
+        )

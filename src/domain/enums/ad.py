@@ -3,6 +3,7 @@ from enum import Enum
 
 class AdStatus(str, Enum):
     DRAFT = "draft"  # создаётся в боте
+    PENDING_MODERATION = "pending_moderation"  # ожидает модерации
     READY = "ready"  # заполнено, можно выбирать слот/оплачивать
     SCHEDULED = "scheduled"  # есть план публикаций
     PUBLISHED = "published"  # опубликована хотя бы раз

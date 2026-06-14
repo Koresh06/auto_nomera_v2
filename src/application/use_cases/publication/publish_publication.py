@@ -22,8 +22,8 @@ from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
-from src.domain.services.publication_service.context import ServiceContext
-from src.domain.services.publication_service.registry import STRATEGIES
+from src.application.services.publication.context import ServiceContext
+from src.application.services.publication.registry import STRATEGIES
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 

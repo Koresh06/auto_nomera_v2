@@ -11,12 +11,14 @@ from src.application.ports.publication_service.service_definition_repo import (
 )
 from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.ports.user.user_repo import UserRepository
+from src.application.services.notification.notification_service import NotificationService
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefUseCase
 from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase
 from src.application.use_cases.ad.find_by_plate import FindAdByPlateUseCase
 from src.application.use_cases.ad.get_by_id import GetByIdAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase
+from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentUseCase
 from src.application.use_cases.payment.confirm import ConfirmPaymentUseCase
 from src.application.use_cases.payment.create import CreatePaymentUseCase
 from src.application.use_cases.publication.check_limiter import CheckPublicationLimitUseCase
@@ -522,4 +524,15 @@ class UseCasesProvider(Provider):
             scheduler=scheduler,
             time_resolver=time_resolver,
             transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def notify_admins_urgent_use_case(
+        self,
+        ad_repo: AdRepository,
+        notification_service: NotificationService,
+    ) -> NotifyAdminsAboutUrgentUseCase:
+        return NotifyAdminsAboutUrgentUseCase(
+            ad_repo=ad_repo,
+            notification_service=notification_service,
         )

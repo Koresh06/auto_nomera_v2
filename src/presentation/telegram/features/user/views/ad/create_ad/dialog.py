@@ -2,8 +2,11 @@ from aiogram import F
 from aiogram.types import ContentType
 from aiogram.enums.button_style import ButtonStyle
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.input import TextInput, MessageInput
+from aiogram_dialog.widgets.media import DynamicMedia
+from aiogram_dialog.widgets.style import Style
+from aiogram_dialog.widgets.markup.reply_keyboard import ReplyKeyboardFactory
 from aiogram_dialog.widgets.kbd import (
     Group,
     Select,
@@ -15,10 +18,8 @@ from aiogram_dialog.widgets.kbd import (
     RequestContact,
     Column,
 )
-from aiogram_dialog.widgets.media import DynamicMedia
-from aiogram_dialog.widgets.style import Style
-from aiogram_dialog.widgets.markup.reply_keyboard import ReplyKeyboardFactory
 
+from src.domain.enums.ad import AdType
 from src.presentation.telegram.features.error_handlers import on_input_error
 
 from .states import CreateAdSG
@@ -32,6 +33,7 @@ from .handlers import (
     on_phone_received_contact,
     on_plate_success,
     on_pick_slot,
+    on_price_input_success,
     on_reuse_old_click,
     on_service_paid_selected,
 )
@@ -46,16 +48,18 @@ from .getters import (
     getter_user_phone,
 )
 from .validators import capitalize_word, validate_phone_number, validate_price
-from .texts import PLATE_BUY_TEXT, PLATE_SALE_TEXT
+from .texts import PLANE_URGENT_TEXT, PLATE_BUY_TEXT, PLATE_SALE_TEXT
 
 create_ad_dialog = Dialog(
     Window(
-        Const(PLATE_SALE_TEXT, when=F["is_sale"] | F["is_urgent"]),
+        Const(PLATE_SALE_TEXT, when=F["is_sale"]),
         Const(PLATE_BUY_TEXT, when=F["is_buy"]),
+        Const(PLANE_URGENT_TEXT, when=F["is_urgent"]),
         TextInput(
             id="plate",
             type_factory=str,
             on_success=on_plate_success,
+            on_error=on_input_error,
         ),
         Cancel(
             Const("⬅️ Назад"),
@@ -163,17 +167,28 @@ create_ad_dialog = Dialog(
             "📌 <b>Примеры:</b>\n\n"
             "➡️ <code>1000</code>\n"
             "➡️ <code>100000</code>\n"
-            "➡️ <code>1000000</code>"
+            "➡️ <code>1000000</code>",
+            when=F["dialog_data"]["ad_type"].in_({AdType.SALE, AdType.BUY}),
+        ),
+        Const(
+            "⚠️ <b>Объявления, в которых не указана сумма, не принимаются.</b>\n\n"
+            "💰 <b>Укажите примерную сумму, которую Вы рассчитываете получить за свой номер.</b>\n\n"
+            "📌 <b>Примеры:</b>\n\n"
+            "➡️ <code>1000</code>\n"
+            "➡️ <code>100000</code>\n"
+            "➡️ <code>1000000</code>",
+            when=F["dialog_data"]["ad_type"] == AdType.URGENT_BUYOUT,
         ),
         Button(
             Const("🤝 Договорная"),
             id="negotiable_price",
             on_click=on_negotiable_price,
+            when=F["dialog_data"]["ad_type"].in_({AdType.SALE, AdType.BUY}),
         ),
         TextInput(
             id="price",
-            type_factory=validate_price,
-            on_success=Next(),
+            type_factory=str,
+            on_success=on_price_input_success,
             on_error=on_input_error,
         ),
         Back(
@@ -202,17 +217,33 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.calendar,
     ),
     Window(
-        Const(
-            '⚠️ <b>Обязательно нажмите кнопку "Подтвердить" в конце этого сообщения, иначе ваше объявление не опубликуется!</b>\n\n'
-            "✅ <b>Предварительный просмотр объявления:</b>\n"
+        Multi(
+            Const(
+                '⚠️ <b>Обязательно нажмите кнопку "Подтвердить" в конце этого сообщения, иначе ваше объявление не опубликуется!</b>\n\n'
+                "✅ <b>Предварительный просмотр объявления:</b>\n",
+            ),
+            Format(
+                "📋 <b>Проверьте данные:</b>\n\n"
+                "🚘 <b>Номер</b>: {plate}\n"
+                "🌎 <b>Город</b>: {city}\n"
+                "💰 <b>Цена</b>: {price}\n"
+                "📲 <b>Контакты</b>: {contacts}\n\n"
+                "🕐 <b>Слот</b>: {slot_day} в {slot_time}\n"
+            ),
+            when=F["dialog_data"]["ad_type"].in_({AdType.SALE, AdType.BUY}),
         ),
-        Format(
-            "📋 <b>Проверьте данные:</b>\n\n"
-            "🚘 <b>Номер</b>: {plate}\n"
-            "🌎 <b>Город</b>: {city}\n"
-            "💰 <b>Цена</b>: {price}\n"
-            "📲 <b>Контакты</b>: {contacts}\n\n"
-            "🕐 <b>Слот</b>: {slot_day} в {slot_time}\n"
+        Multi(
+            Const(
+                "✅ <b>Предварительный просмотр заявки на срочный выкуп:</b>\n",
+            ),
+            Format(
+                "📋 <b>Проверьте данные:</b>\n\n"
+                "🚘 <b>Номер</b>: {plate}\n"
+                "💰 <b>Сумма</b>: {price}\n"
+                "📲 <b>Контакты</b>: {contacts}\n\n"
+                "⚠️ <b>Если заявка соответствует критериям — с вами свяжутся в ближайшее время.</b>",
+            ),
+            when=F["dialog_data"]["ad_type"] == AdType.URGENT_BUYOUT,
         ),
         DynamicMedia(selector="media", when="media"),
         Button(
@@ -273,5 +304,14 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.finish,
         getter=getter_finish,
         # on_process_result=on_process_result,
+    ),
+    Window(
+        Const(
+            "✅ <b>Спасибо за Вашу заявку. </b>"
+            "<b>Если ваше объявление соответствует критериям срочного выкупа,</b> "
+            "<b>то в ближайшее время с Вами свяжутся покупатели.</b>"
+        ),
+        Cancel(Const("🏠 Главное меню")),
+        state=CreateAdSG.urgent_done,
     ),
 )

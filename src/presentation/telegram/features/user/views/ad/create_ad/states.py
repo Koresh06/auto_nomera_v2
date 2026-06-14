@@ -12,3 +12,4 @@ class CreateAdSG(StatesGroup):
     confirm = State()
     publication_service = State()
     finish = State()
+    urgent_done = State()

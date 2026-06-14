@@ -1,8 +1,8 @@
-"""initial
+"""init
 
-Revision ID: 1081222fff4c
+Revision ID: 892513b42b79
 Revises: 
-Create Date: 2026-06-09 23:34:57.293983
+Create Date: 2026-06-14 21:19:39.315548
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '1081222fff4c'
+revision: str = '892513b42b79'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -71,7 +71,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('region_id', sa.Integer(), nullable=False),
     sa.Column('ad_type', sa.Enum('SALE', 'BUY', 'URGENT_BUYOUT', 'STORE', name='adtype'), nullable=False),
-    sa.Column('status', sa.Enum('DRAFT', 'READY', 'SCHEDULED', 'PUBLISHED', 'ARCHIVED', name='adstatus'), nullable=False),
+    sa.Column('status', sa.Enum('DRAFT', 'PENDING_MODERATION', 'READY', 'SCHEDULED', 'PUBLISHED', 'ARCHIVED', name='adstatus'), nullable=False),
     sa.Column('plate_number', sa.VARCHAR(length=16), nullable=True),
     sa.Column('city', sa.VARCHAR(length=128), nullable=True),
     sa.Column('price', sa.Integer(), nullable=True),

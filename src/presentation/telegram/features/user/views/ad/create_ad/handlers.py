@@ -10,25 +10,21 @@ from aiogram_dialog.api.entities import MediaAttachment
 
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 
-from src.application.dtos.ad import AdDTO
-from src.application.dtos.publication import PublicationDTO
-from src.application.dtos.region import RegionDTO
-from src.application.dtos.service_definition import ServiceDefinitionDTO
-from src.application.use_cases.ad.find_by_plate import FindAdByPlateRequest
-from src.application.use_cases.publication.check_limiter import CheckPublicationLimitRequest
-from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
-from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdAndScheduleRequest
-from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedRequest
-from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest
-from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
-from src.application.use_cases.publication_service.priority_publish_publication import PriorityPublishPublicationRequest
-from src.application.use_cases.region.get_by_id import IdRegionRequest
-from src.application.use_cases.slots.check_hold import CheckHoldRequest
-from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
-from src.domain.enums.ad import AdType
+from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
+from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
+from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentRequest
+from src.domain.enums.ad import AdStatus, AdType
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
-from src.domain.exceptions.slot_reservation import  SlotAlreadyConverted, SlotAlreadyHeld, SlotHoldNotFound, SlotHoldOwnerMismatch
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
+from src.domain.exceptions.slot_reservation import (
+    SlotAlreadyConverted,
+    SlotAlreadyHeld,
+    SlotHoldNotFound,
+    SlotHoldOwnerMismatch,
+)
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.services.publication.limiter import LimitCheckResult
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
@@ -36,15 +32,42 @@ from src.domain.services.slots.slot_reservation_service import HoldResult
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
+from src.application.dtos.ad import AdDTO
+from src.application.dtos.publication import PublicationDTO
+from src.application.dtos.region import RegionDTO
+from src.application.dtos.service_definition import ServiceDefinitionDTO
+from src.application.use_cases.ad.find_by_plate import FindAdByPlateRequest
+from src.application.use_cases.publication.check_limiter import (
+    CheckPublicationLimitRequest,
+)
+from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
+from src.application.use_cases.publication.reuse_ad_and_schedule import (
+    ReuseAdAndScheduleRequest,
+)
+from src.application.use_cases.publication_service.apply_service import (
+    ApplyServiceToPublishedRequest,
+)
+from src.application.use_cases.publication_service.buy_publication_service import (
+    BuyPublicationServiceRequest,
+)
+from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
+from src.application.use_cases.publication_service.priority_publish_publication import (
+    PriorityPublishPublicationRequest,
+)
+from src.application.use_cases.region.get_by_id import IdRegionRequest
+from src.application.use_cases.slots.check_hold import CheckHoldRequest
 from src.application.dtos.user import UpdateUserDTO, UserDTO
 from src.application.exceptions.user import UserNotFoundException
 from src.application.mediator import Mediator
-from src.application.use_cases.publication.create_ad_publication import CreateAndScheduleAdRequest
+from src.application.use_cases.publication.create_ad_publication import (
+    CreateAndScheduleAdRequest,
+)
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
 from src.application.use_cases.user.update import UpdateUserRequest
 from src.presentation.telegram.features.user.views.ad.create_ad.states import CreateAdSG
-
+from src.presentation.telegram.features.user.views.ad.create_ad.validators import validate_price, validate_price_urgent_buyout
+from src.presentation.telegram.keyboards.urgent_moderation import build_urgent_moderation_kb
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +82,6 @@ async def on_plate_success(
 ) -> None:
     ad_type = dialog_manager.dialog_data["ad_type"]
     allow_mask = ad_type == AdType.BUY
-    tg_id = dialog_manager.event.from_user.id
 
     try:
         validated = validate_plate(value, allow_mask=allow_mask)
@@ -69,10 +91,9 @@ async def on_plate_success(
 
     dialog_manager.dialog_data["plate"] = validated
 
-    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
-    dialog_manager.dialog_data["user"] = user
+    user: UserDTO = dialog_manager.dialog_data["user"]
 
-    if ad_type != AdType.BUY:
+    if ad_type != AdType.URGENT_BUYOUT:
         existing_ad: AdDTO | None = await mediator.handle(
             FindAdByPlateRequest(
                 user_id=user.id,
@@ -186,6 +207,33 @@ async def on_phone_input_success(
     await dialog_manager.next()
 
 
+async def on_price_input_success(
+    message: Message,
+    widget: ManagedTextInput[str],
+    dialog_manager: DialogManager,
+    value: str,
+) -> None:
+    ad_type = dialog_manager.dialog_data["ad_type"]
+    if ad_type == AdType.URGENT_BUYOUT:
+        try:
+            validated = validate_price_urgent_buyout(value)
+        except ValueError as e:
+            await message.answer(str(e))
+            return
+    else:
+        try:
+            validated = validate_price(value)
+        except ValueError as e:
+            await message.answer(str(e))
+            return
+
+    dialog_manager.dialog_data["price"] = validated
+    if ad_type == AdType.URGENT_BUYOUT:
+        await dialog_manager.switch_to(CreateAdSG.confirm)
+    else:
+        await dialog_manager.next()
+
+
 @inject
 async def on_pick_slot(
     callback: CallbackQuery,
@@ -287,63 +335,101 @@ async def on_confirm_ad(
     tg_id = callback.from_user.id
     data = dialog_manager.dialog_data
 
+    ad_type: AdType = data["ad_type"]
     user: UserDTO = data["user"]
     region_id: int = data["region_id"]
-    slot: SlotKey = data["slot"]
 
-    # Проверяем что холд ещё живой
-    hold_valid = await mediator.handle(
-        CheckHoldRequest(
-            region_id=region_id,
-            slot=slot,
-            user_id=user.id,
-        )
-    )
-    if not hold_valid:
-        await callback.answer(
-            "⏰ Время ожидания подтверждения истекло. Выберите слот заново.",
-            show_alert=True,
-        )
-        await dialog_manager.back()
-        return
-
-    if data.get("reuse_ad"):
-        ad_id: int = data["existing_ad_id"]
-        pub: PublicationDTO = await mediator.handle(
-            ReuseAdAndScheduleRequest(
-                ad_id=ad_id,
-                slot=slot,
-                user_id=user.id,
-            )
-        )
-    else:
-        ad_type: AdType = data["ad_type"]
+    if ad_type == AdType.URGENT_BUYOUT:
         plate: str = data["plate"]
-        city: str = data["city"]
-        price: Price = Price(int(data["price"]))
+        price_raw = data["price"]
         phone: str = data["phone"]
         media: MediaAttachment = data["media"]
         contacts = Contacts.from_user(username=user.username, phone=phone)
 
-        pub: PublicationDTO = await mediator.handle(
-            CreateAndScheduleAdRequest(
+        ad_dto: AdDTO = await mediator.handle(
+            CreateAdDraftRequest(
                 user_id=user.id,
                 region_id=region_id,
-                ad_type=ad_type,
-                plate=plate,
-                city=city,
-                price=price,
+                ad_type=AdType.URGENT_BUYOUT,
+                status=AdStatus.PENDING_MODERATION,
+            )
+        )
+        await mediator.handle(
+            UpdateAdContentRequest(
+                ad_id=ad_dto.id,
+                plate_number=plate,
+                price=Price(int(price_raw)),
                 contacts=contacts,
                 image_file_id=media.file_id.file_id if media and media.file_id else None,
-                slot=slot,
-                chat_id=tg_id,
             )
         )
 
-    data["publication_id"] = pub.id
+        markup = build_urgent_moderation_kb(ad_id=ad_dto.id)
+        await mediator.handle(
+            NotifyAdminsAboutUrgentRequest(
+                ad_id=ad_dto.id,
+                reply_markup=markup,
+            )
+        )
 
-    logger.info("[on_confirm:done] ad created/reused")
-    await dialog_manager.next()
+        data["ad_id"] = ad_dto.id
+        logger.info("[on_confirm:urgent] ad_id=%s sent to admins", ad_dto.id)
+        await dialog_manager.switch_to(CreateAdSG.urgent_done)
+        return
+    else:
+        slot: SlotKey = data["slot"]
+        
+        hold_valid = await mediator.handle(
+            CheckHoldRequest(
+                region_id=region_id,
+                slot=slot,
+                user_id=user.id,
+            )
+        )
+        if not hold_valid:
+            await callback.answer(
+                "⏰ Время ожидания подтверждения истекло. Выберите слот заново.",
+                show_alert=True,
+            )
+
+        if data.get("reuse_ad"):
+            ad_id: int = data["existing_ad_id"]
+            pub: PublicationDTO = await mediator.handle(
+                ReuseAdAndScheduleRequest(
+                    ad_id=ad_id,
+                    slot=slot,
+                    user_id=user.id,
+                )
+            )
+        else:
+            plate: str = data["plate"]
+            city: str = data["city"]
+            price: Price = Price(int(data["price"]))
+            phone: str = data["phone"]
+            media: MediaAttachment = data["media"]
+            contacts = Contacts.from_user(username=user.username, phone=phone)
+
+            pub: PublicationDTO = await mediator.handle(
+                CreateAndScheduleAdRequest(
+                    user_id=user.id,
+                    region_id=region_id,
+                    ad_type=ad_type,
+                    plate=plate,
+                    city=city,
+                    price=price,
+                    contacts=contacts,
+                    image_file_id=(
+                        media.file_id.file_id if media and media.file_id else None
+                    ),
+                    slot=slot,
+                    chat_id=tg_id,
+                )
+            )
+
+        data["publication_id"] = pub.id
+
+        logger.info("[on_confirm:done] ad created/reused")
+        await dialog_manager.next()
 
 
 @inject
@@ -358,17 +444,25 @@ async def on_service_paid_selected(
     pub_id: int = dialog_manager.dialog_data["publication_id"]
     service_type = PublicationServiceType(item_id)
 
-    logger.info(f"[ServiceSelected] user_id={user.id} pub_id={pub_id} service={service_type}")
+    logger.info(
+        f"[ServiceSelected] user_id={user.id} pub_id={pub_id} service={service_type}"
+    )
 
     # проверяем уже куплена ли
-    pub: PublicationDTO = await mediator.handle(GetPublicationByIdRequest(publication_id=pub_id))
-    bought_types = {s.type for s in pub.services if s.status == PublicationServiceStatus.ACTIVE}
+    pub: PublicationDTO = await mediator.handle(
+        GetPublicationByIdRequest(publication_id=pub_id)
+    )
+    bought_types = {
+        s.type for s in pub.services if s.status == PublicationServiceStatus.ACTIVE
+    }
     if item_id in bought_types:
         await callback.answer("⚠️ Эта услуга уже активна.", show_alert=True)
         return
 
     # получаем определение услуги
-    services: list[ServiceDefinitionDTO] = await mediator.handle(GetAllServicesRequest())
+    services: list[ServiceDefinitionDTO] = await mediator.handle(
+        GetAllServicesRequest()
+    )
     service = next((s for s in services if s.type == service_type), None)
     if not service:
         await callback.answer("❌ Услуга не найдена.", show_alert=True)
@@ -385,15 +479,21 @@ async def on_service_paid_selected(
             f"Нажмите ещё раз для подтверждения.",
             show_alert=True,
         )
-        logger.info(f"[ServiceSelected:confirm] waiting second click for {service_type}")
+        logger.info(
+            f"[ServiceSelected:confirm] waiting second click for {service_type}"
+        )
         return
-    logger.info(f"[ServiceSelected:second_click] service={service_type} user_id={user.id}")
+    logger.info(
+        f"[ServiceSelected:second_click] service={service_type} user_id={user.id}"
+    )
 
     # проверяем баланс
     price_decimal = Decimal(service.price) / 100
     if user.balance < price_decimal:
         diff = int(price_decimal - user.balance)
-        logger.warning(f"[ServiceSelected:insufficient] user_id={user.id} balance={user.balance} need={price_decimal}")
+        logger.warning(
+            f"[ServiceSelected:insufficient] user_id={user.id} balance={user.balance} need={price_decimal}"
+        )
         await callback.answer(
             f"😔 Недостаточно средств.\n"
             f"Пополните баланс на {diff} руб. и попробуйте снова.",
@@ -403,7 +503,9 @@ async def on_service_paid_selected(
         return
 
     # покупаем
-    logger.info(f"[ServiceSelected:buy] user_id={user.id} pub_id={pub_id} service={service_type}")
+    logger.info(
+        f"[ServiceSelected:buy] user_id={user.id} pub_id={pub_id} service={service_type}"
+    )
     await mediator.handle(
         BuyPublicationServiceRequest(
             publication_id=pub_id,
@@ -420,7 +522,9 @@ async def on_service_paid_selected(
         await mediator.handle(PriorityPublishPublicationRequest(publication_id=pub_id))
 
     elif pub.status == PublicationStatus.PUBLISHED:
-        logger.info(f"[ServiceSelected:apply_to_published] pub_id={pub_id} service={service_type}")
+        logger.info(
+            f"[ServiceSelected:apply_to_published] pub_id={pub_id} service={service_type}"
+        )
         await mediator.handle(
             ApplyServiceToPublishedRequest(
                 publication_id=pub_id,
@@ -429,5 +533,7 @@ async def on_service_paid_selected(
         )
 
     dialog_manager.dialog_data.pop(pending_key, None)
-    logger.info(f"[ServiceSelected:done] user_id={user.id} pub_id={pub_id} service={service_type}")
+    logger.info(
+        f"[ServiceSelected:done] user_id={user.id} pub_id={pub_id} service={service_type}"
+    )
     await callback.answer(f"✅ {service.title} активирована!", show_alert=True)

@@ -16,21 +16,38 @@ from src.application.use_cases.publication.get_by_id import GetPublicationByIdRe
 from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest
+from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
 from src.presentation.telegram.utils import build_media_attachment
 
 
-REGION_ID_DEV = 1
-
-
-async def getter_default_ad(dialog_manager: DialogManager, **kwargs) -> dict:
+@inject
+async def getter_default_ad(
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+    **kwargs,
+) -> dict:
     start_data = dialog_manager.start_data or {}
     ad_type = start_data.get("ad_type")  # type: ignore
     dialog_manager.dialog_data["ad_type"] = ad_type
+
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
+    region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
+
+    dialog_manager.dialog_data["user"] = user
+    dialog_manager.dialog_data["region_id"] = region.id
+    dialog_manager.dialog_data["channel_username"] = region.channel_username
+    dialog_manager.dialog_data["region_title"] = region.title
+
     return {
         "ad_type": ad_type,
         "is_sale": ad_type == AdType.SALE,
@@ -83,8 +100,6 @@ async def getter_user_phone(
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    tg_id = dialog_manager.event.from_user.id
-    
     user: UserDTO = dialog_manager.dialog_data["user"]
     dialog_manager.dialog_data["current_phone"] = user.phone
     return {"phone": user.phone}
@@ -101,11 +116,6 @@ async def calendar_getter(
     cal: CalendarDTO = await mediator.handle(
         GetCalendarRequest(region_id=user.region_id)
     )
-    region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
-
-    dialog_manager.dialog_data["region_id"] = region.id
-    dialog_manager.dialog_data["channel_username"] = region.channel_username
-    dialog_manager.dialog_data["region_title"] = region.title
 
     available = [s for s in cal.slots if not s.disabled]
 
@@ -121,8 +131,9 @@ async def getter_confirm(
     data = dialog_manager.dialog_data
     tg_id = dialog_manager.event.from_user.id
     user: UserDTO = data["user"]
-    slot: SlotKey = data["slot"]
-    channel_username = data["channel_username"]
+    channel_username: str = data["channel_username"]
+
+    slot: SlotKey | None = data.get("slot")
 
     if data.get("reuse_ad"):
         existing_ad: AdDTO = data["existing_ad"]
@@ -131,13 +142,15 @@ async def getter_confirm(
         city = c.city if c else ""
         price = c.price.display if c else ""
         contacts = c.contacts.display if c else ""
-        media = data.get("media") or build_media_attachment(c.image_file_id if c else None)
+        media = data.get("media") or build_media_attachment(
+            c.image_file_id if c else None
+        )
 
     else:
         plate = data.get("plate")
         city = dialog_manager.find("city").get_value()
-        price_raw = dialog_manager.find("price").get_value() or data["price"]
-        phone = data.get("phone") or data.get("current_phone")
+        price_raw = data["price"]
+        phone = data.get("phone") or data.get("current_phone", "")
         contacts = Contacts.from_user(username=user.username, phone=phone).display
         price = Price.format(price_raw)
 
@@ -161,8 +174,8 @@ async def getter_confirm(
         "city": city,
         "price": price,
         "contacts": contacts,
-        "slot_day": slot.date_display,
-        "slot_time": slot.time_display,
+        "slot_day": slot.date_display if slot else "",
+        "slot_time": slot.time_display if slot else "",
         "media": media,
     }
 
@@ -185,8 +198,10 @@ async def getter_publication_service(
         GetPublicationByIdRequest(publication_id=pub_id)
     )
     bought_types: set[PublicationServiceType] = {
-        s.type for s in pub.services
-        if s.status in (
+        s.type
+        for s in pub.services
+        if s.status
+        in (
             PublicationServiceStatus.ACTIVE,
             PublicationServiceStatus.USED,
         )
@@ -203,9 +218,14 @@ async def getter_publication_service(
 
     # фильтруем
     filtered = [
-        s for s in services
+        s
+        for s in services
         if s.type != PublicationServiceType.PRE_PUBLICATION
-        and not (ad and ad.ad_type == AdType.STORE and s.type == PublicationServiceType.HIGHLIGHT)
+        and not (
+            ad
+            and ad.ad_type == AdType.STORE
+            and s.type == PublicationServiceType.HIGHLIGHT
+        )
     ]
 
     # сортируем
@@ -214,8 +234,11 @@ async def getter_publication_service(
     # формируем отображение
     display = [
         (
-            f"{s.title} ✅" if s.type.value in bought_types
-            else f"{s.title} — {s.price // 100} руб.",
+            (
+                f"{s.title} ✅"
+                if s.type.value in bought_types
+                else f"{s.title} — {s.price // 100} руб."
+            ),
             s.type.value,
         )
         for s in filtered
@@ -225,6 +248,7 @@ async def getter_publication_service(
         "available_services": display,
         "balance": f"{user.balance:.0f} руб.",
     }
+
 
 async def getter_finish(dialog_manager: DialogManager, **kwargs) -> dict:
     data = dialog_manager.dialog_data

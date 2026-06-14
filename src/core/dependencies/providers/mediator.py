@@ -20,6 +20,7 @@ from src.application.use_cases.ad.update_ad_content import (
     UpdateAdContentRequest,
     UpdateAdContentUseCase,
 )
+from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentRequest, NotifyAdminsAboutUrgentUseCase
 from src.application.use_cases.payment.confirm import ConfirmPaymentRequest, ConfirmPaymentUseCase
 from src.application.use_cases.payment.create import CreatePaymentRequest, CreatePaymentUseCase
 from src.application.use_cases.publication.check_limiter import CheckPublicationLimitRequest, CheckPublicationLimitUseCase
@@ -125,7 +126,8 @@ class MediatorProvider(Provider):
         create_payment_use_case: CreatePaymentUseCase,
         confirm_payment_use_case: ConfirmPaymentUseCase,
         seed_service_definitons_use_case: SeedServiceDefinitionsUseCase,
-        apply_service_to_published_use_case: ApplyServiceToPublishedUseCase
+        apply_service_to_published_use_case: ApplyServiceToPublishedUseCase,
+        notify_admins_urgent_use_case: NotifyAdminsAboutUrgentUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -180,5 +182,6 @@ class MediatorProvider(Provider):
         mediator.register(ConfirmPaymentRequest, confirm_payment_use_case)
         mediator.register(SeedServiceDefinitionsRequest, seed_service_definitons_use_case)
         mediator.register(ApplyServiceToPublishedRequest, apply_service_to_published_use_case)
+        mediator.register(NotifyAdminsAboutUrgentRequest, notify_admins_urgent_use_case)
 
         return mediator

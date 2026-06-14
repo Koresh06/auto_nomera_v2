@@ -1,6 +1,6 @@
 from src.domain.entities.publication import Publication
 from src.domain.entities.publication_service import PublicationService
-from src.domain.services.publication_service.context import ServiceContext
+from src.application.services.publication.context import ServiceContext
 
 
 class PinStrategy:
