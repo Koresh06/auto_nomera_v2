@@ -59,6 +59,7 @@ from src.application.use_cases.region.create import CreateRegionUseCase
 from src.application.use_cases.region.get_all import GetAllRegionsUseCase
 from src.application.use_cases.region.get_by_id import GegByIdRegionUseCase
 from src.application.use_cases.seeds.service_definitions import SeedServiceDefinitionsUseCase
+from src.application.use_cases.slots.check_hold import CheckHoldUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
@@ -434,6 +435,15 @@ class UseCasesProvider(Provider):
             create_publication=create_publication,
             select_slot=select_slot,
         )
+    
+    @provide
+    def check_hold_use_case(
+        self,
+        hold_store: SlotHoldStore,
+    ) -> CheckHoldUseCase:
+        return CheckHoldUseCase(
+            hold_store=hold_store,
+    )
 
     @provide
     def reuse_ad_and_schedule_use_case(

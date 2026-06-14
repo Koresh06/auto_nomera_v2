@@ -41,3 +41,7 @@ class RedisSlotHoldStore:
             for slot, value in zip(slots_list, values)
             if value is not None
         }
+
+    async def exists_for_user(self, slot: SlotKey, user_id: int) -> bool:
+        owner = await self.get(slot)
+        return owner is not None and owner.user_id == user_id

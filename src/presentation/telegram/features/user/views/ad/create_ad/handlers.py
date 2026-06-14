@@ -23,6 +23,7 @@ from src.application.use_cases.publication_service.buy_publication_service impor
 from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
 from src.application.use_cases.publication_service.priority_publish_publication import PriorityPublishPublicationRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
+from src.application.use_cases.slots.check_hold import CheckHoldRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
 from src.domain.enums.publication import PublicationStatus
@@ -277,7 +278,7 @@ async def on_back_to_calendar(
 
 
 @inject
-async def on_confirm(
+async def on_confirm_ad(
     callback: CallbackQuery,
     widget: Button,
     dialog_manager: DialogManager,
@@ -289,6 +290,22 @@ async def on_confirm(
     user: UserDTO = data["user"]
     region_id: int = data["region_id"]
     slot: SlotKey = data["slot"]
+
+    # Проверяем что холд ещё живой
+    hold_valid = await mediator.handle(
+        CheckHoldRequest(
+            region_id=region_id,
+            slot=slot,
+            user_id=user.id,
+        )
+    )
+    if not hold_valid:
+        await callback.answer(
+            "⏰ Время ожидания подтверждения истекло. Выберите слот заново.",
+            show_alert=True,
+        )
+        await dialog_manager.back()
+        return
 
     if data.get("reuse_ad"):
         ad_id: int = data["existing_ad_id"]

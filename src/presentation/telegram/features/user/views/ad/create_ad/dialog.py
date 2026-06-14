@@ -24,7 +24,7 @@ from src.presentation.telegram.features.error_handlers import on_input_error
 from .states import CreateAdSG
 from .handlers import (
     on_back_to_calendar,
-    on_confirm,
+    on_confirm_ad,
     on_delete_photo,
     on_input_photo,
     on_negotiable_price,
@@ -218,7 +218,7 @@ create_ad_dialog = Dialog(
         Button(
             Const("✅ Подтвердить"),
             id="confirm",
-            on_click=on_confirm,
+            on_click=on_confirm_ad,
         ),
         Back(
             Const("⬅️ Назад"),

@@ -66,6 +66,7 @@ from src.application.use_cases.region.get_all import (
 )
 from src.application.use_cases.region.get_by_id import GegByIdRegionUseCase, IdRegionRequest
 from src.application.use_cases.seeds.service_definitions import SeedServiceDefinitionsRequest, SeedServiceDefinitionsUseCase
+from src.application.use_cases.slots.check_hold import CheckHoldRequest, CheckHoldUseCase
 from src.application.use_cases.slots.get_calendar import (
     GetCalendarRequest,
     GetCalendarUseCase,
@@ -119,6 +120,7 @@ class MediatorProvider(Provider):
         create_publication_from_ad_use_case: CreatePublicationFromAdUseCase,
         check_publication_limit_use_case: CheckPublicationLimitUseCase,
         create_and_schedule_use_case: CreateAndScheduleAdUseCase,
+        check_hold_use_case: CheckHoldUseCase,
         reuse_ad_and_schedule_use_case: ReuseAdAndScheduleUseCase,
         create_payment_use_case: CreatePaymentUseCase,
         confirm_payment_use_case: ConfirmPaymentUseCase,
@@ -172,6 +174,7 @@ class MediatorProvider(Provider):
         )
         mediator.register(CheckPublicationLimitRequest, check_publication_limit_use_case)
         mediator.register(CreateAndScheduleAdRequest, create_and_schedule_use_case)
+        mediator.register(CheckHoldRequest, check_hold_use_case)
         mediator.register(ReuseAdAndScheduleRequest, reuse_ad_and_schedule_use_case)
         mediator.register(CreatePaymentRequest, create_payment_use_case)
         mediator.register(ConfirmPaymentRequest, confirm_payment_use_case)
