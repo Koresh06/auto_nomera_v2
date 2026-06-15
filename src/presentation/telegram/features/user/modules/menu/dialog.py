@@ -25,16 +25,18 @@ from src.presentation.telegram.features.user.modules.menu.handlers import (
     register_user_or_change_region,
 )
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
+from src.presentation.telegram.features.user.modules.urgent_buyout.states import UrgentBououtSG
+
 
 user_menu_dialog = Dialog(
     Window(
         Const("Выберите действие:"),
-        # Start(
-        #     Const("💎 Каталог объявлений до публикации"),
-        #     id="early_ads_catalog",
-        #     state=CatalogUrgentRedemptionSG.start,
-        #     when="has_early_access",
-        # ),
+        Start(
+            Const("💎 Каталог объявлений до публикации"),
+            id="early_ads_catalog",
+            state=UrgentBououtSG.start,
+            when="has_early_access",
+        ),
         Row(
             Start(
                 Const("📤 ПРОДАТЬ"),
