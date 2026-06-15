@@ -67,12 +67,12 @@ from src.application.use_cases.publication.create_ad_publication import (
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
 from src.application.use_cases.user.update import UpdateUserRequest
-from src.presentation.telegram.features.user.views.ad.create_ad.states import CreateAdSG
-from src.presentation.telegram.features.user.views.ad.create_ad.validators import (
+from src.presentation.telegram.features.user.modules.ad.create_ad.states import CreateAdSG
+from src.presentation.telegram.features.user.modules.ad.create_ad.validators import (
     validate_price,
     validate_price_urgent_buyout,
 )
-from src.presentation.telegram.features.user.views.ad.edit.states import EditAdSG
+from src.presentation.telegram.features.user.modules.ad.edit.states import EditAdSG
 from src.presentation.telegram.keyboards.urgent_moderation import (
     build_urgent_moderation_kb,
 )
@@ -347,13 +347,14 @@ async def on_confirm_ad(
     user: UserDTO = data["user"]
     region_id: int = data["region_id"]
 
-    if ad_type == AdType.URGENT_BUYOUT:
-        plate: str = data["plate"]
-        price_raw = data["price"]
-        phone: str = data["phone"]
-        media: MediaAttachment = data["media"]
-        contacts = Contacts.from_user(username=user.username, phone=phone)
+    plate: str = data["plate"]
+    city: str = data["city"]
+    price: Price = Price(int(data["price"]))
+    phone: str = data["phone"]
+    media: MediaAttachment = data["media"]
+    contacts = Contacts.from_user(username=user.username, phone=phone)
 
+    if ad_type == AdType.URGENT_BUYOUT:
         ad_dto: AdDTO = await mediator.handle(
             CreateAdDraftRequest(
                 user_id=user.id,
@@ -366,7 +367,8 @@ async def on_confirm_ad(
             UpdateAdContentRequest(
                 ad_id=ad_dto.id,
                 plate_number=plate,
-                price=Price(int(price_raw)),
+                price=price,
+                city=city,
                 contacts=contacts,
                 image_file_id=(
                     media.file_id.file_id if media and media.file_id else None
@@ -374,7 +376,7 @@ async def on_confirm_ad(
             )
         )
 
-        markup = build_urgent_moderation_kb(ad_id=ad_dto.id)
+        markup = await build_urgent_moderation_kb(ad_id=ad_dto.id)
         await mediator.handle(
             NotifyAdminsAboutUrgentRequest(
                 ad_id=ad_dto.id,
@@ -412,13 +414,6 @@ async def on_confirm_ad(
                 )
             )
         else:
-            plate: str = data["plate"]
-            city: str = data["city"]
-            price: Price = Price(int(data["price"]))
-            phone: str = data["phone"]
-            media: MediaAttachment = data["media"]
-            contacts = Contacts.from_user(username=user.username, phone=phone)
-
             pub: PublicationDTO = await mediator.handle(
                 CreateAndScheduleAdRequest(
                     user_id=user.id,

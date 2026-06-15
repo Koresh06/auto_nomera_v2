@@ -15,16 +15,16 @@ from aiogram_dialog.widgets.kbd import (
 )
 
 from src.domain.enums.ad import AdType
-from src.presentation.telegram.features.user.views.ad.create_ad.states import CreateAdSG
-from src.presentation.telegram.features.user.views.ad.edit.states import EditAdSG
-from src.presentation.telegram.features.user.views.menu.getters import (
+from src.presentation.telegram.features.user.modules.ad.create_ad.states import CreateAdSG
+from src.presentation.telegram.features.user.modules.ad.edit.states import EditAdSG
+from src.presentation.telegram.features.user.modules.menu.getters import (
     getter_start_menu,
     list_regions_getter,
 )
-from src.presentation.telegram.features.user.views.menu.handlers import (
+from src.presentation.telegram.features.user.modules.menu.handlers import (
     register_user_or_change_region,
 )
-from src.presentation.telegram.features.user.views.menu.states import UserMenuSG
+from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 
 user_menu_dialog = Dialog(
     Window(

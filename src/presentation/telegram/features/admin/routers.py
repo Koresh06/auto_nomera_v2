@@ -6,7 +6,7 @@ from aiogram_dialog import DialogManager, StartMode
 from dishka.integrations.aiogram import FromDishka, inject
 
 from src.application.mediator import Mediator
-from src.presentation.telegram.features.admin.views.main.states import MainRegionSG
+from src.presentation.telegram.features.admin.modules.main.states import MainRegionSG
 
 logger = logging.getLogger(__name__)
 

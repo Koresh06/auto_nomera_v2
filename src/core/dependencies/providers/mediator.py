@@ -2,10 +2,12 @@ from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
 from src.application.ports.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
+from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutRequest, ApproveUrgentBuyoutUseCase
 from src.application.use_cases.ad.create_ad_draft import (
     CreateAdDraftRequest,
     CreateAdDraftUseCase,
 )
+from src.application.use_cases.ad.eject_urgent_buyout import RejectUrgentBuyoutRequest, RejectUrgentBuyoutUseCase
 from src.application.use_cases.ad.ensure_ad_image_ref import (
     EnsureAdImageRefRequest,
     EnsureAdImageRefUseCase,
@@ -21,6 +23,7 @@ from src.application.use_cases.ad.update_ad_content import (
     UpdateAdContentUseCase,
 )
 from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentRequest, NotifyAdminsAboutUrgentUseCase
+from src.application.use_cases.notification.notify_pre_publication_users import NotifyPrePublicationUsersRequest, NotifyPrePublicationUsersUseCase
 from src.application.use_cases.payment.confirm import ConfirmPaymentRequest, ConfirmPaymentUseCase
 from src.application.use_cases.payment.create import CreatePaymentRequest, CreatePaymentUseCase
 from src.application.use_cases.publication.check_limiter import CheckPublicationLimitRequest, CheckPublicationLimitUseCase
@@ -128,6 +131,9 @@ class MediatorProvider(Provider):
         seed_service_definitons_use_case: SeedServiceDefinitionsUseCase,
         apply_service_to_published_use_case: ApplyServiceToPublishedUseCase,
         notify_admins_urgent_use_case: NotifyAdminsAboutUrgentUseCase,
+        notify_pre_publication_users_use_case: NotifyPrePublicationUsersUseCase,
+        approve_urgent_buyout_use_case: ApproveUrgentBuyoutUseCase,
+        reject_urgnet_buyout_use_case: RejectUrgentBuyoutUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -183,5 +189,8 @@ class MediatorProvider(Provider):
         mediator.register(SeedServiceDefinitionsRequest, seed_service_definitons_use_case)
         mediator.register(ApplyServiceToPublishedRequest, apply_service_to_published_use_case)
         mediator.register(NotifyAdminsAboutUrgentRequest, notify_admins_urgent_use_case)
+        mediator.register(NotifyPrePublicationUsersRequest, notify_pre_publication_users_use_case)
+        mediator.register(ApproveUrgentBuyoutRequest, approve_urgent_buyout_use_case)
+        mediator.register(RejectUrgentBuyoutRequest, reject_urgnet_buyout_use_case)
 
         return mediator

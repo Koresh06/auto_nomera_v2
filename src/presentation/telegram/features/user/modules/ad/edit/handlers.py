@@ -18,8 +18,8 @@ from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.enums.publication import PublicationStatus
-from src.presentation.telegram.features.user.views.ad.create_ad.texts import PLATE_BUY_EDIT_TEXT, PLATE_SALE_EDIT_TEXT
-from src.presentation.telegram.features.user.views.ad.create_ad.validators import (
+from src.presentation.telegram.features.user.modules.ad.create_ad.texts import PLATE_BUY_EDIT_TEXT, PLATE_SALE_EDIT_TEXT
+from src.presentation.telegram.features.user.modules.ad.create_ad.validators import (
     validate_phone_number,
     validate_price,
 )

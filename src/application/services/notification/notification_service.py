@@ -21,3 +21,12 @@ class NotificationService(Protocol):
         photo_id: str | None = None,
         reply_markup: Any | None = None,
     ) -> None: ...
+
+
+    async def notify_users(
+        self,
+        *,
+        user_ids: list[int],
+        text: str,
+        reply_markup: Any | None = None,
+    ) -> None: ...

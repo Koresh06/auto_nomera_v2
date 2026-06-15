@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
 
-from src.application.dtos.user import UserDTO
 from src.application.exceptions.ad import AdNotFoundException
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.region import RegionNotFoundException

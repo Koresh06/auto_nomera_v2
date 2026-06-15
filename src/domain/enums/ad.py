@@ -2,12 +2,12 @@ from enum import Enum
 
 
 class AdStatus(str, Enum):
-    DRAFT = "draft"  # создаётся в боте
-    PENDING_MODERATION = "pending_moderation"  # ожидает модерации
-    READY = "ready"  # заполнено, можно выбирать слот/оплачивать
-    SCHEDULED = "scheduled"  # есть план публикаций
-    PUBLISHED = "published"  # опубликована хотя бы раз
-    ARCHIVED = "archived"  # снята/устарела
+    DRAFT = "draft"                         # создаётся в боте, поля не заполнены
+    PENDING_MODERATION = "pending_moderation"  # URGENT_BUYOUT — ждёт одобрения админа
+    READY = "ready"                         # заполнено, можно выбирать слот / оплачивать
+    SCHEDULED = "scheduled"                 # запланирована хотя бы одна публикация
+    PUBLISHED = "published"                 # опубликована хотя бы раз в канале; для URGENT_BUYOUT — одобрена админом и доступна юзерам с pre_publication
+    ARCHIVED = "archived"                   # снята, устарела или отклонена админом (URGENT_BUYOUT)
 
 
 class AdType(str, Enum):

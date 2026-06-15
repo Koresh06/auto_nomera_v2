@@ -10,7 +10,7 @@ from src.application.exceptions.user import UserAlreadyExistsException
 from src.application.mediator import Mediator
 from src.application.use_cases.user.register import UserRegisterRequest
 from src.application.use_cases.user.update import UpdateUserRequest
-from src.presentation.telegram.features.user.views.menu.states import UserMenuSG
+from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 
 
 logger = logging.getLogger(__name__)

@@ -14,13 +14,13 @@ from aiogram_dialog.widgets.kbd import (
 )
 
 from src.presentation.telegram.features.error_handlers import on_input_error
-from src.presentation.telegram.features.user.views.ad.edit.getters import (
+from src.presentation.telegram.features.user.modules.ad.edit.getters import (
     getter_confirm_edit,
     getter_detail,
     getter_edit_field,
     getter_list_publications,
 )
-from src.presentation.telegram.features.user.views.ad.edit.handlers import (
+from src.presentation.telegram.features.user.modules.ad.edit.handlers import (
     on_apply_edit,
     on_edit_city,
     on_edit_phone,
@@ -61,7 +61,7 @@ edit_ad_dialog = Dialog(
             "🌎<b>Город:</b> {city}\n"
             "🚘<b>Номер:</b> {plate}\n"
             "💰<b>Цена:</b> {price}\n"
-            "📲<b>Контакты:</b> {contacts}\n"
+            "📲<b>Связь:</b> {contacts}\n"
         ),
         Group(
             SwitchTo(

@@ -1,4 +1,5 @@
 from src.application.mediator import Mediator
+from src.application.use_cases.notification.notify_pre_publication_users import NotifyPrePublicationUsersRequest
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationRequest,
 )
@@ -24,7 +25,16 @@ def register_taskiq_tasks(broker, *, container):
                 UnpinMessageRequest(channel_id=channel_id, message_id=message_id)
             )
 
+    @broker.task(name="notify_pre_publication_users")
+    async def notify_pre_publication_users(ad_id: int) -> None:
+        async with container() as request_container:
+            mediator = await request_container.get(Mediator)
+            await mediator.handle(
+                NotifyPrePublicationUsersRequest(ad_id=ad_id)
+            )
+
     return {
         "publish_publication": publish_publication,
         "unpin_message": unpin_message,
+        "notify_pre_publication_users": notify_pre_publication_users,
     }

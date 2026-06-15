@@ -1,4 +1,5 @@
 from dataclasses import fields
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,3 +58,12 @@ class SQLAlchemyUserRepo(UserRepository):
         await self._session.merge(user_model)
         await self._session.flush()
         return user_model.to_entity()
+    
+    async def find_with_active_pre_publication(self, region_id: int) -> list[User]:
+        now = datetime.now(timezone.utc)
+        query = select(UserModel).where(
+            UserModel.pre_publication_expires_at > now,
+            UserModel.region_id == region_id,
+        )
+        result = await self._session.execute(query)
+        return [model.to_entity() for model in result.scalars().all()]

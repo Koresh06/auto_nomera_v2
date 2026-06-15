@@ -79,7 +79,7 @@ create_ad_dialog = Dialog(
             "🚘 <b>Номер</b>: {plate}\n"
             "🌎 <b>Город</b>: {city}\n"
             "💰 <b>Цена</b>: {price}\n"
-            "📲 <b>Контакты</b>: {contacts}"
+            "📲 <b>Связь</b>: {contacts}"
         ),
         Column(
             Button(
@@ -228,7 +228,7 @@ create_ad_dialog = Dialog(
                 "🚘 <b>Номер</b>: {plate}\n"
                 "🌎 <b>Город</b>: {city}\n"
                 "💰 <b>Цена</b>: {price}\n"
-                "📲 <b>Контакты</b>: {contacts}\n\n"
+                "📲 <b>Связь</b>: {contacts}\n\n"
                 "🕐 <b>Слот</b>: {slot_day} в {slot_time}\n"
             ),
             when=F["dialog_data"]["ad_type"].in_({AdType.SALE, AdType.BUY}),
@@ -238,11 +238,11 @@ create_ad_dialog = Dialog(
                 "✅ <b>Предварительный просмотр заявки на срочный выкуп:</b>\n",
             ),
             Format(
-                "📋 <b>Проверьте данные:</b>\n\n"
+                "🚀 <b>СРОЧНЫЙ ВЫКУП</b>\n\n"
+                "🌎 <b>Город</b>: {city}\n"
                 "🚘 <b>Номер</b>: {plate}\n"
                 "💰 <b>Сумма</b>: {price}\n"
-                "📲 <b>Контакты</b>: {contacts}\n\n"
-                "⚠️ <b>Если заявка соответствует критериям — с вами свяжутся в ближайшее время.</b>",
+                "📲 <b>Связь</b>: {contacts}\n\n"
             ),
             when=F["dialog_data"]["ad_type"] == AdType.URGENT_BUYOUT,
         ),
@@ -308,7 +308,7 @@ create_ad_dialog = Dialog(
     ),
     Window(
         Const(
-            "✅ <b>Спасибо за Вашу заявку. </b>"
+            "✅ <b>Спасибо за Вашу заявку.</b>"
             "<b>Если ваше объявление соответствует критериям срочного выкупа,</b> "
             "<b>то в ближайшее время с Вами свяжутся покупатели.</b>"
         ),

@@ -4,16 +4,16 @@ from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import Back, Cancel, Next, Button
 
 
-from src.presentation.telegram.features.admin.views.region.create.getters import (
+from src.presentation.telegram.features.admin.modules.region.create.getters import (
     confirm_region_getter,
 )
-from src.presentation.telegram.features.admin.views.region.create.handlers import (
+from src.presentation.telegram.features.admin.modules.region.create.handlers import (
     on_confirm_region,
 )
-from src.presentation.telegram.features.admin.views.region.create.states import (
+from src.presentation.telegram.features.admin.modules.region.create.states import (
     CreateRegionSG,
 )
-from src.presentation.telegram.features.admin.views.region.create.validators import (
+from src.presentation.telegram.features.admin.modules.region.create.validators import (
     validate_channel_id,
     validate_channel_username,
     validate_timezone,

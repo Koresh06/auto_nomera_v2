@@ -30,10 +30,11 @@ class NotifyAdminsAboutUrgentUseCase(UseCase[NotifyAdminsAboutUrgentRequest, Non
 
         c = ad.content
         text = (
-            f"🚨 <b>Срочный выкуп</b>\n\n"
+            f"🚀 <b>СРОЧНЫЙ ВЫКУП</b>\n\n"
+            f"🌎 <b>Город:</b> {c.city}\n"
             f"🚘 <b>Номер:</b> <code>{c.plate_number}</code>\n"
             f"💰 <b>Сумма:</b> {c.price.display}\n"
-            f"📲 <b>Контакты:</b> {c.contacts.display}\n"
+            f"📲 <b>Связь:</b> {c.contacts.display}\n"
         )
 
         await self.notification_service.notify_admins(

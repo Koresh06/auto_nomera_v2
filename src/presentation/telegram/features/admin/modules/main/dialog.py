@@ -2,8 +2,8 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const
 from aiogram_dialog.widgets.kbd import Start
 
-from src.presentation.telegram.features.admin.views.main.states import MainRegionSG
-from src.presentation.telegram.features.admin.views.region.create.states import (
+from src.presentation.telegram.features.admin.modules.main.states import MainRegionSG
+from src.presentation.telegram.features.admin.modules.region.create.states import (
     CreateRegionSG,
 )
 

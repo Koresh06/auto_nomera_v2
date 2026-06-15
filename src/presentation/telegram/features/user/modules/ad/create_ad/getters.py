@@ -145,7 +145,7 @@ async def getter_confirm(
         media = data.get("media") or build_media_attachment(
             c.image_file_id if c else None
         )
-        dialog_manager.dialog_data["media"] = media
+        data["media"] = media
 
     else:
         plate = data.get("plate")
@@ -164,11 +164,11 @@ async def getter_confirm(
                     chat_id=tg_id,
                 )
             )
-            dialog_manager.dialog_data["media"] = media
+            data["media"] = media
 
-        dialog_manager.dialog_data["city"] = city
-        dialog_manager.dialog_data["price"] = price_raw
-        dialog_manager.dialog_data["phone"] = phone
+        data["city"] = city
+        data["price"] = price_raw
+        data["phone"] = phone
 
     return {
         "plate": plate,
