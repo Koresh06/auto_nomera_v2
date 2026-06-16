@@ -140,8 +140,10 @@ async def getter_confirm(
         c = existing_ad.content
         plate = c.plate_number if c else ""
         city = c.city if c else ""
+        price_raw = c.price.value if c else 0
         price = c.price.display if c else ""
         contacts = c.contacts.display if c else ""
+        phone = c.contacts.phone if c else ""
         media = data.get("media") or build_media_attachment(
             c.image_file_id if c else None
         )
@@ -166,9 +168,10 @@ async def getter_confirm(
             )
             data["media"] = media
 
-        data["city"] = city
-        data["price"] = price_raw
-        data["phone"] = phone
+
+    data["phone"] = phone
+    data["price"] = price_raw
+    data["city"] = city
 
     return {
         "plate": plate,

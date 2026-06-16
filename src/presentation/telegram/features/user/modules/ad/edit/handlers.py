@@ -7,18 +7,29 @@ from dishka.integrations.aiogram_dialog import FromDishka, inject
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
+from src.application.dtos.region import RegionDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
+from src.application.use_cases.ad.archive_ad import ArchiveAdRequest
+from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefRequest
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 
 from src.application.use_cases.publication.edit_published import EditPublishedAdRequest
+from src.application.use_cases.region.get_by_id import IdRegionRequest
+from src.application.use_cases.user.get_by_tg_id import (
+    GetByTgIdUserUseCase,
+    GetTgIdRequest,
+)
 from src.domain.enums.ad import AdType
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.enums.publication import PublicationStatus
-from src.presentation.telegram.features.user.modules.ad.create_ad.texts import PLATE_BUY_EDIT_TEXT, PLATE_SALE_EDIT_TEXT
+from src.presentation.telegram.features.user.modules.ad.create_ad.texts import (
+    PLATE_BUY_EDIT_TEXT,
+    PLATE_SALE_EDIT_TEXT,
+)
 from src.presentation.telegram.features.user.modules.ad.create_ad.validators import (
     validate_phone_number,
     validate_price,
@@ -45,6 +56,33 @@ async def on_select_publication(
     dialog_manager.dialog_data["pub_id"] = pub.id
     dialog_manager.dialog_data["ad_id"] = pub.ad_id
     await dialog_manager.next()
+
+
+@inject
+async def on_delete_ad(
+    callback: CallbackQuery,
+    widget: Button,
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+) -> None:
+    if dialog_manager.dialog_data.get("delete_warning"):
+        dialog_manager.dialog_data.pop("delete_warning", None)
+        ad_id = dialog_manager.dialog_data["ad_id"]
+        pub_id = dialog_manager.dialog_data.get("pub_id")
+        await mediator.handle(
+            ArchiveAdRequest(
+                ad_id=ad_id,
+                publication_id=pub_id,
+            )
+        )
+        await callback.answer("🗑 Объявление удалено.", show_alert=False)
+        await dialog_manager.back()
+    else:
+        dialog_manager.dialog_data["delete_warning"] = True
+        await callback.answer(
+            "⚠️ Вы уверены? Нажмите ещё раз для подтверждения.",
+            show_alert=True,
+        )
 
 
 async def on_edit_city(
@@ -81,7 +119,9 @@ async def on_edit_phone(
     dialog_manager: DialogManager,
 ):
     dialog_manager.dialog_data["edit_field"] = "phone"
-    dialog_manager.dialog_data["edit_label"] = "📞 <b>Укажите новый номер телефона (с 8 или +7, без пробелов и лишних символов):</b>"
+    dialog_manager.dialog_data["edit_label"] = (
+        "📞 <b>Укажите новый номер телефона (с 8 или +7, без пробелов и лишних символов):</b>"
+    )
     await dialog_manager.switch_to(EditAdSG.edit_field)
 
 
@@ -99,16 +139,22 @@ async def on_edit_plate(
     await dialog_manager.switch_to(EditAdSG.edit_field)
 
 
+@inject
 async def on_field_input(
     message: Message,
     widget: ManagedTextInput,
     dialog_manager: DialogManager,
     value: str,
+    mediator: FromDishka[Mediator],
 ) -> None:
     field = dialog_manager.dialog_data["edit_field"]
     data = dialog_manager.dialog_data
     ad: AdDTO = data["selected_ad"]
-    user: UserDTO = data["user"]
+    user: UserDTO | None = data.get("user")
+    if user is None:
+        user = await mediator.handle(GetTgIdRequest(tg_id=message.from_user.id))
+        dialog_manager.dialog_data["user"] = user
+
     c = ad.content
 
     current_value = {
@@ -160,14 +206,29 @@ async def on_apply_edit(
 ) -> None:
     data = dialog_manager.dialog_data
     ad_id: int = data["ad_id"]
-    pub: PublicationDTO = data["selected_pub"]
-
+    pub: PublicationDTO | None = data.get("selected_pub")
+    user: UserDTO | None = data["user"]
     plate = data.get("pending_plate")
     city = data.get("pending_city")
     price: Price | None = data.get("pending_price")
     contacts: Contacts | None = data.get("pending_contacts")
 
-    if pub.status == PublicationStatus.PUBLISHED:
+    region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
+
+    image_file_id = None
+    if plate is not None:
+        tg_id = callback.from_user.id
+        new_media = await mediator.handle(
+            EnsureAdImageRefRequest(
+                plate=plate,
+                channel_username=region.channel_username,
+                chat_id=tg_id,
+            )
+        )
+        data["media"] = new_media
+        image_file_id = new_media.url if new_media else None
+
+    if pub is not None and pub.status == PublicationStatus.PUBLISHED:
         await mediator.handle(
             EditPublishedAdRequest(
                 ad_id=ad_id,
@@ -185,6 +246,7 @@ async def on_apply_edit(
                 city=city,
                 price=price,
                 contacts=contacts,
+                image_file_id=image_file_id,
             )
         )
 

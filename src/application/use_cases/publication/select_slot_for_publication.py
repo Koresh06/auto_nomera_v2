@@ -1,21 +1,20 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-import logging
 
-from src.application.exceptions.publication import PublicationNotFoundException
-from src.application.exceptions.region import RegionNotFoundException
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
-from src.domain.services.slots.slot_reservation_service import (
-    SlotReservationService,
-)
+from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.domain.value_objects.slot_key import SlotKey
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.application.exceptions.publication import PublicationNotFoundException
+from src.application.exceptions.region import RegionNotFoundException
 from src.infrastructure.database.transaction_manager.base import TransactionManager
+
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +66,11 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             now_utc=now,
         )
 
-        publish_at_utc = self.time_resolver.resolve_publish_at_utc(
-            tz=region.timezone,
-            slot=command.slot,
-        )
-        # publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
+        # publish_at_utc = self.time_resolver.resolve_publish_at_utc(
+        #     tz=region.timezone,
+        #     slot=command.slot,
+        # )
+        publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
         logger.info(f"[SelectSlot] publish_at_utc={publish_at_utc.isoformat()}")
 
         is_system_paid = self.pricing_policy.is_system_paid(

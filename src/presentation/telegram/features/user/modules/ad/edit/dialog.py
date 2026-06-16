@@ -22,6 +22,7 @@ from src.presentation.telegram.features.user.modules.ad.edit.getters import (
 )
 from src.presentation.telegram.features.user.modules.ad.edit.handlers import (
     on_apply_edit,
+    on_delete_ad,
     on_edit_city,
     on_edit_phone,
     on_edit_plate,
@@ -46,7 +47,7 @@ edit_ad_dialog = Dialog(
             ),
             id="pubs_scroll",
             width=1,
-            height=8,
+            height=10,
             hide_on_single_page=True,
             when="publications",
         ),
@@ -90,6 +91,11 @@ edit_ad_dialog = Dialog(
                 state=EditAdSG.edit_field,
             ),
             width=2,
+        ),
+        Button(
+            Const("🗑 Удалить"),
+            id="delete_ad",
+            on_click=on_delete_ad,
         ),
         Back(
             Const("⬅️ Назад"),
