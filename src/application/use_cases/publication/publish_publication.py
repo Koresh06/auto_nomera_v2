@@ -57,7 +57,8 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         logger.info(f"[Publish] pub_id={command.publication_id} status={pub.status if pub else None}")
     
         if pub is None:
-            raise PublicationNotFoundException(command.publication_id)
+            logger.warning("[Publish] publication_id=%s not found, skipping", command.publication_id)
+            return
     
         if pub.status in (
             PublicationStatus.PUBLISHED,

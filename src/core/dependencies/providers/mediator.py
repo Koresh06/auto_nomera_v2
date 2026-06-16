@@ -3,6 +3,7 @@ from dishka import Provider, provide, Scope
 from src.application.mediator import Mediator
 from src.application.ports.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
 from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutRequest, ApproveUrgentBuyoutUseCase
+from src.application.use_cases.ad.archive_ad import ArchiveAdRequest, ArchiveAdUseCase
 from src.application.use_cases.ad.create_ad_draft import (
     CreateAdDraftRequest,
     CreateAdDraftUseCase,
@@ -22,6 +23,7 @@ from src.application.use_cases.ad.update_ad_content import (
     UpdateAdContentRequest,
     UpdateAdContentUseCase,
 )
+from src.application.use_cases.catalog.get_catalog_deferred_publications import GetCatalogDeferredPublicationsRequest, GetCatalogDeferredPublicationsUseCase
 from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentRequest, NotifyAdminsAboutUrgentUseCase
 from src.application.use_cases.notification.notify_pre_publication_users import NotifyPrePublicationUsersRequest, NotifyPrePublicationUsersUseCase
 from src.application.use_cases.payment.confirm import ConfirmPaymentRequest, ConfirmPaymentUseCase
@@ -121,6 +123,7 @@ class MediatorProvider(Provider):
         get_by_id_ad_use_case: GetByIdAdUseCase,
         finalize_ad_use_case: FinalizeAdUseCase,
         find_ad_by_plate_use_case: FindAdByPlateUseCase,
+        archive_ad_use_case: ArchiveAdUseCase,
         create_publication_from_ad_use_case: CreatePublicationFromAdUseCase,
         check_publication_limit_use_case: CheckPublicationLimitUseCase,
         create_and_schedule_use_case: CreateAndScheduleAdUseCase,
@@ -134,6 +137,7 @@ class MediatorProvider(Provider):
         notify_pre_publication_users_use_case: NotifyPrePublicationUsersUseCase,
         approve_urgent_buyout_use_case: ApproveUrgentBuyoutUseCase,
         reject_urgnet_buyout_use_case: RejectUrgentBuyoutUseCase,
+        get_catalog_deferred_publications_use_case: GetCatalogDeferredPublicationsUseCase
     ) -> Mediator:
         mediator = Mediator()
 
@@ -177,6 +181,7 @@ class MediatorProvider(Provider):
         mediator.register(GetByIdAdRequest, get_by_id_ad_use_case)
         mediator.register(FinalizeAdRequest, finalize_ad_use_case)
         mediator.register(FindAdByPlateRequest, find_ad_by_plate_use_case)
+        mediator.register(ArchiveAdRequest, archive_ad_use_case)
         mediator.register(
             CreatePublicationFromAdRequest, create_publication_from_ad_use_case
         )
@@ -192,5 +197,6 @@ class MediatorProvider(Provider):
         mediator.register(NotifyPrePublicationUsersRequest, notify_pre_publication_users_use_case)
         mediator.register(ApproveUrgentBuyoutRequest, approve_urgent_buyout_use_case)
         mediator.register(RejectUrgentBuyoutRequest, reject_urgnet_buyout_use_case)
+        mediator.register(GetCatalogDeferredPublicationsRequest, get_catalog_deferred_publications_use_case)
 
         return mediator

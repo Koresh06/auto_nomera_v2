@@ -14,6 +14,7 @@ from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.ports.user.user_repo import UserRepository
 from src.application.services.notification.notification_service import NotificationService
 from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutUseCase
+from src.application.use_cases.ad.archive_ad import ArchiveAdUseCase
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase
 from src.application.use_cases.ad.eject_urgent_buyout import RejectUrgentBuyoutUseCase
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefUseCase
@@ -21,6 +22,7 @@ from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase
 from src.application.use_cases.ad.find_by_plate import FindAdByPlateUseCase
 from src.application.use_cases.ad.get_by_id import GetByIdAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase
+from src.application.use_cases.catalog.get_catalog_deferred_publications import GetCatalogDeferredPublicationsUseCase
 from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentUseCase
 from src.application.use_cases.notification.notify_pre_publication_users import NotifyPrePublicationUsersUseCase
 from src.application.use_cases.payment.confirm import ConfirmPaymentUseCase
@@ -398,6 +400,21 @@ class UseCasesProvider(Provider):
         return FindAdByPlateUseCase(
             ad_repo=ad_repo,
         )
+    
+    @provide
+    def archive_ad_use_case(
+        self,
+        ad_repo: AdRepository,
+        publication_repo: PublicationRepository,
+        task_queue: TaskQueue,
+        transaction_manager: TransactionManager,
+    ) -> ArchiveAdUseCase:
+        return ArchiveAdUseCase(
+            ad_repo=ad_repo,
+            publication_repo=publication_repo,
+            task_queue=task_queue,
+            transaction_manager=transaction_manager,
+    )
 
     @provide
     def create_publication_from_ad_use_case(
@@ -577,3 +594,14 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
         )
+    
+    @provide
+    def get_catalog_deferred_publications_use_case(
+        self,
+        ad_repo: AdRepository,
+        publication_repo: PublicationRepository,
+    ) -> GetCatalogDeferredPublicationsUseCase:
+        return GetCatalogDeferredPublicationsUseCase(
+            ad_repo=ad_repo,
+            publication_repo=publication_repo,
+    )

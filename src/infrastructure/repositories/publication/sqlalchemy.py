@@ -120,3 +120,21 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         result = await self._session.execute(query)
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
+    
+
+    async def list_pre_publication(
+        self,
+        region_id: int,
+        before_utc: datetime,
+    ) -> list[Publication]:
+        query = (
+            select(PublicationModel)
+            .where(
+                PublicationModel.region_id == region_id,
+                PublicationModel.status == PublicationStatus.SCHEDULED,
+                PublicationModel.publish_at_utc <= before_utc,
+            )
+            .order_by(PublicationModel.publish_at_utc.asc())
+        )
+        result = await self._session.execute(query)
+        return [m.to_entity() for m in result.scalars().all()]

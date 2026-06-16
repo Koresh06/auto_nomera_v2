@@ -21,13 +21,13 @@ class PublicationRepository(Protocol):
     ) -> list[tuple[Publication, str | None]]: ...
 
     async def count_scheduled_by_user(
-    self,
+        self,
         user_id: int,
         region_id: int,
         ad_type: AdType,
         from_utc: datetime,
     ) -> int: ...
-    
+
     async def find_last_by_plate(
         self,
         user_id: int,
@@ -35,3 +35,9 @@ class PublicationRepository(Protocol):
         plate: str,
         from_utc: datetime,
     ) -> Publication | None: ...
+
+    async def list_pre_publication(
+        self,
+        region_id: int,
+        before_utc: datetime,
+    ) -> list[Publication]: ...

@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram_dialog import DialogManager
 
@@ -19,7 +21,7 @@ async def getter_start_menu(
     user: UserDTO = await mediator.handle(
         GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
     )
-    
+
     title_region = None
     if user.region_id is not None:
         try:
@@ -30,9 +32,16 @@ async def getter_start_menu(
         except RegionNotFoundException:
             title_region = None
 
+    now = datetime.now(timezone.utc)
+    has_pre_publication = (
+        user.pre_publication_expires_at is not None
+        and user.pre_publication_expires_at > now
+    )
+
     return {
         "user": user,
         "title_region": title_region,
+        "has_pre_publication": has_pre_publication,
     }
 
 @inject

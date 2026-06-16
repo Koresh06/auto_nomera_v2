@@ -31,3 +31,15 @@ class RegionDTO:
             metadata=region.metadata,
             settings=region.settings,
         )
+
+    def to_entity(self) -> Region:
+        return Region(
+            id=self.id,
+            title=self.title,
+            timezone=self.timezone,
+            channel_id=self.channel_id,
+            channel_username=self.channel_username,
+            status=self.status,
+            settings=self.settings,
+            metadata=self.metadata,
+        )

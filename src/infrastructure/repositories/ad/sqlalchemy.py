@@ -4,7 +4,7 @@ from sqlalchemy import select
 from src.application.dtos.ad import Ad
 from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
-from src.domain.enums.ad import AdType
+from src.domain.enums.ad import AdStatus, AdType
 from src.infrastructure.database.models import AdModel
 
 
@@ -57,3 +57,16 @@ class SQLAlchemyAdRepo(AdRepository):
         result = await self._session.execute(query)
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
+    
+    async def list_urgent_published(self, region_id: int) -> list[Ad]:
+        query = (
+            select(AdModel)
+            .where(
+                AdModel.region_id == region_id,
+                AdModel.ad_type == AdType.URGENT_BUYOUT,
+                AdModel.status == AdStatus.PUBLISHED,
+            )
+            .order_by(AdModel.created_at.desc())
+        )
+        result = await self._session.execute(query)
+        return [m.to_entity() for m in result.scalars().all()]

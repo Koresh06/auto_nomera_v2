@@ -35,7 +35,7 @@ user_menu_dialog = Dialog(
             Const("💎 Каталог объявлений до публикации"),
             id="early_ads_catalog",
             state=UrgentBououtSG.start,
-            when="has_early_access",
+            when="has_pre_publication",
         ),
         Row(
             Start(
