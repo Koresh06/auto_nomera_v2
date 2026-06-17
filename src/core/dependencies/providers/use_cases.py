@@ -74,6 +74,7 @@ from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
 from src.application.use_cases.user.register import RegisterUserUseCase
 from src.application.use_cases.user.update import UpdateUserUseCase
+from src.core.config import AppSettings
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.calendar_builder import CalendarBuilder
@@ -600,8 +601,10 @@ class UseCasesProvider(Provider):
         self,
         ad_repo: AdRepository,
         publication_repo: PublicationRepository,
+        settings: AppSettings,
     ) -> GetCatalogDeferredPublicationsUseCase:
         return GetCatalogDeferredPublicationsUseCase(
             ad_repo=ad_repo,
             publication_repo=publication_repo,
+            settings=settings,
     )

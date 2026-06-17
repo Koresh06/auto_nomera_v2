@@ -6,4 +6,4 @@ class TelegramSettings(BaseSettings):
     admin_ids: list[int] = [123456789]
     bot_url: str = "https://t.me/your_bot"
     buyout_url: str = "https://t.me/your_buyout_bot"
-    hold_slots_time: int = 30
+    

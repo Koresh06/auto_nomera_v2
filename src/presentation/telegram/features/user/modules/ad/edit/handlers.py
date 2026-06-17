@@ -1,8 +1,9 @@
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.widgets.kbd import Select, Button
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 from aiogram_dialog.widgets.input import ManagedTextInput
+from aiogram_dialog.api.entities import MediaAttachment
 from dishka.integrations.aiogram_dialog import FromDishka, inject
 
 from src.application.dtos.ad import AdDTO
@@ -171,6 +172,18 @@ async def on_field_input(
     try:
         if field == "plate":
             value = validate_plate(value, allow_mask=False)
+            region: RegionDTO = await mediator.handle(
+                IdRegionRequest(user.region_id)
+            )
+            new_media: MediaAttachment = await mediator.handle(
+                EnsureAdImageRefRequest(
+                    plate=value,
+                    channel_username=region.channel_username,
+                    chat_id=message.from_user.id,
+                )
+            )
+            data["pending_media"] = new_media
+            
         elif field == "price":
             validate_price(value)
         elif field == "phone":
@@ -205,6 +218,7 @@ async def on_apply_edit(
     mediator: FromDishka[Mediator],
 ) -> None:
     data = dialog_manager.dialog_data
+    tg_id = callback.from_user.id
     ad_id: int = data["ad_id"]
     pub: PublicationDTO | None = data.get("selected_pub")
     user: UserDTO | None = data["user"]
@@ -214,19 +228,6 @@ async def on_apply_edit(
     contacts: Contacts | None = data.get("pending_contacts")
 
     region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
-
-    image_file_id = None
-    if plate is not None:
-        tg_id = callback.from_user.id
-        new_media = await mediator.handle(
-            EnsureAdImageRefRequest(
-                plate=plate,
-                channel_username=region.channel_username,
-                chat_id=tg_id,
-            )
-        )
-        data["media"] = new_media
-        image_file_id = new_media.url if new_media else None
 
     if pub is not None and pub.status == PublicationStatus.PUBLISHED:
         await mediator.handle(
@@ -239,16 +240,18 @@ async def on_apply_edit(
             )
         )
     else:
-        await mediator.handle(
-            UpdateAdContentRequest(
-                ad_id=ad_id,
-                plate_number=plate,
-                city=city,
-                price=price,
-                contacts=contacts,
-                image_file_id=image_file_id,
+        if plate is not None:
+            media: MediaAttachment = data["pending_media"]
+            await mediator.handle(
+                UpdateAdContentRequest(
+                    ad_id=ad_id,
+                    plate_number=plate,
+                    city=city,
+                    price=price,
+                    contacts=contacts,
+                    image_file_id=media.file_id.file_id if media and media.file_id else None,
+                )
             )
-        )
 
     updated_ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
     data["selected_ad"] = updated_ad

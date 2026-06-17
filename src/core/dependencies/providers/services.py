@@ -23,7 +23,7 @@ class ServicesProvider(Provider):
 
     @provide(scope=Scope.APP)
     def slot_hold_ttl(self, settings: AppSettings) -> timedelta:
-        return timedelta(seconds=settings.telegram.hold_slots_time)
+        return timedelta(seconds=settings.app.hold_slots_time)
 
     @provide(scope=Scope.APP)
     def calendar_builder(self) -> CalendarBuilder:
