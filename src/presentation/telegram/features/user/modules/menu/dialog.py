@@ -25,6 +25,7 @@ from src.presentation.telegram.features.user.modules.menu.handlers import (
     register_user_or_change_region,
 )
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
+from src.presentation.telegram.features.user.modules.profile.states import ProfileSG
 from src.presentation.telegram.features.user.modules.urgent_buyout.states import UrgentBououtSG
 
 
@@ -83,18 +84,18 @@ user_menu_dialog = Dialog(
             #     state=PaidServiceSG.start,
             # ),
         ),
-        # Row(
-        #     Start(
-        #         Const("💻 Мой профиль"),
-        #         id="profile",
-        #         state=UserProfileSG.start,
-        #     ),
+        Row(
+            Start(
+                Const("💻 Мой профиль"),
+                id="profile",
+                state=ProfileSG.start,
+            ),
         #     Start(
         #         Const("💰 Пополнить баланс"),
         #         id="top_up",
         #         state=TopupSG.enter_amount,
         #     ),
-        # ),
+        ),
         Column(
             Next(Format("♻️ Смена региона ({title_region})")),
             Url(

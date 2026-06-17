@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from src.application.dtos.ad import Ad
 from src.application.exceptions.ad import AdNotFoundException
@@ -70,3 +70,18 @@ class SQLAlchemyAdRepo(AdRepository):
         )
         result = await self._session.execute(query)
         return [m.to_entity() for m in result.scalars().all()]
+    
+    async def count_ads_by_user(
+        self,
+        user_id: int,
+        region_id: int,
+    ) -> int:
+        query = (
+            select(func.count(AdModel.id))
+            .where(
+                AdModel.user_id == user_id,
+                AdModel.region_id == region_id,
+            )
+        )
+        result = await self._session.execute(query)
+        return result.scalar_one()

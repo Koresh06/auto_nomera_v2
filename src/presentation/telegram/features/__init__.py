@@ -13,6 +13,7 @@ from src.presentation.telegram.features.admin.modules.main.dialog import main_re
 from src.presentation.telegram.features.admin.modules.region.create.dialog import create_region_dialog
 from src.presentation.telegram.features.user.modules.ad.edit.dialog import edit_ad_dialog
 from src.presentation.telegram.features.user.modules.urgent_buyout.dialogs import catalog_deferred_publication_dialog
+from src.presentation.telegram.features.user.modules.profile.dialogs import profile_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -32,5 +33,6 @@ def get_all_dialogs() -> list[Dialog]:
         main_region_dialog,
         create_region_dialog,
         edit_ad_dialog,
-        catalog_deferred_publication_dialog
+        catalog_deferred_publication_dialog,
+        profile_dialog,
     ]

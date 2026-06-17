@@ -4,6 +4,7 @@ from src.application.mediator import Mediator
 from src.application.ports.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
 from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutRequest, ApproveUrgentBuyoutUseCase
 from src.application.use_cases.ad.archive_ad import ArchiveAdRequest, ArchiveAdUseCase
+from src.application.use_cases.ad.count_ads_by_user import CountAdsByUserRequest, CountAdsByUserUseCase
 from src.application.use_cases.ad.create_ad_draft import (
     CreateAdDraftRequest,
     CreateAdDraftUseCase,
@@ -124,6 +125,7 @@ class MediatorProvider(Provider):
         finalize_ad_use_case: FinalizeAdUseCase,
         find_ad_by_plate_use_case: FindAdByPlateUseCase,
         archive_ad_use_case: ArchiveAdUseCase,
+        count_ads_by_user_use_case: CountAdsByUserUseCase,
         create_publication_from_ad_use_case: CreatePublicationFromAdUseCase,
         check_publication_limit_use_case: CheckPublicationLimitUseCase,
         create_and_schedule_use_case: CreateAndScheduleAdUseCase,
@@ -182,6 +184,7 @@ class MediatorProvider(Provider):
         mediator.register(FinalizeAdRequest, finalize_ad_use_case)
         mediator.register(FindAdByPlateRequest, find_ad_by_plate_use_case)
         mediator.register(ArchiveAdRequest, archive_ad_use_case)
+        mediator.register(CountAdsByUserRequest, count_ads_by_user_use_case)
         mediator.register(
             CreatePublicationFromAdRequest, create_publication_from_ad_use_case
         )

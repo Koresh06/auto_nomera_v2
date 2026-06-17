@@ -18,6 +18,10 @@ class UserDTO:
     balance: Decimal
     is_blocked: bool
     pre_publication_expires_at: datetime | None
+    
+    @property
+    def balance_display(self) -> str:
+        return f"{self.balance:,.0f} руб.".replace(",", " ")
 
     @classmethod
     def from_entity(cls, user: User) -> "UserDTO":

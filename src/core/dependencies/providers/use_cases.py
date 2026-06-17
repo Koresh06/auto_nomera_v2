@@ -15,6 +15,7 @@ from src.application.ports.user.user_repo import UserRepository
 from src.application.services.notification.notification_service import NotificationService
 from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutUseCase
 from src.application.use_cases.ad.archive_ad import ArchiveAdUseCase
+from src.application.use_cases.ad.count_ads_by_user import CountAdsByUserUseCase
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase
 from src.application.use_cases.ad.eject_urgent_buyout import RejectUrgentBuyoutUseCase
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefUseCase
@@ -416,6 +417,13 @@ class UseCasesProvider(Provider):
             task_queue=task_queue,
             transaction_manager=transaction_manager,
     )
+
+    @provide 
+    def count_ads_by_user_use_case(
+        self,
+        ad_repo: AdRepository
+    ) -> CountAdsByUserUseCase:
+        return CountAdsByUserUseCase(ad_repo=ad_repo)
 
     @provide
     def create_publication_from_ad_use_case(

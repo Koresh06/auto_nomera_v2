@@ -17,3 +17,9 @@ class AdRepository(Protocol):
     ) -> Ad | None: ...
 
     async def list_urgent_published(self, region_id: int) -> list[Ad]: ...
+
+    async def count_ads_by_user(
+        self,
+        user_id: int,
+        region_id: int,
+    ) -> int: ...
