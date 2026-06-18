@@ -241,7 +241,7 @@ async def getter_publication_service(
             (
                 f"{s.title} ✅"
                 if s.type.value in bought_types
-                else f"{s.title} — {s.price // 100} руб."
+                else f"{s.title} — {s.price} руб."
             ),
             s.type.value,
         )

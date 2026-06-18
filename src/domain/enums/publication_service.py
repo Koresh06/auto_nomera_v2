@@ -8,6 +8,16 @@ class PublicationServiceType(str, Enum):
     HIGHLIGHT = "highlight"
     PRE_PUBLICATION = "pre_publication"
 
+    @property
+    def display(self) -> str:
+        return {
+            PublicationServiceType.AUTOPUBLISH: "🔂 Автопубликация",
+            PublicationServiceType.PRIORITY_PUBLISH: "🥇 Вне очереди",
+            PublicationServiceType.PIN: "📌 Закрепление",
+            PublicationServiceType.HIGHLIGHT: "🟥 Выделение",
+            PublicationServiceType.PRE_PUBLICATION: "💎 Объявления до публикации",
+        }[self]
+
 
 class PublicationServiceStatus(str, Enum):
     ACTIVE = "active" # активная услуга

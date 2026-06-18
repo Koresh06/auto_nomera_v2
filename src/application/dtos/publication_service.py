@@ -13,6 +13,12 @@ class PublicationServiceDTO:
     price_paid: int | None
     params: dict | None
 
+    @property
+    def price_paid_display(self) -> str:
+        if self.price_paid is None:
+            return "—"
+        return f"{self.price_paid:,.0f} руб.".replace(",", " ")
+
     @classmethod
     def from_entity(cls, s: "PublicationService") -> "PublicationServiceDTO":
         return cls(

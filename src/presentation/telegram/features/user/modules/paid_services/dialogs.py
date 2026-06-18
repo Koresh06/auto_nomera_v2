@@ -1,0 +1,123 @@
+from aiogram import F
+from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.text import Const, Format, List
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Start, Group, Next, Cancel, Back, Row, PrevPage, NextPage, Button
+
+from src.domain.enums.publication_service import PublicationServiceType
+
+from .states import BuyServiceSG, PaidServiceSG, PrePublicationSG
+from .smart_scroll_text import SmartScrollingText
+from .getters import getter_buy_service_confirm, getter_connected_services_user, getter_current_services, getter_user_ads_for_service
+from .handlers import on_ad_selected_service, on_confirm_buy_service
+
+
+paid_service_dialog = Dialog(
+    Window(
+        List(
+            field=Format(
+                "<b>{item[name]}</b>\n"
+                "{item[description]}\n"
+                "Срок: {item[duration_text]}\n"
+                "Цена: <i>{item[price_text]}</i>\n"
+            ),
+            items="services",
+            id="services_list",
+        ),
+        Start(
+            Const("💎 Объявления до публикации"),
+            id="buy_pre_publication",
+            state=PrePublicationSG.confirm,
+        ),
+        Group(
+            Start(
+                Const("🥇 Вне очереди"),
+                id="buy_priority",
+                state=BuyServiceSG.select_ad,
+                data={"service_type": PublicationServiceType.PRIORITY_PUBLISH},
+            ),
+            Start(
+                Const("🔂 Автопубликация"),
+                id="buy_auto",
+                state=BuyServiceSG.select_ad,
+                data={"service_type": PublicationServiceType.AUTOPUBLISH},
+            ),
+            Start(
+                Const("📌 Закрепление"),
+                id="buy_pin",
+                state=BuyServiceSG.select_ad,
+                data={"service_type": PublicationServiceType.PIN},
+            ),
+            Start(
+                Const("🟥 Выделение"),
+                id="buy_highlight",
+                state=BuyServiceSG.select_ad,
+                data={"service_type": PublicationServiceType.HIGHLIGHT},
+            ),
+            width=2,
+        ),
+        Next(Const("📂 Подключённые услуги")),
+        Cancel(Const("⬅️ Назад")),
+        state=PaidServiceSG.start,
+        getter=getter_current_services,
+    ),
+    Window(
+        Const("📂 <b>Подключённые услуги</b>\n"),
+        Const("Пока нет подключённых услуг.", when=~F["has_any"]),
+        SmartScrollingText(
+            text=Format("{cards_text}"),
+            id="scroll_cards",
+            items_per_page=3,
+            when=F["has_any"],
+        ),
+        Row(
+            PrevPage(scroll="scroll_cards", text=Const("⬅️")),
+            Button(Format("📄 {page_current} / {pages_total}"), id="paginator"),
+            NextPage(scroll="scroll_cards", text=Const("➡️")),
+            when=F["has_any"],
+        ),
+        Back(Const("⬅️ Назад")),
+        state=PaidServiceSG.connected,
+        getter=getter_connected_services_user,
+    ),
+)
+
+
+buy_service_dialog = Dialog(
+    Window(
+        Format("<b>{service_name}</b>\n\nВыберите объявление:"),
+        Const("У вас пока нет объявлений с неподключенной услугой.", when=~F["has_ads"]),
+        ScrollingGroup(
+            Select(
+                Format("{item[title]}"),
+                id="ad_select",
+                items="ads",
+                item_id_getter=lambda it: it["id"],
+                on_click=on_ad_selected_service,
+            ),
+            id="ads_scroll",
+            width=1,
+            height=8,
+            hide_on_single_page=True,
+            when="has_ads",
+        ),
+        Cancel(Const("⬅️ Назад")),
+        state=BuyServiceSG.select_ad,
+        getter=getter_user_ads_for_service,
+    ),
+    Window(
+        Format(
+            "📌 <b>Подтверждение покупки</b>\n\n"
+            "Услуга: <b>{service_name}</b>\n"
+            "Объявление: <b>{ad_title}</b>\n"
+            "Цена: <b>{price_text}</b>\n"
+        ),
+        Button(
+            Const("✅ Подключить"),
+            id="confirm_buy",
+            on_click=on_confirm_buy_service,
+        ),
+        Back(Const("⬅️ Назад")),
+        state=BuyServiceSG.confirm,
+        getter=getter_buy_service_confirm,
+    ),
+)

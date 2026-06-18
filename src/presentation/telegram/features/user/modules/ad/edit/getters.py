@@ -8,7 +8,7 @@ from src.domain.enums.publication import PublicationStatus
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
-from src.application.ports.publication.get_user import GetUserPublicationsRequest
+from src.application.use_cases.publication.get_user import GetUserPublicationsRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.presentation.telegram.utils import build_media_attachment
 
@@ -29,9 +29,18 @@ async def getter_list_publications(
             region_id=user.region_id,
         )
     )
+
+    seen_ad_ids: set[int] = set()
+    filtered = []
+    for p in sorted(publications, key=lambda x: x.id):
+        if p.ad_id in seen_ad_ids:
+            continue
+        seen_ad_ids.add(p.ad_id)
+        filtered.append(p)
+
     dialog_manager.dialog_data["user"] = user
-    dialog_manager.dialog_data["publications"] = publications
-    return {"publications": publications}
+    dialog_manager.dialog_data["publications"] = filtered
+    return {"publications": filtered}
 
 
 @inject

@@ -18,5 +18,5 @@ class ServiceDefinition(Entity):
 
     @staticmethod
     def format_price(kopecks: int) -> str:
-        rubles = Decimal(kopecks) / 100
+        rubles = Decimal(kopecks)
         return f"{rubles:,.0f} руб.".replace(",", " ")

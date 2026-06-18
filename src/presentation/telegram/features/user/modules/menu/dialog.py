@@ -25,6 +25,7 @@ from src.presentation.telegram.features.user.modules.menu.handlers import (
     register_user_or_change_region,
 )
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
+from src.presentation.telegram.features.user.modules.paid_services.states import PaidServiceSG
 from src.presentation.telegram.features.user.modules.profile.states import ProfileSG
 from src.presentation.telegram.features.user.modules.urgent_buyout.states import UrgentBououtSG
 
@@ -78,11 +79,11 @@ user_menu_dialog = Dialog(
                 id="edit_ad",
                 state=EditAdSG.list,
             ),
-            # Start(
-            #     Const("🚀 Платные Топ услуги (NEW)"),
-            #     id="paid_services",
-            #     state=PaidServiceSG.start,
-            # ),
+            Start(
+                Const("🚀 Платные Топ услуги (NEW)"),
+                id="paid_services",
+                state=PaidServiceSG.start,
+            ),
         ),
         Row(
             Start(

@@ -1,7 +1,7 @@
 from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
-from src.application.ports.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
+from src.application.use_cases.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
 from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutRequest, ApproveUrgentBuyoutUseCase
 from src.application.use_cases.ad.archive_ad import ArchiveAdRequest, ArchiveAdUseCase
 from src.application.use_cases.ad.count_ads_by_user import CountAdsByUserRequest, CountAdsByUserUseCase

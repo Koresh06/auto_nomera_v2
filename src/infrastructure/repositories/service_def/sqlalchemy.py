@@ -44,12 +44,7 @@ class SQLAlchemyServiceDefinitionRepo(ServiceDefinitionRepository):
         return [m.to_entity() for m in result.scalars().all()]
 
     async def create(self, service: ServiceDefinition) -> ServiceDefinition:
-        model = ServiceDefinitionModel(
-            type=service.type,
-            title=service.title,
-            price=service.price,
-            is_active=service.is_active,
-        )
+        model = ServiceDefinitionModel.from_entity(service)
         self._session.add(model)
         await self._session.flush()
         await self._session.refresh(model)

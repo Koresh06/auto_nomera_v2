@@ -2,7 +2,7 @@ from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.payment.payment_repo import PaymentRepository
-from src.application.ports.publication.get_user import GetUserPublicationsUseCase
+from src.application.use_cases.publication.get_user import GetUserPublicationsUseCase
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.publication_service.image_processor import ImageProcessor

@@ -15,6 +15,7 @@ from src.application.use_cases.ad.update_ad_content import UpdateAdContentReques
 from src.application.use_cases.notification.notify_admins_urgent import (
     NotifyAdminsAboutUrgentRequest,
 )
+from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdStatus, AdType
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import (
@@ -27,6 +28,7 @@ from src.domain.exceptions.slot_reservation import (
     SlotHoldNotFound,
     SlotHoldOwnerMismatch,
 )
+from src.domain.exceptions.user import InsufficientBalance
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.services.publication.limiter import LimitCheckResult
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
@@ -463,14 +465,17 @@ async def on_service_paid_selected(
     item_id: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    user: UserDTO = dialog_manager.dialog_data["user"]
     pub_id: int = dialog_manager.dialog_data["publication_id"]
     service_type = PublicationServiceType(item_id)
+
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=callback.from_user.id)
+    )
+    dialog_manager.dialog_data["user"] = user
 
     logger.info(
         f"[ServiceSelected] user_id={user.id} pub_id={pub_id} service={service_type}"
     )
-
     # проверяем уже куплена ли
     pub: PublicationDTO = await mediator.handle(
         GetPublicationByIdRequest(publication_id=pub_id)
@@ -498,7 +503,7 @@ async def on_service_paid_selected(
         duration = f" на {service.duration_days} дн." if service.duration_days else ""
         await callback.answer(
             f"💳 {service.title}{duration}\n"
-            f"Стоимость: {service.price // 100} руб.\n\n"
+            f"Стоимость: {service.price} руб.\n\n"
             f"Нажмите ещё раз для подтверждения.",
             show_alert=True,
         )
@@ -510,32 +515,24 @@ async def on_service_paid_selected(
         f"[ServiceSelected:second_click] service={service_type} user_id={user.id}"
     )
 
-    # проверяем баланс
-    price_decimal = Decimal(service.price) / 100
-    if user.balance < price_decimal:
-        diff = int(price_decimal - user.balance)
-        logger.warning(
-            f"[ServiceSelected:insufficient] user_id={user.id} balance={user.balance} need={price_decimal}"
+    price_decimal = Decimal(service.price)
+    try:
+        await mediator.handle(
+            BuyPublicationServiceRequest(
+                publication_id=pub_id,
+                service_type=service_type,
+                user_id=user.id,
+            )
         )
+    except InsufficientBalance:
+        diff = abs(int(price_decimal - user.balance))
         await callback.answer(
             f"😔 Недостаточно средств.\n"
-            f"Пополните баланс на {diff} руб. и попробуйте снова.",
+            f"Пополните баланс на {diff} руб.",
             show_alert=True,
         )
         dialog_manager.dialog_data.pop(pending_key, None)
         return
-
-    # покупаем
-    logger.info(
-        f"[ServiceSelected:buy] user_id={user.id} pub_id={pub_id} service={service_type}"
-    )
-    await mediator.handle(
-        BuyPublicationServiceRequest(
-            publication_id=pub_id,
-            service_type=service_type,
-            user_id=user.id,
-        )
-    )
 
     # получаем актуальный статус публикации
     pub = await mediator.handle(GetPublicationByIdRequest(publication_id=pub_id))

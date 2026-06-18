@@ -37,7 +37,7 @@ class BuyPublicationServiceUseCase(UseCase[BuyPublicationServiceRequest, None]):
         if user is None:
             raise UserNotFoundException
         
-        price = Decimal(definition.price) / 100  # копейки → рубли
+        price = Decimal(definition.price)
         user.charge(price)
         await self.user_repo.save(user)
     
