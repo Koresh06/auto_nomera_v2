@@ -14,7 +14,7 @@ from src.infrastructure.database.transaction_manager.base import TransactionMana
 @dataclass(frozen=True, eq=False)
 class BuyPrePublicationServiceRequest(UseCaseRequest):
     user_id: int
-    months: int = 1
+    days: int = 30
 
 
 @dataclass(kw_only=True)
@@ -34,8 +34,8 @@ class BuyPrePublicationServiceUseCase(UseCase[BuyPrePublicationServiceRequest, N
         if user is None:
             raise UserNotFoundException
 
-        price = Decimal(definition.price) * command.months
+        price = Decimal(definition.price) * command.days
         user.charge(price)
-        user.activate_pre_publication(months=command.months)
+        user.activate_pre_publication(days=command.days)
         await self.user_repo.save(user)
         await self.transaction_manager.commit()

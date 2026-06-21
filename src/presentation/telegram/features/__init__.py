@@ -14,7 +14,7 @@ from src.presentation.telegram.features.admin.modules.region.create.dialog impor
 from src.presentation.telegram.features.user.modules.ad.edit.dialog import edit_ad_dialog
 from src.presentation.telegram.features.user.modules.urgent_buyout.dialogs import catalog_deferred_publication_dialog
 from src.presentation.telegram.features.user.modules.profile.dialogs import profile_dialog
-from src.presentation.telegram.features.user.modules.paid_services.dialogs import paid_service_dialog, buy_service_dialog
+from src.presentation.telegram.features.user.modules.paid_services.dialogs import paid_service_dialog, buy_service_dialog, pre_publication_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -38,4 +38,5 @@ def get_all_dialogs() -> list[Dialog]:
         profile_dialog,
         paid_service_dialog,
         buy_service_dialog,
+        pre_publication_dialog,
     ]

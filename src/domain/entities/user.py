@@ -25,13 +25,13 @@ class User(Entity):
             return False
         return self.pre_publication_expires_at > datetime.now(timezone.utc)
 
-    def activate_pre_publication(self, months: int = 1) -> None:
+    def activate_pre_publication(self, days: int = 30) -> None:
         from datetime import timedelta
         now = datetime.now(timezone.utc)
         base = self.pre_publication_expires_at
         if base is None or base <= now:
             base = now
-        self.pre_publication_expires_at = base + timedelta(days=30 * months)
+        self.pre_publication_expires_at = base + timedelta(days)
         self.touch()
 
     @classmethod

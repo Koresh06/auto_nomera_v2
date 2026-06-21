@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from dishka.integrations.aiogram_dialog import FromDishka, inject
@@ -201,4 +202,54 @@ async def getter_buy_service_confirm(
         "service_name": definition.title if definition else service_type.value,
         "price_text": definition.price_display if definition else "—",
         "ad_title": f"{ad.content.plate_number} — {pub.slot_display}",
+    }
+
+
+@inject
+async def getter_pre_publication_confirm(
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+    **kwargs,
+) -> dict:
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
+    dialog_manager.dialog_data["user"] = user
+
+    definitions: list[ServiceDefinitionDTO] = await mediator.handle(
+        GetAllServicesRequest()
+    )
+    definition = next(
+        (d for d in definitions if d.type == PublicationServiceType.PRE_PUBLICATION),
+        None,
+    )
+    
+
+    now = datetime.now(timezone.utc)
+    already_active = (
+        user.pre_publication_expires_at is not None
+        and user.pre_publication_expires_at > now
+    )
+
+    new_expires_at = None
+    if already_active and definition:
+        new_expires_at = user.pre_publication_expires_at + timedelta(
+            days=definition.duration_days or 30
+        )
+    elif definition:
+        new_expires_at = now + timedelta(days=definition.duration_days or 30)
+
+    dialog_manager.dialog_data["definition"] = definition
+    dialog_manager.dialog_data["already_active_flag"] = already_active
+
+    return {
+        "service_name": definition.title if definition else "",
+        "price_text": definition.price_display if definition else "—",
+        "duration_text": str(definition.duration_days) if definition and definition.duration_days else "30",
+        "already_active": already_active,
+        "current_expires_display": (
+            user.pre_publication_expires_at.strftime("%d.%m.%Y")
+            if already_active else None
+        ),
+        "new_expires_display": new_expires_at.strftime("%d.%m.%Y") if new_expires_at else None,
     }

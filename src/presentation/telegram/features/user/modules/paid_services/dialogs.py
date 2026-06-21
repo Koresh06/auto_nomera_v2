@@ -7,8 +7,8 @@ from src.domain.enums.publication_service import PublicationServiceType
 
 from .states import BuyServiceSG, PaidServiceSG, PrePublicationSG
 from .smart_scroll_text import SmartScrollingText
-from .getters import getter_buy_service_confirm, getter_connected_services_user, getter_current_services, getter_user_ads_for_service
-from .handlers import on_ad_selected_service, on_confirm_buy_service
+from .getters import getter_buy_service_confirm, getter_connected_services_user, getter_current_services, getter_pre_publication_confirm, getter_user_ads_for_service
+from .handlers import on_ad_selected_service, on_confirm_buy_pre_publication, on_confirm_buy_service
 
 
 paid_service_dialog = Dialog(
@@ -119,5 +119,33 @@ buy_service_dialog = Dialog(
         Back(Const("⬅️ Назад")),
         state=BuyServiceSG.confirm,
         getter=getter_buy_service_confirm,
+    ),
+)
+
+
+pre_publication_dialog = Dialog(
+    Window(
+        Format(
+            "<b>{service_name}</b>\n\n"
+            "🕒 <b>Срок действия:</b> {duration_text} дн.\n"
+            "💰 <b>Стоимость:</b> {price_text}\n\n"
+            "⚠️ После подключения подписки Вы получаете полный доступ к объявлениям из раздела "
+            '"Срочный выкуп", а также к объявлениям подписчиков до публикации в канале выбранного ранее Вами региона.\n'
+            "⚠️ После подключения подписки, в главном меню появится новая кнопка "
+            '"<b>💎 Каталог объявлений до публикации</b>".'
+        ),
+        Format(
+            "\n\n⚠️ <b>У вас уже активна подписка</b> до <b>{current_expires_display}</b>.\n"
+            "При повторной покупке срок продлится до <b>{new_expires_display}</b>.",
+            when=F["already_active"],
+        ),
+        Button(
+            Const("✅ Подключить подписку"),
+            id="confirm_buy_pre_publication",
+            on_click=on_confirm_buy_pre_publication,
+        ),
+        Cancel(Const("⬅️ Назад")),
+        state=PrePublicationSG.confirm,
+        getter=getter_pre_publication_confirm,
     ),
 )
