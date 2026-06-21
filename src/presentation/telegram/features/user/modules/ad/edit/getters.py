@@ -54,7 +54,6 @@ async def getter_detail(
 
     pub: PublicationDTO | None = data.get("selected_pub")
     pub_status = False
-    # back_to_finish: bool | None = start_data.get("back_to_finish")
 
     if pub is None:
         pub_id: int | None = start_data.get("pub_id")
@@ -90,7 +89,6 @@ async def getter_detail(
         "price": ad.content.price.display if ad.content else None,
         "contacts": ad.content.contacts.display if ad.content else None,
         "media": build_media_attachment(ad.content.image_file_id if ad.content else None),
-        # "back_to_finish": back_to_finish,
     }
 
 

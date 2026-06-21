@@ -100,6 +100,7 @@ async def on_plate_success(
         return
 
     dialog_manager.dialog_data["plate"] = validated
+    dialog_manager.dialog_data["is_reuse_ad"] = False
 
     user: UserDTO = dialog_manager.dialog_data["user"]
 
@@ -114,6 +115,7 @@ async def on_plate_success(
         if existing_ad:
             dialog_manager.dialog_data["existing_ad_id"] = existing_ad.id
             dialog_manager.dialog_data["existing_ad"] = existing_ad
+            dialog_manager.dialog_data["is_reuse_ad"] = True
             await dialog_manager.next()
             return
 
