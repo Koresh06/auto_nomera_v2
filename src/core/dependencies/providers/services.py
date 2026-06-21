@@ -9,12 +9,18 @@ from src.application.ports.publication_service.image_processor import ImageProce
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
+from src.application.services.payment.provider_registry import PaymentProviderRegistry
 from src.core.config import AppSettings
+from src.domain.enums.payment import PaymentMethod
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
+from src.infrastructure.payment.providers.cryptomus import CryptomusProvider
+from src.infrastructure.payment.providers.manual_card import ManualCardProvider
+from src.infrastructure.payment.providers.telegram_stars import TelegramStarsProvider
+from src.infrastructure.payment.providers.yookassa import YooKassaProvider
 from src.infrastructure.telegram.image_processor import PillowImageProcessor
 from src.infrastructure.telegram.notification_service import AiogramNotificationService
 
@@ -75,3 +81,19 @@ class ServicesProvider(Provider):
             bot=bot,
             admin_ids=settings.telegram.admin_ids,
         )
+
+    @provide(scope=Scope.APP)
+    def payment_provider_registry(
+        self,
+        bot: Bot,
+        settings: AppSettings,
+    ) -> PaymentProviderRegistry:
+        registry = PaymentProviderRegistry()
+        registry.register(PaymentMethod.TELEGRAM_STARS, TelegramStarsProvider(bot=bot, xtr_to_rub_rate=settings.payment.telegram_stars.xtr_to_rub_rate))
+        registry.register(
+            PaymentMethod.MANUAL_CARD,
+            ManualCardProvider(card_number=settings.payment.manual_card.card_number),
+        )
+        registry.register(PaymentMethod.YOOKASSA, YooKassaProvider())
+        registry.register(PaymentMethod.CRYPTO, CryptomusProvider())
+        return registry

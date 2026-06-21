@@ -85,8 +85,8 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             await self.publication_repo.save(publication)
 
         elif payment.purpose == PaymentPurpose.PRE_PUBLICATION:
-            months = payment.meta.get("months", 1)
-            user.activate_pre_publication(months=months)
+            days = payment.meta.get("days", 30)
+            user.activate_pre_publication(days)
             await self.user_repo.save(user)
 
         elif payment.purpose == PaymentPurpose.SLOT:

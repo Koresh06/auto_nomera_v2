@@ -6,6 +6,7 @@ from src.presentation.telegram.features.user.routers import router as user_route
 from src.presentation.telegram.features.admin.routers import router as region_router
 from src.presentation.telegram.features.admin.modules.urgent_buyout.router import router as admin_urgent_buyout_router
 from src.presentation.telegram.features.user.modules.urgent_buyout.routers import router as user_urgent_buyout_router
+from src.presentation.telegram.features.user.modules.payment.routers import router as payment_router
 
 from src.presentation.telegram.features.user.modules.menu.dialog import user_menu_dialog
 from src.presentation.telegram.features.user.modules.ad.create_ad.dialog import create_ad_dialog
@@ -15,6 +16,7 @@ from src.presentation.telegram.features.user.modules.ad.edit.dialog import edit_
 from src.presentation.telegram.features.user.modules.urgent_buyout.dialogs import catalog_deferred_publication_dialog
 from src.presentation.telegram.features.user.modules.profile.dialogs import profile_dialog
 from src.presentation.telegram.features.user.modules.paid_services.dialogs import paid_service_dialog, buy_service_dialog, pre_publication_dialog
+from src.presentation.telegram.features.user.modules.balance.dialogs import topup_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -24,6 +26,7 @@ def get_all_routers() -> list[Router]:
         region_router,
         admin_urgent_buyout_router,
         user_urgent_buyout_router,
+        payment_router,
     ]
 
 
@@ -39,4 +42,5 @@ def get_all_dialogs() -> list[Dialog]:
         paid_service_dialog,
         buy_service_dialog,
         pre_publication_dialog,
+        topup_dialog,
     ]

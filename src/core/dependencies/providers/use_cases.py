@@ -2,6 +2,7 @@ from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.payment.payment_repo import PaymentRepository
+from src.application.services.payment.provider_registry import PaymentProviderRegistry
 from src.application.use_cases.publication.get_user import GetUserPublicationsUseCase
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
@@ -492,10 +493,12 @@ class UseCasesProvider(Provider):
     def create_payment_use_case(
         self,
         payment_repo: PaymentRepository,
+        provider_registry: PaymentProviderRegistry,
         transaction_manager: TransactionManager,
     ) -> CreatePaymentUseCase:
         return CreatePaymentUseCase(
             payment_repo=payment_repo,
+            provider_registry=provider_registry,
             transaction_manager=transaction_manager,
         )
 

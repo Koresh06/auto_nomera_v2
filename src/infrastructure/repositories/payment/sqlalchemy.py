@@ -11,11 +11,12 @@ class SQLAlchemyPaymentRepo(PaymentRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def create(self, payment: Payment) -> None:
+    async def create(self, payment: Payment) -> Payment:
         model = PaymentModel.from_entity(payment)
         self.session.add(model)
         await self.session.flush()
         await self.session.refresh(model)
+        return model.to_entity()
 
     async def get_by_external_id(self, external_id: str) -> Payment | None:
         query = select(PaymentModel).where(PaymentModel.external_id == external_id)

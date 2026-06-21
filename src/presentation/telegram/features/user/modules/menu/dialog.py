@@ -17,6 +17,7 @@ from aiogram_dialog.widgets.kbd import (
 from src.domain.enums.ad import AdType
 from src.presentation.telegram.features.user.modules.ad.create_ad.states import CreateAdSG
 from src.presentation.telegram.features.user.modules.ad.edit.states import EditAdSG
+from src.presentation.telegram.features.user.modules.balance.states import TopupSG
 from src.presentation.telegram.features.user.modules.menu.getters import (
     getter_start_menu,
     list_regions_getter,
@@ -91,11 +92,11 @@ user_menu_dialog = Dialog(
                 id="profile",
                 state=ProfileSG.start,
             ),
-        #     Start(
-        #         Const("💰 Пополнить баланс"),
-        #         id="top_up",
-        #         state=TopupSG.enter_amount,
-        #     ),
+            Start(
+                Const("💰 Пополнить баланс"),
+                id="top_up",
+                state=TopupSG.enter_amount,
+            ),
         ),
         Column(
             Next(Format("♻️ Смена региона ({title_region})")),

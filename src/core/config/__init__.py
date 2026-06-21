@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.core.config.base import Settings
 from src.core.config.database import DatabaseSettings
+from src.core.config.payment import PaymentSettings
 from src.core.config.telegram import TelegramSettings
 
 
@@ -8,6 +9,7 @@ class AppSettings(BaseSettings):
     app: Settings = Settings()
     db: DatabaseSettings = DatabaseSettings()
     telegram: TelegramSettings = TelegramSettings()
+    payment: PaymentSettings = PaymentSettings()
 
     model_config = SettingsConfigDict(
         env_file=(".env"),

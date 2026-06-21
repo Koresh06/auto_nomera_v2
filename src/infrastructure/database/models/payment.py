@@ -53,8 +53,8 @@ class PaymentModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
 
 
     @classmethod
-    def from_entity(self, payment: "Payment") -> "PaymentModel":
-        return self(
+    def from_entity(cls, payment: "Payment") -> "PaymentModel":
+        return cls(
             external_id=payment.external_id,
             user_id=payment.user_id,
             method=payment.method,
@@ -71,6 +71,7 @@ class PaymentModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
 
     def to_entity(self) -> "Payment":
         return Payment(
+            id=self.id,
             external_id=self.external_id,
             user_id=self.user_id,
             method=self.method,
