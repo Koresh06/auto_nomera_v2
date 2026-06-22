@@ -81,6 +81,7 @@ async def on_confirm_buy_service(
                     description=definition.title,
                     purpose_id=pub_id,
                     meta={"service_type": service_type.value},
+                    return_state="BuyServiceSG:select_ad",
                 ),
             )
     else:

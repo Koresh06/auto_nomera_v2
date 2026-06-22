@@ -15,6 +15,7 @@ from src.application.ports.publication_service.service_definition_repo import (
     ServiceDefinitionRepository,
 )
 from src.application.ports.user.user_repo import UserRepository
+from src.application.services.notification.notification_service import NotificationService
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.application.use_cases.publication.confirm_paid_slot_and_schedule_publication import (
     ConfirmPaidSlotAndSchedulePublicationRequest,
@@ -51,6 +52,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
     priority_publish: PriorityPublishPublicationUseCase
     reservation_service: SlotReservationService
     teleporter: DialogTeleporter
+    notification_service: NotificationService
     transaction_manager: TransactionManager
 
     async def __call__(self, command: ConfirmPaymentRequest) -> None:
@@ -61,7 +63,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             raise PaymentNotFoundByExternalException(command.external_id)
 
         if payment.status == PaymentStatus.PAID:
-            return  # идемпотентность — уже обработан
+            return
 
         payment.mark_paid(now)
         await self.payment_repo.save(payment)
@@ -70,7 +72,6 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
         if user is None:
             raise UserNotFoundException(payment.user_id)
 
-        # применяем в зависимости от цели платежа
         if payment.purpose == PaymentPurpose.BALANCE_TOPUP:
             user.top_up(payment.amount)
             await self.user_repo.save(user)
@@ -93,9 +94,8 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             )
             publication.add_service(service)
             await self.publication_repo.save(publication)
-            await self.transaction_manager.commit()  # фиксируем покупку
+            await self.transaction_manager.commit()
 
-            # применяем сразу
             if definition.type == PublicationServiceType.PRIORITY_PUBLISH:
                 await self.priority_publish(
                     PriorityPublishPublicationRequest(publication_id=publication.id)
@@ -108,8 +108,9 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                     )
                 )
 
+            await self._notify_success(payment)
             await self._teleport_back(payment)
-            return  # коммит уже сделан выше
+            return
 
         elif payment.purpose == PaymentPurpose.PRE_PUBLICATION:
             days = payment.meta.get("days", 30)
@@ -118,7 +119,6 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
 
         elif payment.purpose == PaymentPurpose.SLOT:
             return_data = payment.meta.get("return_data", {})
-            logger.info(f"[ConfirmPayment:SLOT debug] meta={payment.meta} return_data={return_data}")
 
             if payment.purpose_id:
                 publication = await self.publication_repo.get_by_id(payment.purpose_id)
@@ -153,11 +153,39 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
 
         await self.transaction_manager.commit()
 
+        await self._notify_success(payment)
         await self._teleport_back(payment)
 
         logger.info(
             f"[ConfirmPayment:done] external_id={command.external_id} purpose={payment.purpose}"
         )
+
+    async def _notify_success(self, payment: Payment) -> None:
+        return_to = payment.meta.get("return_to")
+        if not return_to:
+            return
+        text = self._build_success_text(payment.purpose)
+        try:
+            await self.notification_service.notify_user(
+                tg_id=return_to["user_id"],
+                text=text,
+            )
+        except Exception as e:
+            logger.warning(f"[ConfirmPayment:notify_failed] {e}")
+
+    @staticmethod
+    def _build_success_text(purpose: PaymentPurpose) -> str:
+        match purpose:
+            case PaymentPurpose.BALANCE_TOPUP:
+                return "✨ Баланс пополнен!"
+            case PaymentPurpose.PUBLICATION_SERVICE:
+                return "✅ Услуга подключена и применена!"
+            case PaymentPurpose.PRE_PUBLICATION:
+                return "💎 Подписка на ранний доступ активирована!"
+            case PaymentPurpose.SLOT:
+                return "📅 Слот оплачен!"
+            case _:
+                return "✅ Платёж подтверждён!"
 
     async def _teleport_back(self, payment: Payment) -> None:
         return_to = payment.meta.get("return_to")

@@ -30,3 +30,12 @@ class NotificationService(Protocol):
         text: str,
         reply_markup: Any | None = None,
     ) -> None: ...
+    
+    
+    async def notify_user(
+        self,
+        *,
+        tg_id: int,
+        text: str,
+        reply_markup: Any | None = None,
+    ) -> None: ...

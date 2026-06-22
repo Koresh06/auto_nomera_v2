@@ -19,7 +19,6 @@ router = Router()
 
 @router.pre_checkout_query()
 async def pre_checkout_handler(query: PreCheckoutQuery) -> None:
-    """Подтверждаем готовность принять оплату — обязательно для Telegram Stars."""
     await query.bot.answer_pre_checkout_query(query.id, ok=True)
 
 
@@ -46,30 +45,8 @@ async def process_successful_payment(
     try:
         await mediator.handle(ConfirmPaymentRequest(external_id=external_id))
         logger.info(f"[Stars:confirmed] external_id={external_id}")
-        # Если есть телепортация — отдельное сообщение не нужно,
-        # юзер сам увидит новый экран после switch_to
-        payment: Payment = await mediator.handle(
-            GetPaymentByExternalIdRequest(external_id=external_id)
-        )
-        if not payment.meta.get("return_state"):
-            text = _build_success_text(payment.purpose)
-            await message.answer(text)
     except Exception as e:
         logger.exception(f"[Stars:error] external_id={external_id} error={e}")
         await message.answer(
             "❌ Ошибка при подтверждении платежа. Свяжитесь с поддержкой."
         )
-
-
-def _build_success_text(purpose: PaymentPurpose) -> str:
-    match purpose:
-        case PaymentPurpose.BALANCE_TOPUP:
-            return "✨ Баланс пополнен!"
-        case PaymentPurpose.PUBLICATION_SERVICE:
-            return "✅ Услуга подключена и применена!"
-        case PaymentPurpose.PRE_PUBLICATION:
-            return "💎 Подписка на ранний доступ активирована!"
-        case PaymentPurpose.SLOT:
-            return "📅 Слот оплачен!"
-        case _:
-            return "✅ Платёж подтверждён!"

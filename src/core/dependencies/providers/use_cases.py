@@ -531,6 +531,7 @@ class UseCasesProvider(Provider):
         apply_service_to_published: ApplyServiceToPublishedUseCase,
         priority_publish: PriorityPublishPublicationUseCase,
         reservation_service: SlotReservationService,
+        notification_service: NotificationService,
         teleporter: DialogTeleporter,
         transaction_manager: TransactionManager,
     ) -> ConfirmPaymentUseCase:
@@ -543,6 +544,7 @@ class UseCasesProvider(Provider):
             apply_service_to_published=apply_service_to_published,
             priority_publish=priority_publish,
             reservation_service=reservation_service,
+            notification_service=notification_service,
             teleporter=teleporter,
             transaction_manager=transaction_manager,
         )

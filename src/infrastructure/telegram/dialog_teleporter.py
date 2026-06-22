@@ -1,5 +1,5 @@
 from aiogram import Bot
-from aiogram_dialog import BgManagerFactory
+from aiogram_dialog import BgManagerFactory, ShowMode
 
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.presentation.telegram.features.state_registry import resolve_state
@@ -24,8 +24,8 @@ class AiogramDialogTeleporter(DialogTeleporter):
     ) -> None:
         state = resolve_state(state_key)
         bg = self.bg_manager.bg(bot=self.bot, user_id=user_id, chat_id=chat_id)
-        await bg.switch_to(state=state)
-
+        await bg.switch_to(state=state, show_mode=ShowMode.SEND)
+    
     async def update(
         self,
         *,
@@ -34,8 +34,8 @@ class AiogramDialogTeleporter(DialogTeleporter):
         data: dict,
     ) -> None:
         bg = self.bg_manager.bg(bot=self.bot, user_id=user_id, chat_id=chat_id)
-        await bg.update(data)
-
+        await bg.update(data, show_mode=ShowMode.NO_UPDATE)
+    
     async def done(
         self,
         *,
@@ -43,4 +43,4 @@ class AiogramDialogTeleporter(DialogTeleporter):
         chat_id: int,
     ) -> None:
         bg = self.bg_manager.bg(bot=self.bot, user_id=user_id, chat_id=chat_id)
-        await bg.done()
+        await bg.done(show_mode=ShowMode.NO_UPDATE)

@@ -59,3 +59,21 @@ class AiogramNotificationService:
                     "[NotificationService] failed to notify user_id=%s: %s",
                     user_id, e,
                 )
+
+    async def notify_user(
+        self,
+        *,
+        tg_id: int,
+        text: str,
+        reply_markup: InlineKeyboardMarkup | None = None,
+    ) -> None:
+        try:
+            await self.bot.send_message(
+                chat_id=tg_id,
+                text=text,
+                reply_markup=reply_markup,
+            )
+        except TelegramBadRequest as e:
+            logger.warning(
+                "[NotificationService] failed to notify tg_id=%s: %s", tg_id, e
+            )
