@@ -266,9 +266,36 @@ async def getter_publication_service(
     }
 
 
-async def getter_finish(dialog_manager: DialogManager, **kwargs) -> dict:
+@inject
+async def getter_finish(
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+    **kwargs,
+) -> dict:
     data = dialog_manager.dialog_data
     slot: SlotKey = data["slot"]
+    pub_id: int = data["publication_id"]
+
+    pub: PublicationDTO = await mediator.handle(
+        GetPublicationByIdRequest(publication_id=pub_id)
+    )
+
+    active_services = [
+        s
+        for s in pub.services
+        if s.status
+        in (
+            PublicationServiceStatus.ACTIVE,
+            PublicationServiceStatus.USED,
+        )
+    ]
+
+    if active_services:
+        selected_services = ", ".join(
+            PublicationServiceType(s.type).display for s in active_services
+        )
+    else:
+        selected_services = "Нет"
 
     return {
         "is_auto_pub": False,
@@ -277,5 +304,5 @@ async def getter_finish(dialog_manager: DialogManager, **kwargs) -> dict:
         "slot_time": slot.time_display,
         "channel_username": data["channel_username"],
         "region_title": data["region_title"],
-        "selected_services": "Заглушка",
+        "selected_services": selected_services,
     }

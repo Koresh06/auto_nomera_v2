@@ -5,6 +5,10 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.domain.enums.payment import PaymentPurpose
+from src.presentation.telegram.features.user.modules.payment.helpers import (
+    PaymentStartParams,
+    start_payment,
+)
 from src.presentation.telegram.features.user.modules.payment.states import PaymentSG
 
 
@@ -25,13 +29,13 @@ async def on_amount_input_success(
         await message.answer("⚠️ Введите корректную сумму, например 500")
         return
 
-    await dialog_manager.start(
-        state=PaymentSG.select_method,
-        data={
-            "purpose": PaymentPurpose.BALANCE_TOPUP.value,
-            "amount": str(amount),
-            "description": f"Пополнение баланса на {amount} руб.",
-        },
+    await start_payment(
+        dialog_manager,
+        user_id=message.from_user.id,
+        chat_id=message.chat.id,
+        params=PaymentStartParams(
+            purpose=PaymentPurpose.BALANCE_TOPUP,
+            amount=amount,
+            description=f"Пополнение баланса на {amount} руб.",
+        ),
     )
-
-

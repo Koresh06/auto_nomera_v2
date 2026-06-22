@@ -198,6 +198,8 @@ async def getter_buy_service_confirm(
     )
     ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=pub.ad_id))
 
+    dialog_manager.dialog_data["definition"] = definition
+
     return {
         "service_name": definition.title if definition else service_type.value,
         "price_text": definition.price_display if definition else "—",

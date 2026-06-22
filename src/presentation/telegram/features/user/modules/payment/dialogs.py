@@ -52,7 +52,7 @@ payment_dialog = Dialog(
             "После перевода отправьте чек администратору.",
             when=F["dialog_data"]["payment_method"] == PaymentMethod.MANUAL_CARD.value,
         ),
-        Cancel(Const("Отменить")),
+        Cancel(Const("❌ Отменить")),
         state=PaymentSG.waiting_payment,
     ),
 )

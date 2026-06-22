@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any
 
 from dishka.integrations.aiogram_dialog import inject, FromDishka
@@ -5,6 +6,10 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
+from src.domain.enums.payment import PaymentPurpose
+from src.domain.enums.publication import PublicationStatus
+from src.domain.enums.publication_service import PublicationServiceType
+from src.domain.exceptions.user import InsufficientBalance
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.dtos.user import UserDTO
@@ -14,9 +19,7 @@ from src.application.use_cases.publication_service.apply_service import ApplySer
 from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceRequest
 from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest
 from src.application.use_cases.publication_service.priority_publish_publication import PriorityPublishPublicationRequest
-from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceType
-from src.domain.exceptions.user import InsufficientBalance
+from src.presentation.telegram.features.user.modules.payment.helpers import PaymentStartParams, start_payment
 
 
 async def on_ad_selected_service(
@@ -39,6 +42,7 @@ async def on_confirm_buy_service(
     user: UserDTO = dialog_manager.dialog_data["user"]
     service_type: PublicationServiceType = dialog_manager.start_data["service_type"]
     pub_id: int = dialog_manager.dialog_data["selected_pub_id"]
+    definition: ServiceDefinitionDTO = dialog_manager.dialog_data["definition"]
 
     if dialog_manager.dialog_data.get("confirm_warning"):
         dialog_manager.dialog_data.pop("confirm_warning")
@@ -67,7 +71,18 @@ async def on_confirm_buy_service(
             await callback.answer("✅ Услуга подключена!", show_alert=True)
             await dialog_manager.done()
         except InsufficientBalance:
-            await callback.answer("❌ Недостаточно средств на балансе.", show_alert=True)
+            await start_payment(
+                dialog_manager,
+                user_id=callback.from_user.id,
+                chat_id=callback.message.chat.id,
+                params=PaymentStartParams(
+                    purpose=PaymentPurpose.PUBLICATION_SERVICE,
+                    amount=Decimal(definition.price),
+                    description=definition.title,
+                    purpose_id=pub_id,
+                    meta={"service_type": service_type.value},
+                ),
+            )
     else:
         dialog_manager.dialog_data["confirm_warning"] = True
         await callback.answer(
@@ -100,7 +115,17 @@ async def on_confirm_buy_pre_publication(
             )
             await dialog_manager.done()
         except InsufficientBalance:
-            await callback.answer("❌ Недостаточно средств на балансе.", show_alert=True)
+            await start_payment(
+                dialog_manager,
+                user_id=callback.from_user.id,
+                chat_id=callback.message.chat.id,
+                params=PaymentStartParams(
+                    purpose=PaymentPurpose.PRE_PUBLICATION,
+                    amount=Decimal(definition.price),
+                    description=definition.title,
+                    meta={"days": definition.duration_days or 30},
+                ),
+            )
     else:
         dialog_manager.dialog_data["confirm_warning"] = True
         await callback.answer(

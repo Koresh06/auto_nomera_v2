@@ -10,7 +10,9 @@ from aiogram_dialog.api.entities import MediaAttachment
 
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 
-from src.application.ports.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest
+from src.application.ports.slots.confirm_paid_slot_from_balance import (
+    ConfirmPaidSlotFromBalanceRequest,
+)
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 from src.application.use_cases.notification.notify_admins_urgent import (
@@ -71,12 +73,18 @@ from src.application.use_cases.publication.create_ad_publication import (
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
 from src.application.use_cases.user.update import UpdateUserRequest
-from src.presentation.telegram.features.user.modules.ad.create_ad.states import CreateAdSG
+from src.presentation.telegram.features.user.modules.ad.create_ad.states import (
+    CreateAdSG,
+)
 from src.presentation.telegram.features.user.modules.ad.create_ad.validators import (
     validate_price,
     validate_price_urgent_buyout,
 )
 from src.presentation.telegram.features.user.modules.ad.edit.states import EditAdSG
+from src.presentation.telegram.features.user.modules.payment.helpers import (
+    PaymentStartParams,
+    start_payment,
+)
 from src.presentation.telegram.features.user.modules.payment.states import PaymentSG
 from src.presentation.telegram.keyboards.urgent_moderation import (
     build_urgent_moderation_kb,
@@ -289,26 +297,25 @@ async def on_pick_slot(
                 user_id=user.id,
             )
         )
-        logger.info(f"[on_pick_slot] pricing_changed_to_converted={result.pricing_changed_to_converted}")
+        logger.info(
+            f"[on_pick_slot] pricing_changed_to_converted={result.pricing_changed_to_converted}"
+        )
     except (SlotAlreadyHeld, SlotAlreadyConverted):
         if dialog_manager.dialog_data.get("held_warning") == item_id:
             dialog_manager.dialog_data.pop("held_warning", None)
 
             amount = region.settings.paid_slot_price
 
-            await dialog_manager.start(
-                state=PaymentSG.select_method,
-                data={
-                    "purpose": PaymentPurpose.SLOT.value,
-                    "amount": str(amount),
-                    "description": "Оплата платного слота",
-                    "meta": {},
-                    "return_to": {
-                        "user_id": callback.from_user.id,
-                        "chat_id": callback.message.chat.id,
-                    },
-                    "return_state": "CreateAdSG:confirm",
-                    "return_data": {
+            await start_payment(
+                dialog_manager,
+                user_id=callback.from_user.id,
+                chat_id=callback.message.chat.id,
+                params=PaymentStartParams(
+                    purpose=PaymentPurpose.SLOT,
+                    amount=region.settings.paid_slot_price,
+                    description="Оплата платного слота",
+                    return_state="CreateAdSG:confirm",
+                    return_data={
                         "slot": {
                             "region_id": user.region_id,
                             "local_day": slot.local_day.isoformat(),
@@ -317,7 +324,7 @@ async def on_pick_slot(
                         "slot_id": item_id,
                         "is_paid": True,
                     },
-                },
+                ),
             )
             return
         else:
@@ -357,19 +364,16 @@ async def on_pick_slot(
                 return
             else:
                 # баланса не хватает — уходим на оплату
-                await dialog_manager.start(
-                    state=PaymentSG.select_method,
-                    data={
-                        "purpose": PaymentPurpose.SLOT.value,
-                        "amount": str(amount),
-                        "description": "Оплата платного слота",
-                        "meta": {},
-                        "return_to": {
-                            "user_id": callback.from_user.id,
-                            "chat_id": callback.message.chat.id,
-                        },
-                        "return_state": "CreateAdSG:confirm",
-                        "return_data": {
+                await start_payment(
+                    dialog_manager,
+                    user_id=callback.from_user.id,
+                    chat_id=callback.message.chat.id,
+                    params=PaymentStartParams(
+                        purpose=PaymentPurpose.SLOT,
+                        amount=region.settings.paid_slot_price,
+                        description="Оплата платного слота",
+                        return_state="CreateAdSG:confirm",
+                        return_data={
                             "slot": {
                                 "region_id": user.region_id,
                                 "local_day": slot.local_day.isoformat(),
@@ -378,7 +382,7 @@ async def on_pick_slot(
                             "slot_id": item_id,
                             "is_paid": True,
                         },
-                    },
+                    ),
                 )
                 return
         else:
@@ -397,6 +401,7 @@ async def on_pick_slot(
     dialog_manager.dialog_data["is_paid"] = result.pricing_changed_to_converted
 
     await dialog_manager.next()
+
 
 @inject
 async def on_back_to_calendar(
@@ -559,15 +564,13 @@ async def on_service_paid_selected(
     pub_id: int = dialog_manager.dialog_data["publication_id"]
     service_type = PublicationServiceType(item_id)
 
-    user: UserDTO = await mediator.handle(
-        GetTgIdRequest(tg_id=callback.from_user.id)
-    )
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=callback.from_user.id))
     dialog_manager.dialog_data["user"] = user
 
     logger.info(
         f"[ServiceSelected] user_id={user.id} pub_id={pub_id} service={service_type}"
     )
-    # проверяем уже куплена ли
+
     pub: PublicationDTO = await mediator.handle(
         GetPublicationByIdRequest(publication_id=pub_id)
     )
@@ -578,7 +581,6 @@ async def on_service_paid_selected(
         await callback.answer("⚠️ Эта услуга уже активна.", show_alert=True)
         return
 
-    # получаем определение услуги
     services: list[ServiceDefinitionDTO] = await mediator.handle(
         GetAllServicesRequest()
     )
@@ -587,7 +589,6 @@ async def on_service_paid_selected(
         await callback.answer("❌ Услуга не найдена.", show_alert=True)
         return
 
-    # двойное подтверждение
     pending_key = "pending_service"
     if dialog_manager.dialog_data.get(pending_key) != item_id:
         dialog_manager.dialog_data[pending_key] = item_id
@@ -607,44 +608,65 @@ async def on_service_paid_selected(
     )
 
     price_decimal = Decimal(service.price)
-    try:
-        await mediator.handle(
-            BuyPublicationServiceRequest(
-                publication_id=pub_id,
-                service_type=service_type,
-                user_id=user.id,
-            )
-        )
-    except InsufficientBalance:
-        diff = abs(int(price_decimal - user.balance))
-        await callback.answer(
-            f"😔 Недостаточно средств.\n"
-            f"Пополните баланс на {diff} руб.",
-            show_alert=True,
-        )
-        dialog_manager.dialog_data.pop(pending_key, None)
-        return
-
-    # получаем актуальный статус публикации
-    pub = await mediator.handle(GetPublicationByIdRequest(publication_id=pub_id))
-
-    if service_type == PublicationServiceType.PRIORITY_PUBLISH:
-        logger.info(f"[ServiceSelected:priority] publishing now pub_id={pub_id}")
-        await mediator.handle(PriorityPublishPublicationRequest(publication_id=pub_id))
-
-    elif pub.status == PublicationStatus.PUBLISHED:
-        logger.info(
-            f"[ServiceSelected:apply_to_published] pub_id={pub_id} service={service_type}"
-        )
-        await mediator.handle(
-            ApplyServiceToPublishedRequest(
-                publication_id=pub_id,
-                service_type=service_type,
-            )
-        )
-
     dialog_manager.dialog_data.pop(pending_key, None)
-    logger.info(
-        f"[ServiceSelected:done] user_id={user.id} pub_id={pub_id} service={service_type}"
-    )
-    await callback.answer(f"✅ {service.title} активирована!", show_alert=True)
+
+    if user.balance >= price_decimal:
+        # хватает баланса — покупаем сразу как раньше
+        try:
+            await mediator.handle(
+                BuyPublicationServiceRequest(
+                    publication_id=pub_id,
+                    service_type=service_type,
+                    user_id=user.id,
+                )
+            )
+        except InsufficientBalance:
+            await start_payment(
+                dialog_manager,
+                user_id=callback.from_user.id,
+                chat_id=callback.message.chat.id,
+                params=PaymentStartParams(
+                    purpose=PaymentPurpose.PUBLICATION_SERVICE,
+                    amount=service.price,
+                    description=service.title,
+                    purpose_id=pub_id,
+                    meta={"service_type": service_type.value},
+                ),
+            )
+            return
+
+        pub = await mediator.handle(GetPublicationByIdRequest(publication_id=pub_id))
+
+        if service_type == PublicationServiceType.PRIORITY_PUBLISH:
+            logger.info(f"[ServiceSelected:priority] publishing now pub_id={pub_id}")
+            await mediator.handle(
+                PriorityPublishPublicationRequest(publication_id=pub_id)
+            )
+        elif pub.status == PublicationStatus.PUBLISHED:
+            logger.info(
+                f"[ServiceSelected:apply_to_published] pub_id={pub_id} service={service_type}"
+            )
+            await mediator.handle(
+                ApplyServiceToPublishedRequest(
+                    publication_id=pub_id,
+                    service_type=service_type,
+                )
+            )
+
+        logger.info(
+            f"[ServiceSelected:done] user_id={user.id} pub_id={pub_id} service={service_type}"
+        )
+        await callback.answer(f"✅ {service.title} активирована!", show_alert=True)
+    else:
+        await start_payment(
+            dialog_manager,
+            user_id=callback.from_user.id,
+            chat_id=callback.message.chat.id,
+            params=PaymentStartParams(
+                purpose=PaymentPurpose.PUBLICATION_SERVICE,
+                amount=service.price,
+                description=service.title,
+                purpose_id=pub_id,
+                meta={"service_type": service_type.value},
+            ),
+        )
