@@ -66,28 +66,31 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             now_utc=now,
         )
 
-        # publish_at_utc = self.time_resolver.resolve_publish_at_utc(
-        #     tz=region.timezone,
-        #     slot=command.slot,
-        # )
         publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
-        logger.info(f"[SelectSlot] publish_at_utc={publish_at_utc.isoformat()}")
 
         is_system_paid = self.pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots,
             slot=command.slot,
         )
 
-        # ← проверяем converted через репо, не через hold_result
-        is_converted = await self.reservation_service.converted_repo.is_converted(
+        # узнаём владельца конверсии и привязанный ad_id (если есть)
+        converted_info = await self.reservation_service.converted_repo.get_converted_owner_and_ad(
             command.slot
         )
+        is_converted = converted_info is not None
 
-        is_paid_slot = is_system_paid or is_converted
+        # своя незавершённая оплата — публикация по ней ещё не создана (ad_id is None)
+        is_own_pending_payment = (
+            converted_info is not None
+            and converted_info[0] == command.user_id
+            and converted_info[1] is None
+        )
+
+        is_paid_slot = (is_system_paid or is_converted) and not is_own_pending_payment
         logger.info(
             f"[SelectSlot:pricing] is_system_paid={is_system_paid} "
-            f"is_converted={is_converted} is_paid_slot={is_paid_slot} "
-            f"payment_confirmed={command.payment_confirmed}"
+            f"is_converted={is_converted} is_own_pending_payment={is_own_pending_payment} "
+            f"is_paid_slot={is_paid_slot} payment_confirmed={command.payment_confirmed}"
         )
 
         if is_paid_slot and not command.payment_confirmed:
@@ -103,14 +106,20 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         publication.schedule(slot=command.slot, publish_at_utc=publish_at_utc)
         await self.publication_repo.save(publication)
 
+        # фиксируем/обновляем конверсию, проставляя реальный ad_id —
+        # публикация создана, конверсия "закрывается" окончательно.
+        # При следующем заходе на этот слот (любым юзером) is_own_pending_payment
+        # будет False, и слот снова станет платным.
         await self.reservation_service.converted_repo.mark_converted(
             slot=command.slot,
             user_id=command.user_id,
             ad_id=command.ad_id,
         )
         logger.info(
-            f"[SelectSlot:converted] slot={command.slot.local_day} {command.slot.local_time} user_id={command.user_id} ad_id={command.ad_id}"
+            f"[SelectSlot:converted] slot={command.slot.local_day} "
+            f"{command.slot.local_time} user_id={command.user_id} ad_id={command.ad_id}"
         )
+
         await self.transaction_manager.commit()
 
         await self.scheduler.schedule_publication(

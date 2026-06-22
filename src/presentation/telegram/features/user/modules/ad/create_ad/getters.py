@@ -1,3 +1,5 @@
+from datetime import date, time
+
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram.types import ContentType
 from aiogram_dialog import DialogManager
@@ -133,7 +135,18 @@ async def getter_confirm(
     user: UserDTO = data["user"]
     channel_username: str = data["channel_username"]
 
-    slot: SlotKey | None = data.get("slot")
+    # нормализуем slot — после телепортации через bg.update()
+    # он приходит как dict, а не объект SlotKey
+    slot_raw = data.get("slot")
+    if isinstance(slot_raw, dict):
+        slot = SlotKey(
+            region_id=slot_raw["region_id"],
+            local_day=date.fromisoformat(slot_raw["local_day"]),
+            local_time=time.fromisoformat(slot_raw["local_time"]),
+        )
+        data["slot"] = slot
+    else:
+        slot = slot_raw
 
     if data.get("reuse_ad"):
         existing_ad: AdDTO = data["existing_ad"]
@@ -167,7 +180,6 @@ async def getter_confirm(
                 )
             )
             data["media"] = media
-
 
     data["phone"] = phone
     data["price"] = price_raw

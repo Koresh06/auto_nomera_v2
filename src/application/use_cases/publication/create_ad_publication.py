@@ -37,6 +37,7 @@ class CreateAndScheduleAdRequest(UseCaseRequest):
     image_file_id: str | None
     slot: SlotKey
     chat_id: int
+    payment_confirmed: bool = False
 
 
 @dataclass(kw_only=True)
@@ -90,6 +91,7 @@ class CreateAndScheduleAdUseCase(UseCase[CreateAndScheduleAdRequest, Publication
                 slot=command.slot,
                 user_id=command.user_id,
                 ad_id=ad.id,
+                payment_confirmed=command.payment_confirmed
             )
         )
         logger.info(f"[CreateAndScheduleAd:slot_selected] pub_id={pub.id}")

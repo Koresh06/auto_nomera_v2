@@ -1,8 +1,11 @@
 from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
+from src.application.ports.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceUseCase
 from src.application.services.payment.provider_registry import PaymentProviderRegistry
+from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdUseCase
 from src.application.use_cases.publication.get_user import GetUserPublicationsUseCase
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
@@ -213,6 +216,19 @@ class UseCasesProvider(Provider):
             pricing_policy=pricing_policy,
             transaction_manager=transaction_manager,
         )
+    
+    @provide
+    def confirm_paid_slot_from_balance_use_case(
+        self,
+        user_repo: UserRepository,
+        converted_repo: SlotConvertedRepository,
+        transaction_manager: TransactionManager,
+    ) -> ConfirmPaidSlotFromBalanceUseCase:
+        return ConfirmPaidSlotFromBalanceUseCase(
+            user_repo=user_repo,
+            converted_repo=converted_repo,
+            transaction_manager=transaction_manager
+    )
 
     @provide
     def release_hold_use_case(
@@ -473,9 +489,11 @@ class UseCasesProvider(Provider):
     def check_hold_use_case(
         self,
         hold_store: SlotHoldStore,
+        converted_repo: SlotConvertedRepository
     ) -> CheckHoldUseCase:
         return CheckHoldUseCase(
             hold_store=hold_store,
+            converted_repo=converted_repo,
     )
 
     @provide
@@ -510,6 +528,10 @@ class UseCasesProvider(Provider):
         publication_repo: PublicationRepository,
         service_def_repo: ServiceDefinitionRepository,
         confirm_paid_slot: ConfirmPaidSlotAndSchedulePublicationUseCase,
+        apply_service_to_published: ApplyServiceToPublishedUseCase,
+        priority_publish: PriorityPublishPublicationUseCase,
+        reservation_service: SlotReservationService,
+        teleporter: DialogTeleporter,
         transaction_manager: TransactionManager,
     ) -> ConfirmPaymentUseCase:
         return ConfirmPaymentUseCase(
@@ -518,7 +540,20 @@ class UseCasesProvider(Provider):
             publication_repo=publication_repo,
             service_def_repo=service_def_repo,
             confirm_paid_slot=confirm_paid_slot,
+            apply_service_to_published=apply_service_to_published,
+            priority_publish=priority_publish,
+            reservation_service=reservation_service,
+            teleporter=teleporter,
             transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def get_payment_by_external_id_use_case(
+        self,
+        payment_repo: PaymentRepository,
+    ) -> GetPaymentByExternalIdUseCase:
+        return GetPaymentByExternalIdUseCase(
+            payment_repo=payment_repo,
         )
     
     @provide

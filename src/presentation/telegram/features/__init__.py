@@ -17,6 +17,7 @@ from src.presentation.telegram.features.user.modules.urgent_buyout.dialogs impor
 from src.presentation.telegram.features.user.modules.profile.dialogs import profile_dialog
 from src.presentation.telegram.features.user.modules.paid_services.dialogs import paid_service_dialog, buy_service_dialog, pre_publication_dialog
 from src.presentation.telegram.features.user.modules.balance.dialogs import topup_dialog
+from src.presentation.telegram.features.user.modules.payment.dialogs import payment_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -43,4 +44,5 @@ def get_all_dialogs() -> list[Dialog]:
         buy_service_dialog,
         pre_publication_dialog,
         topup_dialog,
+        payment_dialog,
     ]

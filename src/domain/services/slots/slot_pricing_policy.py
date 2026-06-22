@@ -14,7 +14,6 @@ class SlotPricingPolicy:
         ordered_future_slots: list[SlotKey],
         slot: SlotKey,
     ) -> bool:
-        # ordered_future_slots должны быть отсортированы "от ближайшего"
         if self.system_paid_count <= 0:
             return False
         return slot in set(ordered_future_slots[: self.system_paid_count])

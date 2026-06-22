@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import time
+from decimal import Decimal
 
 from src.domain.exceptions.region import (
     InvalidDaysRange,
@@ -22,6 +23,7 @@ class RegionSettings:
     days_range: int = 7
     system_paid_slots_count: int = 3
     publication_limit_enabled: bool = False
+    paid_slot_price: Decimal = Decimal("2")
 
     def __post_init__(self) -> None:
         if self.days_range <= 0 or self.days_range > 31:

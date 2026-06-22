@@ -3,7 +3,7 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
-from aiogram_dialog import setup_dialogs
+from aiogram_dialog import BgManagerFactory, setup_dialogs
 from dishka import make_async_container
 from dishka.integrations.aiogram import AiogramProvider, setup_dishka
 from taskiq_redis import RedisStreamBroker
@@ -15,7 +15,6 @@ from src.utils.logging import setup_logging
 from src.core.dependencies.providers import make_base_providers
 from src.presentation.telegram.common.custom_message_manager import CustomMessageManager
 from src.presentation.telegram.middlewares.setup import setup_middlewares
-from src.presentation.telegram.features import get_all_dialogs, get_all_routers
 
 
 logger = logging.getLogger(__name__)
@@ -53,10 +52,7 @@ async def create_app():
     setup_dishka(container=container, router=dp)
     setup_middlewares(dp=dp, container=container)
 
-    dp.include_routers(*get_all_routers())
-    dp.include_routers(*get_all_dialogs())
-
-    setup_dialogs(dp, message_manager=CustomMessageManager())
+    await container.get(BgManagerFactory)
     
     await bot.delete_webhook(drop_pending_updates=True)
 

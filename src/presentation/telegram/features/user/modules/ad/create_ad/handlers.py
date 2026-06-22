@@ -2,7 +2,7 @@ from decimal import Decimal
 import logging
 
 from aiogram.types import Message, CallbackQuery
-from aiogram_dialog import DialogManager
+from aiogram_dialog import BgManagerFactory, DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
 from aiogram_dialog.widgets.kbd import Select, Button
 from aiogram_dialog.widgets.kbd.select import OnItemClick
@@ -10,6 +10,7 @@ from aiogram_dialog.api.entities import MediaAttachment
 
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 
+from src.application.ports.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 from src.application.use_cases.notification.notify_admins_urgent import (
@@ -17,6 +18,7 @@ from src.application.use_cases.notification.notify_admins_urgent import (
 )
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdStatus, AdType
+from src.domain.enums.payment import PaymentPurpose
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import (
     PublicationServiceStatus,
@@ -75,6 +77,7 @@ from src.presentation.telegram.features.user.modules.ad.create_ad.validators imp
     validate_price_urgent_buyout,
 )
 from src.presentation.telegram.features.user.modules.ad.edit.states import EditAdSG
+from src.presentation.telegram.features.user.modules.payment.states import PaymentSG
 from src.presentation.telegram.keyboards.urgent_moderation import (
     build_urgent_moderation_kb,
 )
@@ -286,15 +289,37 @@ async def on_pick_slot(
                 user_id=user.id,
             )
         )
+        logger.info(f"[on_pick_slot] pricing_changed_to_converted={result.pricing_changed_to_converted}")
     except (SlotAlreadyHeld, SlotAlreadyConverted):
         if dialog_manager.dialog_data.get("held_warning") == item_id:
-            dialog_manager.dialog_data["slot_id"] = item_id
-            dialog_manager.dialog_data["slot"] = slot
-            dialog_manager.dialog_data["slot_day"] = slot.date_display
-            dialog_manager.dialog_data["slot_time"] = slot.time_display
-            dialog_manager.dialog_data["is_paid"] = True
             dialog_manager.dialog_data.pop("held_warning", None)
-            await callback.answer("💰 Оплата слота", show_alert=True)
+
+            amount = region.settings.paid_slot_price
+
+            await dialog_manager.start(
+                state=PaymentSG.select_method,
+                data={
+                    "purpose": PaymentPurpose.SLOT.value,
+                    "amount": str(amount),
+                    "description": "Оплата платного слота",
+                    "meta": {},
+                    "return_to": {
+                        "user_id": callback.from_user.id,
+                        "chat_id": callback.message.chat.id,
+                    },
+                    "return_state": "CreateAdSG:confirm",
+                    "return_data": {
+                        "slot": {
+                            "region_id": user.region_id,
+                            "local_day": slot.local_day.isoformat(),
+                            "local_time": slot.local_time.isoformat(),
+                        },
+                        "slot_id": item_id,
+                        "is_paid": True,
+                    },
+                },
+            )
+            return
         else:
             dialog_manager.dialog_data["held_warning"] = item_id
             await callback.answer(
@@ -303,6 +328,68 @@ async def on_pick_slot(
             )
         return
 
+    # слот успешно захолжен — проверяем, не системно-платный ли он
+    if result.pricing_changed_to_converted:
+        amount = region.settings.paid_slot_price
+
+        if dialog_manager.dialog_data.get("paid_slot_confirm") == item_id:
+            dialog_manager.dialog_data.pop("paid_slot_confirm", None)
+
+            if user.balance >= amount:
+                # списываем с баланса сразу
+                await mediator.handle(
+                    ConfirmPaidSlotFromBalanceRequest(
+                        user_id=user.id,
+                        slot=slot,
+                        amount=amount,
+                    )
+                )
+                dialog_manager.dialog_data["slot_id"] = item_id
+                dialog_manager.dialog_data["slot"] = slot
+                dialog_manager.dialog_data["slot_day"] = slot.date_display
+                dialog_manager.dialog_data["slot_time"] = slot.time_display
+                dialog_manager.dialog_data["is_paid"] = True
+
+                await callback.answer(
+                    f"💰 Списано {amount} руб. с баланса.", show_alert=True
+                )
+                await dialog_manager.next()
+                return
+            else:
+                # баланса не хватает — уходим на оплату
+                await dialog_manager.start(
+                    state=PaymentSG.select_method,
+                    data={
+                        "purpose": PaymentPurpose.SLOT.value,
+                        "amount": str(amount),
+                        "description": "Оплата платного слота",
+                        "meta": {},
+                        "return_to": {
+                            "user_id": callback.from_user.id,
+                            "chat_id": callback.message.chat.id,
+                        },
+                        "return_state": "CreateAdSG:confirm",
+                        "return_data": {
+                            "slot": {
+                                "region_id": user.region_id,
+                                "local_day": slot.local_day.isoformat(),
+                                "local_time": slot.local_time.isoformat(),
+                            },
+                            "slot_id": item_id,
+                            "is_paid": True,
+                        },
+                    },
+                )
+                return
+        else:
+            dialog_manager.dialog_data["paid_slot_confirm"] = item_id
+            await callback.answer(
+                f"💰 Этот слот платный ({amount} руб.). "
+                "Нажмите ещё раз для подтверждения покупки.",
+                show_alert=True,
+            )
+            return
+
     dialog_manager.dialog_data["slot_id"] = item_id
     dialog_manager.dialog_data["slot"] = slot
     dialog_manager.dialog_data["slot_day"] = slot.date_display
@@ -310,7 +397,6 @@ async def on_pick_slot(
     dialog_manager.dialog_data["is_paid"] = result.pricing_changed_to_converted
 
     await dialog_manager.next()
-
 
 @inject
 async def on_back_to_calendar(
@@ -407,6 +493,8 @@ async def on_confirm_ad(
                 "⏰ Время ожидания подтверждения истекло. Выберите слот заново.",
                 show_alert=True,
             )
+            await dialog_manager.switch_to(CreateAdSG.calendar)
+            return
 
         if data.get("reuse_ad"):
             ad_id: int = data["existing_ad_id"]
@@ -432,6 +520,7 @@ async def on_confirm_ad(
                     ),
                     slot=slot,
                     chat_id=tg_id,
+                    payment_confirmed=data.get("is_paid", False),
                 )
             )
 

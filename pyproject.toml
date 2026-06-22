@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "aiogram-dialog>=2.4.0",
+    "aiogram-dialog>=2.6.0",
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
     "betterlogging>=1.0.0",

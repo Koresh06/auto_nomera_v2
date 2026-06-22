@@ -83,7 +83,6 @@ class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
         user_id: int,
         ad_id: int | None = None,
     ) -> None:
-        # INSERT ... ON CONFLICT DO NOTHING — идемпотентно
         stmt = (
             insert(SlotConvertedModel)
             .values(
@@ -93,10 +92,12 @@ class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
                 ad_id=ad_id,
                 user_id=user_id,
             )
-            .on_conflict_do_nothing(
-                index_elements=["region_id", "slot_day", "slot_time"]
+            .on_conflict_do_update(
+                index_elements=["region_id", "slot_day", "slot_time"],
+                set_={"ad_id": ad_id, "user_id": user_id},
             )
         )
+
         await self._session.execute(stmt)
 
     async def unmark_converted(self, slot: SlotKey, user_id: int) -> None:
@@ -138,3 +139,14 @@ class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
             for slot in slots_list
             if (slot.region_id, slot.local_day, slot.local_time) in converted
         }
+
+    async def get_converted_owner_and_ad(self, slot: SlotKey) -> tuple[int, int | None] | None:
+        result = await self._session.execute(
+            select(SlotConvertedModel.user_id, SlotConvertedModel.ad_id).where(
+                SlotConvertedModel.region_id == slot.region_id,
+                SlotConvertedModel.slot_day == slot.local_day,
+                SlotConvertedModel.slot_time == slot.local_time,
+            )
+        )
+        row = result.one_or_none()
+        return (row.user_id, row.ad_id) if row else None

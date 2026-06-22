@@ -1,6 +1,8 @@
 from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
+from src.application.ports.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest, ConfirmPaidSlotFromBalanceUseCase
+from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdRequest, GetPaymentByExternalIdUseCase
 from src.application.use_cases.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
 from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutRequest, ApproveUrgentBuyoutUseCase
 from src.application.use_cases.ad.archive_ad import ArchiveAdRequest, ArchiveAdUseCase
@@ -107,6 +109,7 @@ class MediatorProvider(Provider):
         hold_slot_use_case: HoldSlotUseCase,
         confirm_paid_slot_and_schedule_publication_use_case: ConfirmPaidSlotAndSchedulePublicationUseCase,
         select_slot_for_publication_use_case: SelectSlotForPublicationUseCase,
+        confirm_paid_slot_from_balance_use_case: ConfirmPaidSlotFromBalanceUseCase,
         release_hold_use_case: ReleaseHoldUseCase,
         add_service_to_publication_use_case: AddServiceToPublicationUseCase,
         priority_publish_publication_use_case: PriorityPublishPublicationUseCase,
@@ -133,6 +136,7 @@ class MediatorProvider(Provider):
         reuse_ad_and_schedule_use_case: ReuseAdAndScheduleUseCase,
         create_payment_use_case: CreatePaymentUseCase,
         confirm_payment_use_case: ConfirmPaymentUseCase,
+        get_payment_by_external_id_use_case: GetPaymentByExternalIdUseCase,
         seed_service_definitons_use_case: SeedServiceDefinitionsUseCase,
         apply_service_to_published_use_case: ApplyServiceToPublishedUseCase,
         notify_admins_urgent_use_case: NotifyAdminsAboutUrgentUseCase,
@@ -159,10 +163,8 @@ class MediatorProvider(Provider):
         mediator.register(
             SelectSlotForPublicationRequest, select_slot_for_publication_use_case
         )
-        mediator.register(
-            ReleaseHoldRequest,
-            release_hold_use_case,
-        )
+        mediator.register(ConfirmPaidSlotFromBalanceRequest, confirm_paid_slot_from_balance_use_case)
+        mediator.register(ReleaseHoldRequest,release_hold_use_case)
         mediator.register(
             AddServiceToPublicationRequest, add_service_to_publication_use_case
         )
@@ -194,6 +196,7 @@ class MediatorProvider(Provider):
         mediator.register(ReuseAdAndScheduleRequest, reuse_ad_and_schedule_use_case)
         mediator.register(CreatePaymentRequest, create_payment_use_case)
         mediator.register(ConfirmPaymentRequest, confirm_payment_use_case)
+        mediator.register(GetPaymentByExternalIdRequest, get_payment_by_external_id_use_case)
         mediator.register(SeedServiceDefinitionsRequest, seed_service_definitons_use_case)
         mediator.register(ApplyServiceToPublishedRequest, apply_service_to_published_use_case)
         mediator.register(NotifyAdminsAboutUrgentRequest, notify_admins_urgent_use_case)

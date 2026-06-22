@@ -43,32 +43,32 @@ class SlotReservationService:
     ) -> HoldResult:
         now = now_utc or get_datetime_utc_now()
         owner = HoldOwner(user_id=user_id)
-
-        # 1) booked?
+    
         if await self.booking_repo.is_booked(slot):
             raise SlotAlreadyBooked()
-
-        # 2) hold чужого?
+    
         existing = await self.hold_store.get(slot)
         if existing is not None and existing != owner:
             raise SlotAlreadyHeld()
-        
-        # 3) converted?
-        is_converted = await self.converted_repo.is_converted(slot)
-        if is_converted:
-            raise SlotAlreadyConverted()
-
-        # 4) поставить/продлить hold
+    
+        converted_info = await self.converted_repo.get_converted_owner_and_ad(slot)
+        is_converted = converted_info is not None
+    
+        # своя незавершённая оплата — публикация ещё не создана этим юзером
+        is_own_pending_payment = (
+            converted_info is not None
+            and converted_info[0] == user_id
+            and converted_info[1] is None
+        )
+    
         hold_until = now + self.hold_ttl
         await self.hold_store.set(slot, owner, self.hold_ttl)
-
-        # 5) проверяем pricing для UI (показать пользователю платный или нет)
+    
         is_system_paid = self.pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots, slot=slot
         )
-        is_converted = await self.converted_repo.is_converted(slot)
-        is_paid = is_system_paid or is_converted
-
+        is_paid = (is_system_paid or is_converted) and not is_own_pending_payment
+    
         return HoldResult(
             slot=slot,
             hold_until_utc=hold_until,
