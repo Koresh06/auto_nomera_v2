@@ -32,6 +32,7 @@ from src.domain.services.slots.slot_reservation_service import SlotReservationSe
 from src.domain.value_objects.slot_key import SlotKey
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +40,6 @@ logger = logging.getLogger(__name__)
 class ConfirmPaymentRequest(UseCaseRequest):
     external_id: str
     now_utc: datetime | None = None
-
 
 @dataclass(kw_only=True)
 class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
@@ -56,27 +56,40 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
     transaction_manager: TransactionManager
 
     async def __call__(self, command: ConfirmPaymentRequest) -> None:
+        logger.info(f"[ConfirmPayment:start] external_id={command.external_id}")
         now = command.now_utc or datetime.now(timezone.utc)
 
         payment = await self.payment_repo.get_by_external_id(command.external_id)
         if payment is None:
+            logger.warning(f"[ConfirmPayment:not_found] external_id={command.external_id}")
             raise PaymentNotFoundByExternalException(command.external_id)
 
+        logger.info(
+            f"[ConfirmPayment:loaded] payment_id={payment.id} status={payment.status} "
+            f"purpose={payment.purpose} meta={payment.meta}"
+        )
+
         if payment.status == PaymentStatus.PAID:
+            logger.info(f"[ConfirmPayment:already_paid] external_id={command.external_id}")
             return
 
         payment.mark_paid(now)
         await self.payment_repo.save(payment)
+        logger.info(f"[ConfirmPayment:marked_paid] payment_id={payment.id}")
 
         user = await self.user_repo.get_by_id(payment.user_id)
         if user is None:
             raise UserNotFoundException(payment.user_id)
 
+        extra: dict = {}
+
         if payment.purpose == PaymentPurpose.BALANCE_TOPUP:
+            logger.info("[ConfirmPayment:branch] BALANCE_TOPUP")
             user.top_up(payment.amount)
             await self.user_repo.save(user)
 
         elif payment.purpose == PaymentPurpose.PUBLICATION_SERVICE:
+            logger.info("[ConfirmPayment:branch] PUBLICATION_SERVICE")
             definition = await self.service_def_repo.get_by_type(
                 PublicationServiceType(payment.meta["service_type"])
             )
@@ -95,11 +108,13 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             publication.add_service(service)
             await self.publication_repo.save(publication)
             await self.transaction_manager.commit()
+            logger.info(f"[ConfirmPayment:service_applied] pub_id={publication.id} type={definition.type}")
 
             if definition.type == PublicationServiceType.PRIORITY_PUBLISH:
                 await self.priority_publish(
                     PriorityPublishPublicationRequest(publication_id=publication.id)
                 )
+                logger.info(f"[ConfirmPayment:priority_published] pub_id={publication.id}")
             elif publication.status == PublicationStatus.PUBLISHED:
                 await self.apply_service_to_published(
                     ApplyServiceToPublishedRequest(
@@ -108,16 +123,24 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                     )
                 )
 
-            await self._notify_success(payment)
+            logger.info(f"[ConfirmPayment:before_notify] payment_id={payment.id}")
+            await self._notify_success(payment, extra={"title": definition.title})
+            logger.info(f"[ConfirmPayment:before_teleport] payment_id={payment.id} meta={payment.meta}")
             await self._teleport_back(payment)
+            logger.info(f"[ConfirmPayment:after_teleport] payment_id={payment.id}")
             return
 
         elif payment.purpose == PaymentPurpose.PRE_PUBLICATION:
+            logger.info("[ConfirmPayment:branch] PRE_PUBLICATION")
             days = payment.meta.get("days", 30)
+            was_active = user.has_pre_publication
             user.activate_pre_publication(days)
             await self.user_repo.save(user)
+            extra["days"] = days
+            extra["was_active"] = was_active
 
         elif payment.purpose == PaymentPurpose.SLOT:
+            logger.info("[ConfirmPayment:branch] SLOT")
             return_data = payment.meta.get("return_data", {})
 
             if payment.purpose_id:
@@ -132,6 +155,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                         ad_id=publication.ad_id,
                     )
                 )
+                extra["slot_text"] = f"{publication.publish_at_utc:%d.%m}-{publication.publish_at_utc:%H:%M}"
             elif "slot" in return_data:
                 slot_dict = return_data["slot"]
                 slot = SlotKey(
@@ -144,6 +168,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                     user_id=payment.user_id,
                     ad_id=None,
                 )
+                extra["slot_text"] = f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
                 logger.info(
                     f"[ConfirmPayment:slot_converted] user_id={payment.user_id} "
                     f"slot={slot.local_day} {slot.local_time}"
@@ -153,63 +178,84 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
 
         await self.transaction_manager.commit()
 
-        await self._notify_success(payment)
+        logger.info(f"[ConfirmPayment:before_notify] payment_id={payment.id} extra={extra}")
+        await self._notify_success(payment, extra=extra)
+        logger.info(f"[ConfirmPayment:before_teleport] payment_id={payment.id} meta={payment.meta}")
         await self._teleport_back(payment)
+        logger.info(f"[ConfirmPayment:after_teleport] payment_id={payment.id}")
 
         logger.info(
             f"[ConfirmPayment:done] external_id={command.external_id} purpose={payment.purpose}"
         )
 
-    async def _notify_success(self, payment: Payment) -> None:
+    async def _notify_success(self, payment: Payment, extra: dict | None = None) -> None:
         return_to = payment.meta.get("return_to")
         if not return_to:
+            logger.warning(f"[ConfirmPayment:notify_skip] no return_to, payment_id={payment.id}")
             return
-        text = self._build_success_text(payment.purpose)
+        text = self._build_success_text(payment, extra)
         try:
             await self.notification_service.notify_user(
                 tg_id=return_to["user_id"],
                 text=text,
             )
+            logger.info(f"[ConfirmPayment:notify_sent] tg_id={return_to['user_id']}")
         except Exception as e:
             logger.warning(f"[ConfirmPayment:notify_failed] {e}")
-
-    @staticmethod
-    def _build_success_text(purpose: PaymentPurpose) -> str:
-        match purpose:
-            case PaymentPurpose.BALANCE_TOPUP:
-                return "✨ Баланс пополнен!"
-            case PaymentPurpose.PUBLICATION_SERVICE:
-                return "✅ Услуга подключена и применена!"
-            case PaymentPurpose.PRE_PUBLICATION:
-                return "💎 Подписка на ранний доступ активирована!"
-            case PaymentPurpose.SLOT:
-                return "📅 Слот оплачен!"
-            case _:
-                return "✅ Платёж подтверждён!"
 
     async def _teleport_back(self, payment: Payment) -> None:
         return_to = payment.meta.get("return_to")
         return_state = payment.meta.get("return_state")
         return_data = payment.meta.get("return_data", {})
 
-        if not return_to:
+        logger.info(
+            f"[ConfirmPayment:teleport_check] return_to={return_to} "
+            f"return_state={return_state!r} return_data={return_data}"
+        )
+
+        if not return_to or not return_state:
+            logger.warning(
+                f"[ConfirmPayment:teleport_skip] return_to_empty={not return_to} "
+                f"return_state_empty={not return_state}"
+            )
             return
 
         try:
-            await self.teleporter.done(
+            await self.teleporter.start(
                 user_id=return_to["user_id"],
                 chat_id=return_to["chat_id"],
+                state_key=return_state,
+                data=return_data,
             )
-            if return_state:
-                await self.teleporter.update(
-                    user_id=return_to["user_id"],
-                    chat_id=return_to["chat_id"],
-                    data=return_data,
-                )
-                await self.teleporter.switch_to(
-                    user_id=return_to["user_id"],
-                    chat_id=return_to["chat_id"],
-                    state_key=return_state,
-                )
+            logger.info(f"[ConfirmPayment:teleport_success] state_key={return_state}")
         except Exception as e:
             logger.warning(f"[ConfirmPayment:teleport_failed] {e}")
+
+
+    @staticmethod
+    def _build_success_text(payment: Payment, extra: dict | None = None) -> str:
+        extra = extra or {}
+        header = "🎉 <b>Оплата прошла успешно!</b>"
+    
+        match payment.purpose:
+            case PaymentPurpose.BALANCE_TOPUP:
+                body = f"✨ Баланс пополнен на <b>{payment.amount} ₽</b>"
+    
+            case PaymentPurpose.PUBLICATION_SERVICE:
+                title = extra.get("title", "Услуга")
+                body = f"<b>{title}</b>\nУслуга подключена и применена к объявлению"
+    
+            case PaymentPurpose.PRE_PUBLICATION:
+                days = extra.get("days", 30)
+                action = "продлена" if extra.get("was_active") else "активирована"
+                body = f"💎 Подписка на ранний доступ <b>{action}</b>\nна {days} дн."
+    
+            case PaymentPurpose.SLOT:
+                slot_text = extra.get("slot_text", "")
+                suffix = f"\n🕒 {slot_text}" if slot_text else ""
+                body = f"📅 Слот <b>оплачен и забронирован</b>!{suffix}"
+    
+            case _:
+                body = "✅ Платёж подтверждён"
+    
+        return f"{header}\n\n{body}"

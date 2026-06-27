@@ -12,8 +12,9 @@ class TelegramStarsSettings(BaseSettings):
 
 
 class YooKassaSettings(BaseSettings):
-    shop_id: str = ""
+    account_id: int = 0
     secret_key: str = ""
+    return_url: str = ""
 
 
 class CryptomusSettings(BaseSettings):

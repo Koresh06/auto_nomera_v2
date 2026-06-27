@@ -2,7 +2,9 @@ import uuid
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.payment.payment_repo import PaymentRepository
+from src.application.ports.user.user_repo import UserRepository
 from src.application.services.payment.provider_registry import PaymentProviderRegistry
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.payment import Payment
@@ -24,6 +26,7 @@ class CreatePaymentRequest(UseCaseRequest):
 @dataclass(kw_only=True)
 class CreatePaymentUseCase(UseCase[CreatePaymentRequest, Payment]):
     payment_repo: PaymentRepository
+    user_repo: UserRepository
     provider_registry: PaymentProviderRegistry
     transaction_manager: TransactionManager
 
@@ -31,15 +34,20 @@ class CreatePaymentUseCase(UseCase[CreatePaymentRequest, Payment]):
         external_id = str(uuid.uuid4())
         provider = self.provider_registry.get(command.method)
 
+        user = await self.user_repo.get_by_id(command.user_id)
+        if user is None:
+            raise UserNotFoundException(command.user_id)
+
         provider_meta = await provider.create_invoice(
             user_id=command.user_id,
             amount=command.amount,
             currency="RUB",
             description=command.description or "",
             external_id=external_id,
+            phone=user.phone or "",
+            chat_id=user.tg_id,
         )
 
-        # для MANUAL_CARD статус сразу WAITING_CONFIRMATION
         initial_status = (
             PaymentStatus.WAITING_CONFIRMATION
             if command.method == PaymentMethod.MANUAL_CARD

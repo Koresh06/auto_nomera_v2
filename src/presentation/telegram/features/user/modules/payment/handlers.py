@@ -28,7 +28,6 @@ async def on_payment_method_selected(
 
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
 
-    # объединяем meta с данными для телепортации
     meta = {
         **start_data.get("meta", {}),
         "return_to": start_data.get("return_to"),
@@ -56,5 +55,7 @@ async def on_payment_method_selected(
     elif method == PaymentMethod.MANUAL_CARD:
         dialog_manager.dialog_data["card_number"] = payment.meta.get("card")
         dialog_manager.dialog_data["reference"] = payment.meta.get("reference")
+    elif method == PaymentMethod.YOOKASSA:
+        dialog_manager.dialog_data["confirmation_url"] = payment.meta.get("confirmation_url")
 
     await dialog_manager.next()

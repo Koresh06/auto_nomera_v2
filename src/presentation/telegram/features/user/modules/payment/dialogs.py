@@ -9,7 +9,6 @@ from .states import PaymentSG
 from .getters import getter_select_payment_method
 from .handlers import on_payment_method_selected
 
-
 payment_dialog = Dialog(
     Window(
         Format(
@@ -38,19 +37,30 @@ payment_dialog = Dialog(
     Window(
         Format(
             "⭐ <b>Оплата звёздами</b>\n\nСумма: <b>{dialog_data[amount]} руб.</b>",
-            when=F["dialog_data"]["payment_method"] == PaymentMethod.TELEGRAM_STARS.value,
+            when=F["dialog_data"]["payment_method"]
+            == PaymentMethod.TELEGRAM_STARS.value,
         ),
         Url(
             Const("⭐ Оплатить звёздами"),
             url=Format("{dialog_data[invoice_link]}"),
-            when=F["dialog_data"]["payment_method"] == PaymentMethod.TELEGRAM_STARS.value,
+            when=F["dialog_data"]["payment_method"]
+            == PaymentMethod.TELEGRAM_STARS.value,
         ),
+        # Format(
+        #     "💳 Переведите <b>{dialog_data[amount]} руб.</b> на карту:\n"
+        #     "<code>{dialog_data[card_number]}</code>\n\n"
+        #     "В комментарии укажите код: <code>{dialog_data[reference]}</code>\n\n"
+        #     "После перевода отправьте чек администратору.",
+        #     when=F["dialog_data"]["payment_method"] == PaymentMethod.MANUAL_CARD.value,
+        # ),
         Format(
-            "💳 Переведите <b>{dialog_data[amount]} руб.</b> на карту:\n"
-            "<code>{dialog_data[card_number]}</code>\n\n"
-            "В комментарии укажите код: <code>{dialog_data[reference]}</code>\n\n"
-            "После перевода отправьте чек администратору.",
-            when=F["dialog_data"]["payment_method"] == PaymentMethod.MANUAL_CARD.value,
+            "🏦 <b>Оплата через ЮKassa</b>\n\nСумма: <b>{dialog_data[amount]} руб.</b>",
+            when=F["dialog_data"]["payment_method"] == PaymentMethod.YOOKASSA.value,
+        ),
+        Url(
+            Const("🏦 Перейти к оплате"),
+            url=Format("{dialog_data[confirmation_url]}"),
+            when=F["dialog_data"]["payment_method"] == PaymentMethod.YOOKASSA.value,
         ),
         Cancel(Const("❌ Отменить")),
         state=PaymentSG.waiting_payment,
