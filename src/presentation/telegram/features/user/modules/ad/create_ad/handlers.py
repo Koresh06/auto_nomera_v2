@@ -482,8 +482,12 @@ async def on_back_to_calendar(
         GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
     )
 
-    if "slot_id" in data:
-        slot: SlotKey = SlotKey.decode_slot_id(data["slot_id"], user.region_id)
+    if "region_id" in data:
+        slot: SlotKey = SlotKey(
+            region_id=data["region_id"],
+            local_day=date.fromisoformat(data["slot_day"]),
+            local_time=time.fromisoformat(data["slot_time"]),
+        )
         try:
             await mediator.handle(
                 ReleaseHoldRequest(
@@ -494,7 +498,9 @@ async def on_back_to_calendar(
             logger.info("[ReleaseHold:done] slot released")
         except (SlotHoldNotFound, SlotHoldOwnerMismatch) as e:
             logger.info(str(e))
-        data.pop("slot_id", None)
+        data.pop("region_id", None)
+        data.pop("slot_day", None)
+        data.pop("slot_time", None)
 
 
 @inject
