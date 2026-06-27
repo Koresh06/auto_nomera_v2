@@ -1,3 +1,4 @@
+from datetime import date, time
 from decimal import Decimal
 import logging
 
@@ -14,9 +15,14 @@ from src.application.ports.slots.confirm_paid_slot_from_balance import (
     ConfirmPaidSlotFromBalanceRequest,
 )
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
+from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefRequest
+from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 from src.application.use_cases.notification.notify_admins_urgent import (
     NotifyAdminsAboutUrgentRequest,
+)
+from src.application.use_cases.publication.finalize_and_schedule_existing_ad import (
+    FinalizeAndScheduleExistingAdRequest,
 )
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdStatus, AdType
@@ -89,6 +95,7 @@ from src.presentation.telegram.features.user.modules.payment.states import Payme
 from src.presentation.telegram.keyboards.urgent_moderation import (
     build_urgent_moderation_kb,
 )
+from src.presentation.telegram.utils import build_media_attachment
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +120,9 @@ async def on_plate_success(
     dialog_manager.dialog_data["plate"] = validated
     dialog_manager.dialog_data["is_reuse_ad"] = False
 
-    user: UserDTO = dialog_manager.dialog_data["user"]
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
 
     if ad_type != AdType.URGENT_BUYOUT:
         existing_ad: AdDTO | None = await mediator.handle(
@@ -125,7 +134,6 @@ async def on_plate_success(
         )
         if existing_ad:
             dialog_manager.dialog_data["existing_ad_id"] = existing_ad.id
-            dialog_manager.dialog_data["existing_ad"] = existing_ad
             dialog_manager.dialog_data["is_reuse_ad"] = True
             await dialog_manager.next()
             return
@@ -163,6 +171,16 @@ async def on_delete_photo(
         await callback.answer("Фото удалено. Отправьте новое.")
     else:
         await callback.answer("Фото для удаления не найдено.", show_alert=True)
+
+
+async def on_city_input(
+    message: Message,
+    widget: ManagedTextInput,
+    dialog_manager: DialogManager,
+    value: str,
+) -> None:
+    dialog_manager.dialog_data["city"] = value
+    await dialog_manager.next()
 
 
 async def on_negotiable_price(
@@ -265,7 +283,9 @@ async def on_pick_slot(
     item_id: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    user: UserDTO = dialog_manager.dialog_data["user"]
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
     slot: SlotKey = SlotKey.decode_slot_id(item_id, user.region_id)
     ad_type: AdType = dialog_manager.dialog_data["ad_type"]
     plate: str = dialog_manager.dialog_data["plate"]
@@ -303,28 +323,8 @@ async def on_pick_slot(
     except (SlotAlreadyHeld, SlotAlreadyConverted):
         if dialog_manager.dialog_data.get("held_warning") == item_id:
             dialog_manager.dialog_data.pop("held_warning", None)
-
-            amount = region.settings.paid_slot_price
-
-            await start_payment(
-                dialog_manager,
-                user_id=callback.from_user.id,
-                chat_id=callback.message.chat.id,
-                params=PaymentStartParams(
-                    purpose=PaymentPurpose.SLOT,
-                    amount=region.settings.paid_slot_price,
-                    description="Оплата платного слота",
-                    return_state="CreateAdSG:confirm",
-                    return_data={
-                        "slot": {
-                            "region_id": user.region_id,
-                            "local_day": slot.local_day.isoformat(),
-                            "local_time": slot.local_time.isoformat(),
-                        },
-                        "slot_id": item_id,
-                        "is_paid": True,
-                    },
-                ),
+            await _start_slot_payment(
+                dialog_manager, callback, mediator, user, region, slot
             )
             return
         else:
@@ -335,7 +335,6 @@ async def on_pick_slot(
             )
         return
 
-    # слот успешно захолжен — проверяем, не системно-платный ли он
     if result.pricing_changed_to_converted:
         amount = region.settings.paid_slot_price
 
@@ -343,7 +342,6 @@ async def on_pick_slot(
             dialog_manager.dialog_data.pop("paid_slot_confirm", None)
 
             if user.balance >= amount:
-                # списываем с баланса сразу
                 await mediator.handle(
                     ConfirmPaidSlotFromBalanceRequest(
                         user_id=user.id,
@@ -351,10 +349,11 @@ async def on_pick_slot(
                         amount=amount,
                     )
                 )
-                dialog_manager.dialog_data["slot_id"] = item_id
-                dialog_manager.dialog_data["slot"] = slot
-                dialog_manager.dialog_data["slot_day"] = slot.date_display
-                dialog_manager.dialog_data["slot_time"] = slot.time_display
+                dialog_manager.dialog_data["region_id"] = slot.region_id
+                dialog_manager.dialog_data["slot_day"] = slot.local_day.isoformat()
+                dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime(
+                    "%H:%M"
+                )
                 dialog_manager.dialog_data["is_paid"] = True
 
                 await callback.answer(
@@ -363,26 +362,8 @@ async def on_pick_slot(
                 await dialog_manager.next()
                 return
             else:
-                # баланса не хватает — уходим на оплату
-                await start_payment(
-                    dialog_manager,
-                    user_id=callback.from_user.id,
-                    chat_id=callback.message.chat.id,
-                    params=PaymentStartParams(
-                        purpose=PaymentPurpose.SLOT,
-                        amount=region.settings.paid_slot_price,
-                        description="Оплата платного слота",
-                        return_state="CreateAdSG:confirm",
-                        return_data={
-                            "slot": {
-                                "region_id": user.region_id,
-                                "local_day": slot.local_day.isoformat(),
-                                "local_time": slot.local_time.isoformat(),
-                            },
-                            "slot_id": item_id,
-                            "is_paid": True,
-                        },
-                    ),
+                await _start_slot_payment(
+                    dialog_manager, callback, mediator, user, region, slot
                 )
                 return
         else:
@@ -394,13 +375,99 @@ async def on_pick_slot(
             )
             return
 
-    dialog_manager.dialog_data["slot_id"] = item_id
-    dialog_manager.dialog_data["slot"] = slot
-    dialog_manager.dialog_data["slot_day"] = slot.date_display
-    dialog_manager.dialog_data["slot_time"] = slot.time_display
+    dialog_manager.dialog_data["region_id"] = slot.region_id
+    dialog_manager.dialog_data["slot_day"] = slot.local_day.isoformat()
+    dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime("%H:%M")
     dialog_manager.dialog_data["is_paid"] = result.pricing_changed_to_converted
 
     await dialog_manager.next()
+
+
+async def _start_slot_payment(
+    dialog_manager: DialogManager,
+    callback: CallbackQuery,
+    mediator: Mediator,
+    user: UserDTO,
+    region: RegionDTO,
+    slot: SlotKey,
+) -> None:
+    data = dialog_manager.dialog_data
+
+    ad_type: AdType = data["ad_type"]
+
+    if data.get("reuse_ad"):
+        existing_ad_id: int = data["existing_ad_id"]
+        existing_ad: AdDTO = await mediator.handle(
+            GetByIdAdRequest(ad_id=existing_ad_id)
+        )
+        c = existing_ad.content
+
+        ad: AdDTO = (
+            existing_ad  # объявление уже существует, повторно создавать не нужно
+        )
+        plate = c.plate_number if c else data.get("plate", "")
+        city = c.city if c else ""
+        price_raw = c.price.value if c and c.price else None
+        contacts = c.contacts if c and c.contacts else None
+        media_file_id = c.image_file_id if c else None
+
+    else:
+        plate: str = data["plate"]
+        city: str = data.get("city", "")
+        price_raw = data.get("price")
+        phone: str = data.get("phone") or data.get("current_phone", "")
+        contacts = Contacts.from_user(username=user.username, phone=phone)
+
+        media: MediaAttachment = data.get("media")
+        if not media:
+            media = await mediator.handle(
+                EnsureAdImageRefRequest(
+                    plate=plate,
+                    channel_username=data["channel_username"],
+                    chat_id=callback.from_user.id,
+                )
+            )
+        media_file_id = media.file_id.file_id if media and media.file_id else None
+
+        ad: AdDTO = await mediator.handle(
+            CreateAdDraftRequest(
+                user_id=user.id,
+                region_id=user.region_id,
+                ad_type=ad_type,
+                status=AdStatus.DRAFT,
+            )
+        )
+        await mediator.handle(
+            UpdateAdContentRequest(
+                ad_id=ad.id,
+                plate_number=plate,
+                city=city,
+                price=Price(int(price_raw)) if price_raw else None,
+                contacts=contacts,
+                image_file_id=media_file_id,
+            )
+        )
+
+    await start_payment(
+        dialog_manager,
+        user_id=callback.from_user.id,
+        chat_id=callback.message.chat.id,
+        params=PaymentStartParams(
+            purpose=PaymentPurpose.SLOT,
+            amount=region.settings.paid_slot_price,
+            description="Оплата платного слота",
+            return_state="CreateAdSG:confirm",
+            return_data={
+                "ad_id": ad.id,
+                "slot": {
+                    "region_id": user.region_id,
+                    "local_day": slot.local_day.isoformat(),
+                    "local_time": slot.local_time.isoformat(),
+                },
+                "is_paid": True,
+            },
+        ),
+    )
 
 
 @inject
@@ -411,7 +478,9 @@ async def on_back_to_calendar(
     mediator: FromDishka[Mediator],
 ) -> None:
     data = dialog_manager.dialog_data
-    user: UserDTO = data["user"]
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
 
     if "slot_id" in data:
         slot: SlotKey = SlotKey.decode_slot_id(data["slot_id"], user.region_id)
@@ -438,15 +507,24 @@ async def on_confirm_ad(
     tg_id = callback.from_user.id
     data = dialog_manager.dialog_data
 
-    ad_type: AdType = data["ad_type"]
-    user: UserDTO = data["user"]
+    ad_type_raw = data["ad_type"]
+    ad_type: AdType = (
+        ad_type_raw if isinstance(ad_type_raw, AdType) else AdType(ad_type_raw)
+    )
+
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
     region_id: int = data["region_id"]
 
     plate: str = data["plate"]
     city: str = data["city"]
     price: Price = Price(int(data["price"]))
     phone: str = data["phone"]
-    media: MediaAttachment = data["media"]
+
+    media_file_id = data.get("media_file_id")
+    media: MediaAttachment | None = build_media_attachment(media_file_id)
+
     contacts = Contacts.from_user(username=user.username, phone=phone)
 
     if ad_type == AdType.URGENT_BUYOUT:
@@ -483,66 +561,98 @@ async def on_confirm_ad(
         logger.info("[on_confirm:urgent] ad_id=%s sent to admins", ad_dto.id)
         await dialog_manager.switch_to(CreateAdSG.urgent_done)
         return
-    else:
-        slot: SlotKey = data["slot"]
 
-        hold_valid = await mediator.handle(
-            CheckHoldRequest(
-                region_id=region_id,
+    slot = SlotKey(
+        region_id=data["region_id"],
+        local_day=date.fromisoformat(data["slot_day"]),
+        local_time=time.fromisoformat(data["slot_time"]),
+    )
+
+    if data.get("from_existing_draft"):
+        ad_id: int = data["ad_id"]
+
+        pub_dto: PublicationDTO = await mediator.handle(
+            FinalizeAndScheduleExistingAdRequest(
+                ad_id=ad_id,
+                slot=slot,
+                user_id=user.id,
+                payment_confirmed=data.get("is_paid", False),
+            )
+        )
+
+        data["publication_id"] = pub_dto.id
+
+        logger.info("[on_confirm:from_draft] ad_id=%s pub_id=%s", ad_id, pub_dto.id)
+        await dialog_manager.next()
+        return
+
+    # обычный путь — холд должен быть жив
+    hold_valid = await mediator.handle(
+        CheckHoldRequest(
+            region_id=region_id,
+            slot=slot,
+            user_id=user.id,
+        )
+    )
+    if not hold_valid:
+        await callback.answer(
+            "⏰ Время ожидания подтверждения истекло. Выберите слот заново.",
+            show_alert=True,
+        )
+        await dialog_manager.switch_to(CreateAdSG.calendar)
+        return
+
+    if data.get("reuse_ad"):
+        ad_id: int = data["existing_ad_id"]
+        pub: PublicationDTO = await mediator.handle(
+            ReuseAdAndScheduleRequest(
+                ad_id=ad_id,
                 slot=slot,
                 user_id=user.id,
             )
         )
-        if not hold_valid:
-            await callback.answer(
-                "⏰ Время ожидания подтверждения истекло. Выберите слот заново.",
-                show_alert=True,
+    else:
+        pub: PublicationDTO = await mediator.handle(
+            CreateAndScheduleAdRequest(
+                user_id=user.id,
+                region_id=region_id,
+                ad_type=ad_type,
+                plate=plate,
+                city=city,
+                price=price,
+                contacts=contacts,
+                image_file_id=(
+                    media.file_id.file_id if media and media.file_id else None
+                ),
+                slot=slot,
+                chat_id=tg_id,
+                payment_confirmed=data.get("is_paid", False),
             )
-            await dialog_manager.switch_to(CreateAdSG.calendar)
-            return
+        )
 
-        if data.get("reuse_ad"):
-            ad_id: int = data["existing_ad_id"]
-            pub: PublicationDTO = await mediator.handle(
-                ReuseAdAndScheduleRequest(
-                    ad_id=ad_id,
-                    slot=slot,
-                    user_id=user.id,
-                )
-            )
-        else:
-            pub: PublicationDTO = await mediator.handle(
-                CreateAndScheduleAdRequest(
-                    user_id=user.id,
-                    region_id=region_id,
-                    ad_type=ad_type,
-                    plate=plate,
-                    city=city,
-                    price=price,
-                    contacts=contacts,
-                    image_file_id=(
-                        media.file_id.file_id if media and media.file_id else None
-                    ),
-                    slot=slot,
-                    chat_id=tg_id,
-                    payment_confirmed=data.get("is_paid", False),
-                )
-            )
+    data["ad_id"] = pub.ad_id
+    data["publication_id"] = pub.id
 
-        data["ad_id"] = pub.ad_id
-        data["publication_id"] = pub.id
-
-        logger.info("[on_confirm:done] ad created/reused")
-        await dialog_manager.next()
+    logger.info("[on_confirm:done] ad created/reused")
+    await dialog_manager.next()
 
 
+@inject
 async def on_edit_ad(
     callback: CallbackQuery,
     widget: Button,
     dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
 ) -> None:
-    ad_id = dialog_manager.dialog_data["ad_id"]
-    pub_id = dialog_manager.dialog_data["publication_id"]
+    pub_id: int = dialog_manager.dialog_data["publication_id"]
+
+    ad_id = dialog_manager.dialog_data.get("ad_id")
+    if ad_id is None:
+        pub: PublicationDTO = await mediator.handle(
+            GetPublicationByIdRequest(publication_id=pub_id)
+        )
+        ad_id = pub.ad_id
+
     await dialog_manager.start(
         state=EditAdSG.detail,
         data={
@@ -561,11 +671,11 @@ async def on_service_paid_selected(
     item_id: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    pub_id: int = dialog_manager.dialog_data["publication_id"]
+    start_data = dialog_manager.start_data or {}
+    pub_id: int = dialog_manager.dialog_data.get("publication_id") or start_data.get("publication_id")
     service_type = PublicationServiceType(item_id)
 
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=callback.from_user.id))
-    dialog_manager.dialog_data["user"] = user
 
     logger.info(
         f"[ServiceSelected] user_id={user.id} pub_id={pub_id} service={service_type}"
@@ -627,9 +737,11 @@ async def on_service_paid_selected(
                 chat_id=callback.message.chat.id,
                 params=PaymentStartParams(
                     purpose=PaymentPurpose.PUBLICATION_SERVICE,
-                    amount=service.price,
+                    amount=price_decimal,
                     description=service.title,
                     purpose_id=pub_id,
+                    return_state="CreateAdSG:publication_service",
+                    return_data={"publication_id": pub_id},
                     meta={"service_type": service_type.value},
                 ),
             )
@@ -664,9 +776,11 @@ async def on_service_paid_selected(
             chat_id=callback.message.chat.id,
             params=PaymentStartParams(
                 purpose=PaymentPurpose.PUBLICATION_SERVICE,
-                amount=service.price,
+                amount=price_decimal,
                 description=service.title,
                 purpose_id=pub_id,
+                return_state="CreateAdSG:publication_service",
+                return_data={"publication_id": pub_id},
                 meta={"service_type": service_type.value},
             ),
         )

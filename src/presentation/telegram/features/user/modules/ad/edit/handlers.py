@@ -6,6 +6,7 @@ from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.api.entities import MediaAttachment
 from dishka.integrations.aiogram_dialog import FromDishka, inject
 
+from src.application import mediator
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.region import RegionDTO
@@ -17,6 +18,8 @@ from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 
 from src.application.use_cases.publication.edit_published import EditPublishedAdRequest
+from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
+from src.application.use_cases.publication.get_user import GetUserPublicationsRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
@@ -46,14 +49,20 @@ async def on_select_publication(
     item_id: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    publications: list[PublicationDTO] = dialog_manager.dialog_data["publications"]
+    data = dialog_manager.dialog_data
+    publications: list[PublicationDTO] = await mediator.handle(
+        GetUserPublicationsRequest(
+            user_id=data["user_id"],
+            region_id=data["region_id"],
+        )
+    )
     pub: PublicationDTO | None = next(
         (p for p in publications if str(p.id) == item_id), None
     )
     if pub is None:
         return
 
-    dialog_manager.dialog_data["selected_pub"] = pub
+    dialog_manager.dialog_data["selected_pub_id"] = pub.id
     dialog_manager.dialog_data["pub_id"] = pub.id
     dialog_manager.dialog_data["ad_id"] = pub.ad_id
     await dialog_manager.next()
@@ -126,12 +135,28 @@ async def on_edit_phone(
     await dialog_manager.switch_to(EditAdSG.edit_field)
 
 
+@inject
 async def on_edit_plate(
     callback: CallbackQuery,
     widget: Button,
     dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
 ):
-    ad: AdDTO = dialog_manager.dialog_data["selected_ad"]
+    ad_id: int = dialog_manager.dialog_data.get("selected_ad_id") or dialog_manager.dialog_data.get("ad_id")
+    ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
+
+    pub_id: int | None = dialog_manager.dialog_data.get("selected_pub_id") or dialog_manager.dialog_data.get("pub_id")
+    if pub_id:
+        pub: PublicationDTO = await mediator.handle(
+            GetPublicationByIdRequest(publication_id=pub_id)
+        )
+        if pub.status == PublicationStatus.PUBLISHED:
+            await callback.answer(
+                "⚠️ Номер уже опубликован — изменить его нельзя.",
+                show_alert=True,
+            )
+            return
+
     if ad.ad_type == AdType.BUY:
         dialog_manager.dialog_data["edit_label"] = PLATE_BUY_EDIT_TEXT
     else:
@@ -148,13 +173,14 @@ async def on_field_input(
     value: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    field = dialog_manager.dialog_data["edit_field"]
     data = dialog_manager.dialog_data
-    ad: AdDTO = data["selected_ad"]
-    user: UserDTO | None = data.get("user")
-    if user is None:
-        user = await mediator.handle(GetTgIdRequest(tg_id=message.from_user.id))
-        dialog_manager.dialog_data["user"] = user
+    field = data["edit_field"]
+    ad_id: int = data["selected_ad_id"] or data["ad_id"]
+
+    ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=message.from_user.id)
+    )
 
     c = ad.content
 
@@ -182,7 +208,7 @@ async def on_field_input(
                     chat_id=message.from_user.id,
                 )
             )
-            data["pending_media"] = new_media
+            data["pending_media_file_id"] = new_media.file_id.file_id if new_media.file_id else None
             
         elif field == "price":
             validate_price(value)
@@ -204,8 +230,8 @@ async def on_field_input(
     data["pending_value"] = value
     data["pending_plate"] = plate
     data["pending_city"] = city
-    data["pending_price"] = price
-    data["pending_contacts"] = contacts
+    data["pending_price"] = price.value if price else None
+    data["pending_contacts"] = contacts.display if contacts else None
 
     await dialog_manager.switch_to(EditAdSG.confirm_edit)
 
@@ -218,30 +244,31 @@ async def on_apply_edit(
     mediator: FromDishka[Mediator],
 ) -> None:
     data = dialog_manager.dialog_data
-    tg_id = callback.from_user.id
     ad_id: int = data["ad_id"]
-    pub: PublicationDTO | None = data.get("selected_pub")
-    user: UserDTO | None = data["user"]
+    pub_id: int | None = data.get("selected_pub_id") or data.get("pub_id")
     plate = data.get("pending_plate")
     city = data.get("pending_city")
-    price: Price | None = data.get("pending_price")
+    price_raw: int | None = data.get("pending_price")
+    price: Price | None = Price(price_raw) if price_raw is not None else None
     contacts: Contacts | None = data.get("pending_contacts")
 
-    region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
-
-    if pub is not None and pub.status == PublicationStatus.PUBLISHED:
-        await mediator.handle(
-            EditPublishedAdRequest(
-                ad_id=ad_id,
-                publication_id=pub.id,
-                city=city,
-                price=price,
-                contacts=contacts,
-            )
+    if pub_id is not None:
+        pub: PublicationDTO = await mediator.handle(
+            GetPublicationByIdRequest(publication_id=pub_id)
         )
-    else:
-        if plate is not None:
-            media: MediaAttachment = data["pending_media"]
+    
+        if pub.status == PublicationStatus.PUBLISHED:
+            await mediator.handle(
+                EditPublishedAdRequest(
+                    ad_id=ad_id,
+                    publication_id=pub.id,
+                    city=city,
+                    price=price,
+                    contacts=contacts, 
+                )
+            )
+        else:
+            file_id_media = data.get("pending_media_file_id")
             await mediator.handle(
                 UpdateAdContentRequest(
                     ad_id=ad_id,
@@ -249,11 +276,11 @@ async def on_apply_edit(
                     city=city,
                     price=price,
                     contacts=contacts,
-                    image_file_id=media.file_id.file_id if media and media.file_id else None,
+                    image_file_id=file_id_media,
                 )
             )
 
     updated_ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
-    data["selected_ad"] = updated_ad
+    data["selected_ad_id"] = updated_ad.id
 
     await dialog_manager.switch_to(EditAdSG.detail)

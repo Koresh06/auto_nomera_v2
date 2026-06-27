@@ -6,6 +6,7 @@ from aiogram_dialog import DialogManager
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
+from src.application.dtos.region import RegionDTO
 from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
@@ -13,6 +14,7 @@ from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.application.use_cases.publication.get_user import GetUserPublicationsRequest
 from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
+from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import (
@@ -29,7 +31,8 @@ async def getter_current_services(
 ) -> dict:
     tg_id = dialog_manager.event.from_user.id
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
-    dialog_manager.dialog_data["user"] = user
+    dialog_manager.dialog_data["user_id"] = user.id
+    dialog_manager.dialog_data["region_id"] = user.region_id
 
     definitions: list[ServiceDefinitionDTO] = await mediator.handle(
         GetAllServicesRequest()
@@ -78,10 +81,11 @@ async def getter_connected_services_user(
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    user: UserDTO = dialog_manager.dialog_data["user"]
+    user_id: int = dialog_manager.dialog_data["user_id"]
+    region_id: int = dialog_manager.dialog_data["region_id"]
 
     publications: list[PublicationDTO] = await mediator.handle(
-        GetUserPublicationsRequest(user_id=user.id, region_id=user.region_id)
+        GetUserPublicationsRequest(user_id=user_id, region_id=region_id)
     )
 
     cards: list[str] = []
@@ -120,13 +124,15 @@ async def getter_user_ads_for_service(
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    service_type: PublicationServiceType = dialog_manager.start_data["service_type"]
+    service_type_raw = dialog_manager.start_data["service_type"]
+    service_type: PublicationServiceType = PublicationServiceType(service_type_raw)
     user: UserDTO = await mediator.handle(
         GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
     )
+    region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
 
     publications: list[PublicationDTO] = await mediator.handle(
-        GetUserPublicationsRequest(user_id=user.id, region_id=user.region_id)
+        GetUserPublicationsRequest(user_id=user.id, region_id=region.id)
     )
 
     seen_ad_ids: set[int] = set()
@@ -143,8 +149,8 @@ async def getter_user_ads_for_service(
         )
 
         if has_autopublish:
-            seen_ad_ids.add(p.ad_id)  # блокируем все дочерние
-            continue  # но саму родительскую тоже не показываем
+            seen_ad_ids.add(p.ad_id)
+            continue  
 
         if any(
             s.type == service_type and s.status in (
@@ -170,7 +176,8 @@ async def getter_user_ads_for_service(
         for p in eligible
     ]
 
-    dialog_manager.dialog_data["user"] = user
+    dialog_manager.dialog_data["user_id"] = user.id
+
 
     return {
         "ads": ads,
@@ -198,7 +205,7 @@ async def getter_buy_service_confirm(
     )
     ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=pub.ad_id))
 
-    dialog_manager.dialog_data["definition"] = definition
+    dialog_manager.dialog_data["definition_id"] = definition.id
 
     return {
         "service_name": definition.title if definition else service_type.value,
@@ -216,14 +223,12 @@ async def getter_pre_publication_confirm(
     user: UserDTO = await mediator.handle(
         GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
     )
-    dialog_manager.dialog_data["user"] = user
 
     definitions: list[ServiceDefinitionDTO] = await mediator.handle(
         GetAllServicesRequest()
     )
     definition = next(
-        (d for d in definitions if d.type == PublicationServiceType.PRE_PUBLICATION),
-        None,
+        (d for d in definitions if d.type == PublicationServiceType.PRE_PUBLICATION)
     )
     
 
@@ -241,7 +246,8 @@ async def getter_pre_publication_confirm(
     elif definition:
         new_expires_at = now + timedelta(days=definition.duration_days or 30)
 
-    dialog_manager.dialog_data["definition"] = definition
+    dialog_manager.dialog_data["user_id"] = user.id
+    dialog_manager.dialog_data["definition_id"] = definition.id
     dialog_manager.dialog_data["already_active_flag"] = already_active
 
     return {

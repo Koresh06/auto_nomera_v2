@@ -6,6 +6,9 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
+from src.application.use_cases.publication_service.get_by_id import (
+    GetByIdServiceDefinitionRequest,
+)
 from src.domain.enums.payment import PaymentPurpose
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceType
@@ -15,11 +18,22 @@ from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
-from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedRequest
-from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceRequest
-from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest
-from src.application.use_cases.publication_service.priority_publish_publication import PriorityPublishPublicationRequest
-from src.presentation.telegram.features.user.modules.payment.helpers import PaymentStartParams, start_payment
+from src.application.use_cases.publication_service.apply_service import (
+    ApplyServiceToPublishedRequest,
+)
+from src.application.use_cases.publication_service.buy_pre_publication_service import (
+    BuyPrePublicationServiceRequest,
+)
+from src.application.use_cases.publication_service.buy_publication_service import (
+    BuyPublicationServiceRequest,
+)
+from src.application.use_cases.publication_service.priority_publish_publication import (
+    PriorityPublishPublicationRequest,
+)
+from src.presentation.telegram.features.user.modules.payment.helpers import (
+    PaymentStartParams,
+    start_payment,
+)
 
 
 async def on_ad_selected_service(
@@ -39,17 +53,21 @@ async def on_confirm_buy_service(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
 ) -> None:
-    user: UserDTO = dialog_manager.dialog_data["user"]
-    service_type: PublicationServiceType = dialog_manager.start_data["service_type"]
+    user_id: int = dialog_manager.dialog_data["user_id"]
+    service_type_raw = dialog_manager.start_data["service_type"]
+    service_type: PublicationServiceType = PublicationServiceType(service_type_raw)
     pub_id: int = dialog_manager.dialog_data["selected_pub_id"]
-    definition: ServiceDefinitionDTO = dialog_manager.dialog_data["definition"]
+    definition_id: int = dialog_manager.dialog_data["definition_id"]
+    definition: ServiceDefinitionDTO = await mediator.handle(
+        GetByIdServiceDefinitionRequest(definition_id)
+    )
 
     if dialog_manager.dialog_data.get("confirm_warning"):
         dialog_manager.dialog_data.pop("confirm_warning")
         try:
             await mediator.handle(
                 BuyPublicationServiceRequest(
-                    user_id=user.id,
+                    user_id=user_id,
                     publication_id=pub_id,
                     service_type=service_type,
                 )
@@ -80,8 +98,9 @@ async def on_confirm_buy_service(
                     amount=Decimal(definition.price),
                     description=definition.title,
                     purpose_id=pub_id,
-                    meta={"service_type": service_type.value},
-                    return_state="BuyServiceSG:select_ad",
+                    return_state="PaidServiceSG:start",
+                    return_data={},
+                    meta={"service_type": service_type_raw},
                 ),
             )
     else:
@@ -99,16 +118,18 @@ async def on_confirm_buy_pre_publication(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
 ) -> None:
-    user: UserDTO = dialog_manager.dialog_data["user"]
-    definition: ServiceDefinitionDTO = dialog_manager.dialog_data["definition"]
+    user_id: int = dialog_manager.dialog_data["user_id"]
+    definition_id: int = dialog_manager.dialog_data["definition_id"]
     was_active = dialog_manager.dialog_data.get("already_active_flag", False)
+
+    definition: ServiceDefinitionDTO = await mediator.handle(
+        GetByIdServiceDefinitionRequest(definition_id)
+    )
 
     if dialog_manager.dialog_data.get("confirm_warning"):
         dialog_manager.dialog_data.pop("confirm_warning")
         try:
-            await mediator.handle(
-                BuyPrePublicationServiceRequest(user_id=user.id)
-            )
+            await mediator.handle(BuyPrePublicationServiceRequest(user_id=user_id))
             action_text = "продлена" if was_active else "подключена"
             await callback.answer(
                 f"✅ Подписка {action_text} на {definition.duration_days} дн.!",
@@ -124,6 +145,8 @@ async def on_confirm_buy_pre_publication(
                     purpose=PaymentPurpose.PRE_PUBLICATION,
                     amount=Decimal(definition.price),
                     description=definition.title,
+                    return_state="PaidServiceSG:start",
+                    return_data={},
                     meta={"days": definition.duration_days or 30},
                 ),
             )

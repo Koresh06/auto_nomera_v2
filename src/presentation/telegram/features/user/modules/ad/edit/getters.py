@@ -38,8 +38,9 @@ async def getter_list_publications(
         seen_ad_ids.add(p.ad_id)
         filtered.append(p)
 
-    dialog_manager.dialog_data["user"] = user
-    dialog_manager.dialog_data["publications"] = filtered
+    dialog_manager.dialog_data["user_id"] = user.id
+    dialog_manager.dialog_data["region_id"] = user.region_id
+
     return {"publications": filtered}
 
 
@@ -52,43 +53,41 @@ async def getter_detail(
     data = dialog_manager.dialog_data
     start_data = dialog_manager.start_data or {}
 
-    pub: PublicationDTO | None = data.get("selected_pub")
-    pub_status = False
+    pub: PublicationDTO | None = None
 
-    if pub is None:
-        pub_id: int | None = start_data.get("pub_id")
-        ad_id: int | None  = start_data.get("ad_id") or data.get("ad_id")
+    pub_id: int | None = data.get("selected_pub_id") or start_data.get("pub_id")
+    ad_id: int | None = start_data.get("ad_id") or data.get("ad_id")
 
-        if pub_id:
-            pub: PublicationDTO = await mediator.handle(
-                GetPublicationByIdRequest(publication_id=pub_id)
-            )
-            pub_status = pub.status not in (
-                PublicationStatus.PUBLISHED,
-                PublicationStatus.CANCELED,
-                PublicationStatus.REPLACED,
-            )
-    else:
+    is_editable = False
+
+    if pub_id:
+        pub = await mediator.handle(GetPublicationByIdRequest(publication_id=pub_id))
+
         ad_id = pub.ad_id
-        pub_status = pub.status not in (
-            PublicationStatus.PUBLISHED,
+
+        is_editable = pub.status in (
+            PublicationStatus.SCHEDULED,
+            PublicationStatus.DRAFT,
             PublicationStatus.CANCELED,
-            PublicationStatus.REPLACED,
         )
+    else:
+        is_editable = True
 
     ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
-    dialog_manager.dialog_data["selected_ad"] = ad
+    dialog_manager.dialog_data["selected_ad_id"] = ad.id
     dialog_manager.dialog_data["ad_id"] = ad_id
 
     return {
         "pub": pub,
-        "pub_status": pub_status,
+        "can_edit_plate": is_editable,
         "type_ad": ad.ad_type.display,
         "plate": ad.content.plate_number if ad.content else None,
         "city": ad.content.city if ad.content else None,
         "price": ad.content.price.display if ad.content else None,
         "contacts": ad.content.contacts.display if ad.content else None,
-        "media": build_media_attachment(ad.content.image_file_id if ad.content else None),
+        "media": build_media_attachment(
+            ad.content.image_file_id if ad.content else None
+        ),
     }
 
 
@@ -96,6 +95,12 @@ async def getter_edit_field(
     dialog_manager: DialogManager,
     **kwargs,
 ) -> dict:
+    start_data = dialog_manager.start_data or {}
+    ad_id: int | None = start_data.get("ad_id")
+    pub_id: int | None = start_data.get("pub_id")
+
+    dialog_manager.dialog_data["ad_id"] = ad_id
+    dialog_manager.dialog_data["pub_id"] = pub_id
     return {
         "edit_label": dialog_manager.dialog_data.get("edit_label", "Введите значение:"),
     }
@@ -105,14 +110,14 @@ async def getter_confirm_edit(dialog_manager: DialogManager, **kwargs) -> dict:
     data = dialog_manager.dialog_data
     field = data["edit_field"]
     value = data["pending_value"]
-    
+
     labels = {
         "city": "🌎 Город",
         "price": "💰 Цена",
         "phone": "📲 Телефон",
         "plate": "🚘 Номер",
     }
-    
+
     return {
         "field_label": labels.get(field, field),
         "new_value": value,
