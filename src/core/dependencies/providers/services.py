@@ -89,11 +89,23 @@ class ServicesProvider(Provider):
         settings: AppSettings,
     ) -> PaymentProviderRegistry:
         registry = PaymentProviderRegistry()
-        registry.register(PaymentMethod.TELEGRAM_STARS, TelegramStarsProvider(bot=bot, xtr_to_rub_rate=settings.payment.telegram_stars.xtr_to_rub_rate))
+        registry.register(
+            PaymentMethod.TELEGRAM_STARS,
+            TelegramStarsProvider(
+                bot=bot, xtr_to_rub_rate=settings.payment.telegram_stars.xtr_to_rub_rate
+            ),
+        )
         registry.register(
             PaymentMethod.MANUAL_CARD,
-            ManualCardProvider(card_number=settings.payment.manual_card.card_number),
+            ManualCardProvider(card=settings.payment.manual_card.card_number),
         )
-        registry.register(PaymentMethod.YOOKASSA, YooKassaProvider())
+        registry.register(
+            PaymentMethod.YOOKASSA,
+            YooKassaProvider(
+                account_id=settings.payment.yookassa.account_id,
+                secret_key=settings.payment.yookassa.secret_key,
+                settings=settings.payment.yookassa,
+            ),
+        )
         registry.register(PaymentMethod.CRYPTO, CryptomusProvider())
         return registry

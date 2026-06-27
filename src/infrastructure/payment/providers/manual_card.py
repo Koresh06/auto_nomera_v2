@@ -1,4 +1,5 @@
 import secrets
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
@@ -6,9 +7,9 @@ from src.application.ports.payment.provider import PaymentProvider
 from src.domain.entities.payment import Payment
 
 
+@dataclass
 class ManualCardProvider(PaymentProvider):
-    def __init__(self, card_number: str) -> None:
-        self.card = card_number
+    card: str
 
     async def create_invoice(
         self,

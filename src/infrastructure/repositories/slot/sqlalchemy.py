@@ -109,9 +109,6 @@ class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
                 SlotConvertedModel.user_id == user_id,
             )
         )
-        print(
-            f"[unmark_converted] deleted {result} rows for slot={slot} user_id={user_id}"
-        )
 
     async def get_converted_set(self, slots: Iterable[SlotKey]) -> set[SlotKey]:
         slots_list = list(slots)

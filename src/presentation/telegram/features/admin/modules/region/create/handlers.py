@@ -40,7 +40,6 @@ async def on_confirm_region(
         )
     except Exception as e:
         await callback.answer(str(e))
-        print(e)
     else:
         await callback.answer("Регион успешно создан!")
 

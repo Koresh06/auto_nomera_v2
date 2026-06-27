@@ -1,3 +1,4 @@
+from aiogram import Bot
 from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
@@ -6,6 +7,8 @@ from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceUseCase
 from src.application.services.payment.provider_registry import PaymentProviderRegistry
 from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdUseCase
+from src.application.use_cases.payment.mark import MarkPaymentFailedUseCase
+from src.application.use_cases.publication.finalize_and_schedule_existing_ad import FinalizeAndScheduleExistingAdUseCase
 from src.application.use_cases.publication.get_user import GetUserPublicationsUseCase
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
@@ -52,6 +55,7 @@ from src.application.use_cases.publication_service.apply_service import ApplySer
 from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceUseCase
 from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceUseCase
 from src.application.use_cases.publication_service.get_all import GetAllServicesUseCase
+from src.application.use_cases.publication_service.get_by_id import GetByIdServiceDefinitionUseCase
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationUseCase,
 )
@@ -86,6 +90,7 @@ from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.infrastructure.database.transaction_manager.base import TransactionManager
+from src.presentation.telegram.common.custom_message_manager import CustomMessageManager
 
 
 class UseCasesProvider(Provider):
@@ -372,8 +377,13 @@ class UseCasesProvider(Provider):
     @provide
     def ensure_ad_image_ref_use_case(
         self,
+        bot: Bot,
+        message_manager: CustomMessageManager
     ) -> EnsureAdImageRefUseCase:
-        return EnsureAdImageRefUseCase()
+        return EnsureAdImageRefUseCase(
+            bot=bot,
+            message_manager=message_manager
+        )
 
     @provide
     def create_ad_draft_use_case(
@@ -486,6 +496,19 @@ class UseCasesProvider(Provider):
         )
     
     @provide
+    def finalize_and_schedule_existing_ad_use_case(
+        self,
+        finalize_ad: FinalizeAdUseCase,
+        create_publication: CreatePublicationFromAdUseCase,
+        select_slot: SelectSlotForPublicationUseCase,
+    ) -> FinalizeAndScheduleExistingAdUseCase:
+        return FinalizeAndScheduleExistingAdUseCase(
+            finalize_ad=finalize_ad,
+            create_publication=create_publication,
+            select_slot=select_slot,
+        )
+    
+    @provide
     def check_hold_use_case(
         self,
         hold_store: SlotHoldStore,
@@ -511,11 +534,13 @@ class UseCasesProvider(Provider):
     def create_payment_use_case(
         self,
         payment_repo: PaymentRepository,
+        user_repo: UserRepository,
         provider_registry: PaymentProviderRegistry,
         transaction_manager: TransactionManager,
     ) -> CreatePaymentUseCase:
         return CreatePaymentUseCase(
             payment_repo=payment_repo,
+            user_repo=user_repo,
             provider_registry=provider_registry,
             transaction_manager=transaction_manager,
         )
@@ -556,6 +581,26 @@ class UseCasesProvider(Provider):
     ) -> GetPaymentByExternalIdUseCase:
         return GetPaymentByExternalIdUseCase(
             payment_repo=payment_repo,
+        )
+    
+    @provide
+    def mark_payment_failed_use_case(
+        self,
+        payment_repo: PaymentRepository,
+        transaction_manager: TransactionManager,
+    ) -> MarkPaymentFailedUseCase:
+        return MarkPaymentFailedUseCase(
+            payment_repo=payment_repo,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def get_by_id_service_definition_use_case(
+        self,
+        service_def_repo: ServiceDefinitionRepository,
+    ) -> GetByIdServiceDefinitionUseCase:
+        return GetByIdServiceDefinitionUseCase(
+            service_def_repo=service_def_repo,
         )
     
     @provide

@@ -3,6 +3,8 @@ from dishka import Provider, provide, Scope
 from src.application.mediator import Mediator
 from src.application.ports.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest, ConfirmPaidSlotFromBalanceUseCase
 from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdRequest, GetPaymentByExternalIdUseCase
+from src.application.use_cases.payment.mark import MarkPaymentFailedRequest, MarkPaymentFailedUseCase
+from src.application.use_cases.publication.finalize_and_schedule_existing_ad import FinalizeAndScheduleExistingAdRequest, FinalizeAndScheduleExistingAdUseCase
 from src.application.use_cases.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
 from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutRequest, ApproveUrgentBuyoutUseCase
 from src.application.use_cases.ad.archive_ad import ArchiveAdRequest, ArchiveAdUseCase
@@ -52,6 +54,7 @@ from src.application.use_cases.publication_service.apply_service import ApplySer
 from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceRequest, BuyPrePublicationServiceUseCase
 from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest, BuyPublicationServiceUseCase
 from src.application.use_cases.publication_service.get_all import GetAllServicesRequest, GetAllServicesUseCase
+from src.application.use_cases.publication_service.get_by_id import GetByIdServiceDefinitionRequest, GetByIdServiceDefinitionUseCase
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationRequest,
     PriorityPublishPublicationUseCase,
@@ -132,11 +135,14 @@ class MediatorProvider(Provider):
         create_publication_from_ad_use_case: CreatePublicationFromAdUseCase,
         check_publication_limit_use_case: CheckPublicationLimitUseCase,
         create_and_schedule_use_case: CreateAndScheduleAdUseCase,
+        finalize_and_schedule_existing_ad_use_case: FinalizeAndScheduleExistingAdUseCase,
         check_hold_use_case: CheckHoldUseCase,
         reuse_ad_and_schedule_use_case: ReuseAdAndScheduleUseCase,
         create_payment_use_case: CreatePaymentUseCase,
         confirm_payment_use_case: ConfirmPaymentUseCase,
         get_payment_by_external_id_use_case: GetPaymentByExternalIdUseCase,
+        mark_payment_failed_use_case: MarkPaymentFailedUseCase,
+        get_by_id_service_definition_use_case: GetByIdServiceDefinitionUseCase,
         seed_service_definitons_use_case: SeedServiceDefinitionsUseCase,
         apply_service_to_published_use_case: ApplyServiceToPublishedUseCase,
         notify_admins_urgent_use_case: NotifyAdminsAboutUrgentUseCase,
@@ -192,11 +198,17 @@ class MediatorProvider(Provider):
         )
         mediator.register(CheckPublicationLimitRequest, check_publication_limit_use_case)
         mediator.register(CreateAndScheduleAdRequest, create_and_schedule_use_case)
+        mediator.register(
+            FinalizeAndScheduleExistingAdRequest,
+            finalize_and_schedule_existing_ad_use_case,
+        )
         mediator.register(CheckHoldRequest, check_hold_use_case)
         mediator.register(ReuseAdAndScheduleRequest, reuse_ad_and_schedule_use_case)
         mediator.register(CreatePaymentRequest, create_payment_use_case)
         mediator.register(ConfirmPaymentRequest, confirm_payment_use_case)
         mediator.register(GetPaymentByExternalIdRequest, get_payment_by_external_id_use_case)
+        mediator.register(MarkPaymentFailedRequest, mark_payment_failed_use_case)
+        mediator.register(GetByIdServiceDefinitionRequest, get_by_id_service_definition_use_case)
         mediator.register(SeedServiceDefinitionsRequest, seed_service_definitons_use_case)
         mediator.register(ApplyServiceToPublishedRequest, apply_service_to_published_use_case)
         mediator.register(NotifyAdminsAboutUrgentRequest, notify_admins_urgent_use_case)

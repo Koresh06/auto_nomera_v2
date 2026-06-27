@@ -80,3 +80,15 @@ class SQLAlchemyServiceDefinitionRepo(ServiceDefinitionRepository):
         await self._session.flush()
         await self._session.refresh(model)
         return model.to_entity()
+    
+
+    async def get_by_id(self, service_id: int) -> ServiceDefinition:
+        result = await self._session.execute(
+            select(ServiceDefinitionModel).where(
+                ServiceDefinitionModel.id == service_id
+            )
+        )
+        model = result.scalar_one_or_none()
+        if model is None:
+            raise ServiceDefinitionException(f"ServiceDefinition id={service_id} not found")
+        return model.to_entity()

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from decimal import Decimal, ROUND_CEILING
 from aiogram import Bot
 from aiogram.types import LabeledPrice
@@ -6,11 +7,10 @@ from src.application.ports.payment.provider import PaymentProvider
 from src.domain.entities.payment import Payment
 
 
+@dataclass
 class TelegramStarsProvider(PaymentProvider):
-
-    def __init__(self, bot: Bot, xtr_to_rub_rate: Decimal) -> None:
-        self.bot = bot
-        self.xtr_to_rub_rate = xtr_to_rub_rate
+    bot: Bot
+    xtr_to_rub_rate: Decimal
 
     async def create_invoice(
         self,

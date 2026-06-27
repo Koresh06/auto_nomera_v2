@@ -1,4 +1,9 @@
+import asyncio
+from aiogram import Dispatcher
+from aiogram_dialog import BgManagerFactory
 from dishka import make_async_container
+from dishka.integrations.aiogram import setup_dishka
+from taskiq import TaskiqEvents, TaskiqState
 
 from src.core.dependencies.providers import make_base_providers
 from src.core.dependencies.providers.taskiq import TaskiqProvider
@@ -11,7 +16,16 @@ container = make_async_container(
     TaskiqProvider(),
 )
 
-register_taskiq_tasks(broker, container=container)
-# print(f"Registered tasks: {list(broker.get_all_tasks().keys())}")
+
+@broker.on_event(TaskiqEvents.WORKER_STARTUP)
+async def setup_worker(state: TaskiqState) -> None:
+    dp: Dispatcher = await container.get(Dispatcher)
+    setup_dishka(container=container, router=dp)
+
+    # триггерим создание BgManagerFactory — вызывает setup_dialogs() внутри TelegramProvider
+    await container.get(BgManagerFactory)
+
+    register_taskiq_tasks(broker, container=container)
+
 
 # taskiq worker src.worker:broker
