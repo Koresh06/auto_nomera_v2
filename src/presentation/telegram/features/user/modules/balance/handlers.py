@@ -9,7 +9,6 @@ from src.presentation.telegram.features.user.modules.payment.helpers import (
     PaymentStartParams,
     start_payment,
 )
-from src.presentation.telegram.features.user.modules.payment.states import PaymentSG
 
 
 logger = logging.getLogger(__name__)
