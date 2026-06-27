@@ -6,7 +6,6 @@ from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import (
     ScrollingGroup,
     Select,
-    SwitchTo,
     Cancel,
     Back,
     Group,
@@ -65,30 +64,26 @@ edit_ad_dialog = Dialog(
             "📲<b>Связь:</b> {contacts}\n"
         ),
         Group(
-            SwitchTo(
+            Button(
                 Const("🚘 Изменить номер"),
                 id="edit_plate",
                 on_click=on_edit_plate,
-                state=EditAdSG.edit_field,
-                when="pub_status",
+                when="can_edit_plate",
             ),
-            SwitchTo(
+            Button(
                 Const("🌎 Изменить город"),
                 id="edit_city",
                 on_click=on_edit_city,
-                state=EditAdSG.edit_field,
             ),
-            SwitchTo(
+            Button(
                 Const("💰 Изменить цену"),
                 id="edit_price",
                 on_click=on_edit_price,
-                state=EditAdSG.edit_field,
             ),
-            SwitchTo(
+            Button(
                 Const("📲 Изменить телефон"),
                 id="edit_phone",
                 on_click=on_edit_phone,
-                state=EditAdSG.edit_field,
             ),
             width=2,
         ),
@@ -96,6 +91,7 @@ edit_ad_dialog = Dialog(
             Const("🗑 Удалить"),
             id="delete_ad",
             on_click=on_delete_ad,
+            when=~F["start_data"]["back_to_finish"],
         ),
         Back(
             Const("⬅️ Назад"),
