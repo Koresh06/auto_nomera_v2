@@ -1,15 +1,37 @@
 from aiogram import F
-from aiogram_dialog import Dialog, Window
+from aiogram_dialog import Dialog, StartMode, Window
 from aiogram_dialog.widgets.text import Const, Format, List
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Start, Group, Next, Cancel, Back, Row, PrevPage, NextPage, Button
+from aiogram_dialog.widgets.kbd import (
+    ScrollingGroup,
+    Select,
+    Start,
+    Group,
+    Next,
+    Cancel,
+    Back,
+    Row,
+    PrevPage,
+    NextPage,
+    Button,
+)
 
 from src.domain.enums.publication_service import PublicationServiceType
+from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 
 from .states import BuyServiceSG, PaidServiceSG, PrePublicationSG
 from .smart_scroll_text import SmartScrollingText
-from .getters import getter_buy_service_confirm, getter_connected_services_user, getter_current_services, getter_pre_publication_confirm, getter_user_ads_for_service
-from .handlers import on_ad_selected_service, on_confirm_buy_pre_publication, on_confirm_buy_service
-
+from .getters import (
+    getter_buy_service_confirm,
+    getter_connected_services_user,
+    getter_current_services,
+    getter_pre_publication_confirm,
+    getter_user_ads_for_service,
+)
+from .handlers import (
+    on_ad_selected_service,
+    on_confirm_buy_pre_publication,
+    on_confirm_buy_service,
+)
 
 paid_service_dialog = Dialog(
     Window(
@@ -33,30 +55,36 @@ paid_service_dialog = Dialog(
                 Const("🥇 Вне очереди"),
                 id="buy_priority",
                 state=BuyServiceSG.select_ad,
-                data={"service_type": PublicationServiceType.PRIORITY_PUBLISH},
+                data={"service_type": PublicationServiceType.PRIORITY_PUBLISH.value},
             ),
             Start(
                 Const("🔂 Автопубликация"),
                 id="buy_auto",
                 state=BuyServiceSG.select_ad,
-                data={"service_type": PublicationServiceType.AUTOPUBLISH},
+                data={"service_type": PublicationServiceType.AUTOPUBLISH.value},
             ),
             Start(
                 Const("📌 Закрепление"),
                 id="buy_pin",
                 state=BuyServiceSG.select_ad,
-                data={"service_type": PublicationServiceType.PIN},
+                data={"service_type": PublicationServiceType.PIN.value},
             ),
             Start(
                 Const("🟥 Выделение"),
                 id="buy_highlight",
                 state=BuyServiceSG.select_ad,
-                data={"service_type": PublicationServiceType.HIGHLIGHT},
+                data={"service_type": PublicationServiceType.HIGHLIGHT.value},
             ),
             width=2,
         ),
         Next(Const("📂 Подключённые услуги")),
-        Cancel(Const("⬅️ Назад")),
+        # Cancel(Const("⬅️ Назад")),
+        Start(
+            Const("⬅️ Назад"),
+            id="back_to_menu",
+            state=UserMenuSG.menu,
+            mode=StartMode.RESET_STACK,
+        ),
         state=PaidServiceSG.start,
         getter=getter_current_services,
     ),
@@ -85,7 +113,9 @@ paid_service_dialog = Dialog(
 buy_service_dialog = Dialog(
     Window(
         Format("<b>{service_name}</b>\n\nВыберите объявление:"),
-        Const("У вас пока нет объявлений с неподключенной услугой.", when=~F["has_ads"]),
+        Const(
+            "У вас пока нет объявлений с неподключенной услугой.", when=~F["has_ads"]
+        ),
         ScrollingGroup(
             Select(
                 Format("{item[title]}"),

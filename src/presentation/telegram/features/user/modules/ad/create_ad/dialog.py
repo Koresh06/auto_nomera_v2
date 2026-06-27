@@ -25,6 +25,7 @@ from src.presentation.telegram.features.error_handlers import on_input_error
 from .states import CreateAdSG
 from .handlers import (
     on_back_to_calendar,
+    on_city_input,
     on_confirm_ad,
     on_delete_photo,
     on_edit_ad,
@@ -135,7 +136,7 @@ create_ad_dialog = Dialog(
         TextInput(
             id="city",
             type_factory=capitalize_word,
-            on_success=Next(),
+            on_success=on_city_input,
             on_error=on_input_error,
         ),
         Back(

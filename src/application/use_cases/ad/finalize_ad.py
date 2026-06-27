@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class FinalizeAdRequest(UseCaseRequest):
     ad_id: int
 
+
 @dataclass(kw_only=True)
 class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
     ad_repo: AdRepository
