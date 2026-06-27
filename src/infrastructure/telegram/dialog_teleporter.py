@@ -1,20 +1,16 @@
 from aiogram import Bot
-from aiogram_dialog import BgManagerFactory, ShowMode
+from aiogram_dialog import BgManagerFactory, ShowMode, StartMode
 
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.presentation.telegram.features.state_registry import resolve_state
 
 
 class AiogramDialogTeleporter(DialogTeleporter):
-    def __init__(
-        self,
-        bot: Bot,
-        bg_manager_factory: BgManagerFactory,
-    ) -> None:
+    def __init__(self, bot: Bot, bg_manager: BgManagerFactory) -> None:
         self.bot = bot
-        self.bg_manager = bg_manager_factory
+        self.bg_manager = bg_manager
 
-    async def switch_to(
+    async def start(
         self,
         *,
         user_id: int,
@@ -23,24 +19,16 @@ class AiogramDialogTeleporter(DialogTeleporter):
         data: dict | None = None,
     ) -> None:
         state = resolve_state(state_key)
-        bg = self.bg_manager.bg(bot=self.bot, user_id=user_id, chat_id=chat_id)
-        await bg.switch_to(state=state, show_mode=ShowMode.SEND)
+        bg = self.bg_manager.bg(
+            bot=self.bot,
+            user_id=user_id,
+            chat_id=chat_id,
+            load=True,
+        )
     
-    async def update(
-        self,
-        *,
-        user_id: int,
-        chat_id: int,
-        data: dict,
-    ) -> None:
-        bg = self.bg_manager.bg(bot=self.bot, user_id=user_id, chat_id=chat_id)
-        await bg.update(data, show_mode=ShowMode.NO_UPDATE)
-    
-    async def done(
-        self,
-        *,
-        user_id: int,
-        chat_id: int,
-    ) -> None:
-        bg = self.bg_manager.bg(bot=self.bot, user_id=user_id, chat_id=chat_id)
-        await bg.done(show_mode=ShowMode.NO_UPDATE)
+        await bg.start(
+            state=state,
+            data=data or {},
+            mode=StartMode.RESET_STACK,
+            show_mode=ShowMode.SEND,
+        )
