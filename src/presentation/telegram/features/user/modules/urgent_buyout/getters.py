@@ -21,7 +21,8 @@ async def getter_urgent_catalog(
 ) -> dict:
     tg_id = dialog_manager.event.from_user.id
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
-    dialog_manager.dialog_data["user"] = user
+    dialog_manager.dialog_data["region_id"] = user.region_id
+
 
     region_dto: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
     region = region_dto.to_entity()
@@ -86,14 +87,14 @@ async def getter_catalog_list(
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    user: UserDTO = dialog_manager.dialog_data["user"]
+    region_id: int = dialog_manager.dialog_data["region_id"]
     current_page = dialog_manager.dialog_data.get("count_page", 0)
     
     scroll = dialog_manager.find("catalog_scroll")
     current_page = await scroll.get_page() if scroll else 0
 
     items: list[CatalogItem] = await mediator.handle(
-        GetCatalogDeferredPublicationsRequest(region_id=user.region_id)
+        GetCatalogDeferredPublicationsRequest(region_id=region_id)
     )
 
     buttons = [

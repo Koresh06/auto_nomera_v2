@@ -4,7 +4,6 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button, Select
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 
-from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.ad.archive_ad import ArchiveAdRequest
 from src.application.use_cases.catalog.get_catalog_deferred_publications import (
@@ -20,7 +19,7 @@ async def on_delete_catalog_item(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
 ) -> None:
-    user: UserDTO = dialog_manager.dialog_data["user"]
+    region_id: int = dialog_manager.dialog_data["region_id"]
 
     if dialog_manager.dialog_data.get("delete_warning"):
         dialog_manager.dialog_data.pop("delete_warning", None)
@@ -29,7 +28,7 @@ async def on_delete_catalog_item(
         current_page = await scroll.get_page() if scroll else 0
 
         items: list[CatalogItem] = await mediator.handle(
-            GetCatalogDeferredPublicationsRequest(region_id=user.region_id)
+            GetCatalogDeferredPublicationsRequest(region_id=region_id)
         )
 
         if current_page < len(items):
