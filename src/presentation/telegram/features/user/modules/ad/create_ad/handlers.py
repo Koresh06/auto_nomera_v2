@@ -402,9 +402,7 @@ async def _start_slot_payment(
         )
         c = existing_ad.content
 
-        ad: AdDTO = (
-            existing_ad  # объявление уже существует, повторно создавать не нужно
-        )
+        ad: AdDTO = existing_ad
         plate = c.plate_number if c else data.get("plate", "")
         city = c.city if c else ""
         price_raw = c.price.value if c and c.price else None
