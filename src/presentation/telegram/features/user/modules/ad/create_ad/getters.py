@@ -141,10 +141,13 @@ async def getter_confirm(
     start_data = dialog_manager.start_data or {}
     tg_id = dialog_manager.event.from_user.id
 
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
+
     if "ad_id" in start_data:
         ad_id: int = start_data["ad_id"]
         ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
-        user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
 
         c = ad.content
         plate = c.plate_number if c else ""
@@ -159,8 +162,8 @@ async def getter_confirm(
         if slot_raw:
             slot = SlotKey(
                 region_id=slot_raw["region_id"],
-                local_day=date.fromisoformat(slot_raw["local_day"]),
-                local_time=time.fromisoformat(slot_raw["local_time"]),
+                local_day=date.fromisoformat(slot_raw["slot_day"]),
+                local_time=time.fromisoformat(slot_raw["slot_time"]),
             )
             data["region_id"] = slot_raw["region_id"]
             data["slot_day"] = slot_raw["local_day"]
@@ -187,16 +190,19 @@ async def getter_confirm(
             "media": media,
         }
 
-    user: UserDTO = await mediator.handle(
-        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
-    )
+    
     channel_username: str = data["channel_username"]
 
-    slot = SlotKey(
-        region_id=data["region_id"],
-        local_day=date.fromisoformat(data["slot_day"]),
-        local_time=time.fromisoformat(data["slot_time"]),
-    )
+    ad_type_raw = data.get("ad_type")
+    needs_slot = ad_type_raw != AdType.URGENT_BUYOUT.value
+    
+    slot = None
+    if needs_slot:
+        slot = SlotKey(
+            region_id=data["region_id"],
+            local_day=date.fromisoformat(data["slot_day"]),
+            local_time=time.fromisoformat(data["slot_time"]),
+        )
 
     if data.get("reuse_ad"):
         existing_ad_id = data["existing_ad_id"] 
@@ -209,13 +215,8 @@ async def getter_confirm(
         contacts = c.contacts.display if c else ""
         phone = c.contacts.phone if c else ""
 
-        media_file_id = data.get("media_file_id")
-
-        if media_file_id:
-            media: MediaAttachment | None = build_media_attachment(media_file_id)
-        else:
-            media: MediaAttachment | None = build_media_attachment(c.image_file_id if c else None)
-            data["media_file_id"] = media.file_id.file_id if media and media.file_id else None
+        media: MediaAttachment | None = build_media_attachment(c.image_file_id if c else None)
+        data["media_file_id"] = media.file_id.file_id if media and media.file_id else None
     else:
         plate = data.get("plate")
         city = dialog_manager.find("city").get_value()
@@ -224,18 +225,14 @@ async def getter_confirm(
         contacts = Contacts.from_user(username=user.username, phone=phone).display
         price = Price.format(price_raw)
 
-        media_file_id = data.get("media_file_id")
-        if media_file_id:
-            media: MediaAttachment | None = build_media_attachment(media_file_id)
-        else:
-            media: MediaAttachment = await mediator.handle(
-                EnsureAdImageRefRequest(
-                    plate=plate,
-                    channel_username=channel_username,
-                    chat_id=tg_id,
-                )
+        media: MediaAttachment = await mediator.handle(
+            EnsureAdImageRefRequest(
+                plate=plate,
+                channel_username=channel_username,
+                chat_id=tg_id,
             )
-            data["media_file_id"] = media.file_id.file_id if media and media.file_id else None
+        )
+        data["media_file_id"] = media.file_id.file_id if media and media.file_id else None
 
     data["phone"] = phone
     data["price"] = price_raw
@@ -318,7 +315,7 @@ async def getter_publication_service(
 
     return {
         "available_services": display,
-        "balance": f"{user.balance:.0f} руб.",
+        "balance": user.balance_display,
     }
 
 
@@ -349,7 +346,7 @@ async def getter_finish(
     ]
 
     if active_services:
-        selected_services = ", ".join(
+        selected_services = ",\n".join(
             PublicationServiceType(s.type).display for s in active_services
         )
     else:
