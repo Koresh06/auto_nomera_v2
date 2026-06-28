@@ -81,7 +81,7 @@ paid_service_dialog = Dialog(
         # Cancel(Const("⬅️ Назад")),
         Start(
             Const("⬅️ Назад"),
-            id="back_to_menu",
+            id="general_menu",
             state=UserMenuSG.menu,
             mode=StartMode.RESET_STACK,
         ),

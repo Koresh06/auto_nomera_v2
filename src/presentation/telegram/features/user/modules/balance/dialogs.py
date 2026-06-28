@@ -18,7 +18,7 @@ topup_dialog = Dialog(
             on_success=on_amount_input_success,
             on_error=on_input_error,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(Const("🏠 Главное меню")),
         state=TopupSG.enter_amount,
     ),
 )

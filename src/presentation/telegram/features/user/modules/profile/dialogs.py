@@ -16,7 +16,7 @@ profile_dialog = Dialog(
             "📣 <b>Количество объявлений:</b> {count_ads}\n"
             "💰 <b>Ваш баланс:</b> {user.balance_display}\n"
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(Const("🏠 Главное меню")),
         getter=profile_getter,
         state=ProfileSG.start,
     )

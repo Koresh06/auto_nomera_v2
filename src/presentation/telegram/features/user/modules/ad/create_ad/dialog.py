@@ -14,6 +14,7 @@ from aiogram_dialog.widgets.kbd import (
     Cancel,
     Next,
     Button,
+    Start,
     SwitchTo,
     RequestContact,
     Column,
@@ -21,6 +22,7 @@ from aiogram_dialog.widgets.kbd import (
 
 from src.domain.enums.ad import AdType
 from src.presentation.telegram.features.error_handlers import on_input_error
+from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 
 from .states import CreateAdSG
 from .handlers import (
@@ -247,7 +249,7 @@ create_ad_dialog = Dialog(
                 "🌎 <b>Город</b>: {city}\n"
                 "💰 <b>Цена</b>: {price}\n"
                 "📲 <b>Связь</b>: {contacts}\n\n"
-                "🕐 <b>Слот</b>: {slot_day} в {slot_time}\n"
+                "🕐 <b>Слот</b>: {slot_day} в {slot_time}"
             ),
             when=F["dialog_data"]["ad_type"].in_({AdType.SALE, AdType.BUY}),
         ),
@@ -260,7 +262,7 @@ create_ad_dialog = Dialog(
                 "🌎 <b>Город</b>: {city}\n"
                 "🚘 <b>Номер</b>: {plate}\n"
                 "💰 <b>Сумма</b>: {price}\n"
-                "📲 <b>Связь</b>: {contacts}\n\n"
+                "📲 <b>Связь</b>: {contacts}"
             ),
             when=F["dialog_data"]["ad_type"] == AdType.URGENT_BUYOUT,
         ),
@@ -309,16 +311,23 @@ create_ad_dialog = Dialog(
         Const(
             "Для быстрой продажи рекомендуем воспользоваться платными услугами, выбрав раздел «🚀 Платные Топ услуги (NEW)» в общем меню, чтобы выделить Ваше объявление среди других.\n\n"
         ),
-        Format("🔝 Подключённые услуги:\n{selected_services}"),
+        Format("🔝 Подключённые услуги:\n{selected_services}."),
         DynamicMedia(selector="media", when="media"),
-        Back(Const("Назад к Услугам!")),
+        Back(
+            Const("Назад к Услугам!"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         Column(
             Button(
                 Const("📝 Редактировать объявление"),
                 id="edit_ad",
                 on_click=on_edit_ad,
             ),
-            Cancel(Const("🏠 Главное меню")),
+            Start(
+                Const("🏠 Главное меню"),
+                id="main_menu",
+                state=UserMenuSG.menu,
+            ),
         ),
         state=CreateAdSG.finish,
         getter=getter_finish,
@@ -330,7 +339,11 @@ create_ad_dialog = Dialog(
             "<b>Если ваше объявление соответствует критериям срочного выкупа,</b> "
             "<b>то в ближайшее время с Вами свяжутся покупатели.</b>"
         ),
-        Cancel(Const("🏠 Главное меню")),
+        Start(
+            Const("🏠 Главное меню"),
+            id="main_menu",
+            state=UserMenuSG.menu,
+        ),
         state=CreateAdSG.urgent_done,
     ),
 )
