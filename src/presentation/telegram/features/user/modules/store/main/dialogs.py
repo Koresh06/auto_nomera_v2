@@ -9,7 +9,7 @@ from src.presentation.telegram.features.user.modules.store.edit_store.states imp
 from src.presentation.telegram.features.user.modules.store.main.getters import (
     getter_store_main,
 )
-from src.presentation.telegram.features.user.modules.store.publication.states import StoreViewPublishSG
+from src.presentation.telegram.features.user.modules.store.view_publish.states import StoreViewPublishSG
 from .states import StoreMainSG
 
 
@@ -28,7 +28,7 @@ store_main_dialog = Dialog(
             Start(
                 Const("📣 Просмотр и Публикация"),
                 id="view_publish",
-                state=StoreViewPublishSG.view,
+                state=StoreViewPublishSG.preview,
             ),
             Start(
                 Const("✅ Добавить номера"),

@@ -21,7 +21,7 @@ from src.presentation.telegram.features.user.modules.ad.create_ad.handlers impor
 )
 from src.presentation.telegram.features.user.modules.store.create.handlers import on_finish
 from src.presentation.telegram.features.user.modules.store.main.states import StoreMainSG
-from src.presentation.telegram.features.user.shared.text_validators import (
+from src.presentation.telegram.utils.text_validators import (
     capitalize_word,
     validate_phone_number,
 )
