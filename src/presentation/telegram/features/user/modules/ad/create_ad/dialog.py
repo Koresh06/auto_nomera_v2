@@ -23,6 +23,9 @@ from aiogram_dialog.widgets.kbd import (
 from src.domain.enums.ad import AdType
 from src.presentation.telegram.features.error_handlers import on_input_error
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
+from src.presentation.telegram.features.user.shared.ad_getters import calendar_getter, getter_finish, getter_publication_service
+from src.presentation.telegram.features.user.shared.ad_handlers import on_pick_slot, on_service_paid_selected
+from src.presentation.telegram.utils.text_validators import capitalize_word, validate_phone_number
 
 from .states import CreateAdSG
 from .handlers import (
@@ -36,22 +39,16 @@ from .handlers import (
     on_phone_input_success,
     on_phone_received_contact,
     on_plate_success,
-    on_pick_slot,
     on_price_input_success,
     on_reuse_old_click,
-    on_service_paid_selected,
 )
 from .getters import (
-    calendar_getter,
     getter_confirm,
     getter_default_ad,
     getter_duplicate_ad,
-    getter_finish,
     getter_media_plate,
-    getter_publication_service,
     getter_user_phone,
 )
-from .validators import capitalize_word, validate_phone_number, validate_price
 from .texts import PLANE_URGENT_TEXT, PLATE_BUY_TEXT, PLATE_SALE_TEXT
 
 create_ad_dialog = Dialog(
@@ -281,8 +278,9 @@ create_ad_dialog = Dialog(
         getter=getter_confirm,
     ),
     Window(
-        Const("💎 <b>Сделайте своё объявление заметнее!</b>\n"),
-        Format("💰 Ваш баланс: {balance}\n"),
+        Const(
+            "💎 <b>Сделайте своё объявление заметнее! Выберите услуги, чтобы выделить его перед публикацией:</b>"
+        ),
         Group(
             Select(
                 Format("{item[0]}"),

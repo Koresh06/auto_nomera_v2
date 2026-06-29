@@ -1,12 +1,16 @@
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import DialogManager, ShowMode
+from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select, Button
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.api.entities import MediaAttachment
 from dishka.integrations.aiogram_dialog import FromDishka, inject
 
-from src.application import mediator
+from src.domain.enums.ad import AdType
+from src.domain.services.ad.plate_validator import validate_plate
+from src.domain.value_objects.contacts import Contacts
+from src.domain.value_objects.price import Price
+from src.domain.enums.publication import PublicationStatus
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.region import RegionDTO
@@ -16,28 +20,17 @@ from src.application.use_cases.ad.archive_ad import ArchiveAdRequest
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefRequest
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
-
 from src.application.use_cases.publication.edit_published import EditPublishedAdRequest
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.application.use_cases.publication.get_user import GetUserPublicationsRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
-from src.application.use_cases.user.get_by_tg_id import (
-    GetByTgIdUserUseCase,
-    GetTgIdRequest,
-)
-from src.domain.enums.ad import AdType
-from src.domain.services.ad.plate_validator import validate_plate
-from src.domain.value_objects.contacts import Contacts
-from src.domain.value_objects.price import Price
-from src.domain.enums.publication import PublicationStatus
+from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.presentation.telegram.features.user.modules.ad.create_ad.texts import (
     PLATE_BUY_EDIT_TEXT,
     PLATE_SALE_EDIT_TEXT,
 )
-from src.presentation.telegram.features.user.modules.ad.create_ad.validators import (
-    validate_phone_number,
-    validate_price,
-)
+from src.presentation.telegram.utils.text_validators import validate_phone_number
+from src.presentation.telegram.features.user.modules.ad.create_ad.validators import validate_price
 from .states import EditAdSG
 
 

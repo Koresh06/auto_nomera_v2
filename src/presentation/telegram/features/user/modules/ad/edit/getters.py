@@ -10,7 +10,7 @@ from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.publication.get_user import GetUserPublicationsRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
-from src.presentation.telegram.utils import build_media_attachment
+from src.presentation.telegram.utils.build_media import build_media_attachment
 
 
 @inject

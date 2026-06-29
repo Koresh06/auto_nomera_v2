@@ -10,7 +10,7 @@ from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.catalog.get_catalog_deferred_publications import CatalogItem, GetCatalogDeferredPublicationsRequest
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
-from src.presentation.telegram.utils import build_media_attachment
+from src.presentation.telegram.utils.build_media import build_media_attachment
 
 
 @inject
