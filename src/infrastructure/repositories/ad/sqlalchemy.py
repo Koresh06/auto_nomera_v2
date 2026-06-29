@@ -58,6 +58,27 @@ class SQLAlchemyAdRepo(AdRepository):
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
     
+    
+    async def find_store_by_user(
+        self,
+        user_id: int,
+        region_id: int,
+    ) -> Ad | None:
+        query = (
+            select(AdModel)
+            .where(
+                AdModel.user_id == user_id,
+                AdModel.region_id == region_id,
+                AdModel.ad_type == AdType.STORE,
+            )
+            .order_by(AdModel.created_at.desc())
+            .limit(1)
+        )
+        result = await self._session.execute(query)
+        model = result.scalar_one_or_none()
+        return model.to_entity() if model else None
+    
+    
     async def list_urgent_published(self, region_id: int) -> list[Ad]:
         query = (
             select(AdModel)
@@ -70,6 +91,7 @@ class SQLAlchemyAdRepo(AdRepository):
         )
         result = await self._session.execute(query)
         return [m.to_entity() for m in result.scalars().all()]
+    
     
     async def count_ads_by_user(
         self,

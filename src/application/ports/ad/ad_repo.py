@@ -16,6 +16,12 @@ class AdRepository(Protocol):
         plate_number: str,
     ) -> Ad | None: ...
 
+    async def find_store_by_user(
+        self,
+        user_id: int,
+        region_id: int,
+    ) -> Ad | None: ...
+
     async def list_urgent_published(self, region_id: int) -> list[Ad]: ...
 
     async def count_ads_by_user(
