@@ -18,6 +18,10 @@ from src.presentation.telegram.features.user.modules.profile.dialogs import prof
 from src.presentation.telegram.features.user.modules.paid_services.dialogs import paid_service_dialog, buy_service_dialog, pre_publication_dialog
 from src.presentation.telegram.features.user.modules.balance.dialogs import topup_dialog
 from src.presentation.telegram.features.user.modules.payment.dialogs import payment_dialog
+from src.presentation.telegram.features.user.modules.store.main.dialogs import store_main_dialog
+from src.presentation.telegram.features.user.modules.store.create.dialogs import create_store_dialog
+from src.presentation.telegram.features.user.modules.store.add_item.dialogs import store_add_items_dialog
+from src.presentation.telegram.features.user.modules.store.view_publish.dialogs import store_view_publish_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -45,4 +49,8 @@ def get_all_dialogs() -> list[Dialog]:
         pre_publication_dialog,
         topup_dialog,
         payment_dialog,
+        store_main_dialog,
+        create_store_dialog,
+        store_add_items_dialog,
+        store_view_publish_dialog,
     ]

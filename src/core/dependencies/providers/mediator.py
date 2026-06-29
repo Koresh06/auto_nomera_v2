@@ -85,6 +85,9 @@ from src.application.use_cases.slots.get_calendar import (
 )
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest, HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest, ReleaseHoldUseCase
+from src.application.use_cases.store.add_items import AddStoreItemsRequest, AddStoreItemsUseCase
+from src.application.use_cases.store.create import CreateStoreRequest, CreateStoreUseCase
+from src.application.use_cases.store.get_by_user import GetUserStoreRequest, GetUserStoreUseCase
 from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
     GetTgIdRequest,
@@ -149,7 +152,10 @@ class MediatorProvider(Provider):
         notify_pre_publication_users_use_case: NotifyPrePublicationUsersUseCase,
         approve_urgent_buyout_use_case: ApproveUrgentBuyoutUseCase,
         reject_urgnet_buyout_use_case: RejectUrgentBuyoutUseCase,
-        get_catalog_deferred_publications_use_case: GetCatalogDeferredPublicationsUseCase
+        get_catalog_deferred_publications_use_case: GetCatalogDeferredPublicationsUseCase,
+        get_user_store_use_case: GetUserStoreUseCase,
+        create_store_use_case: CreateStoreUseCase,
+        add_store_items_use_case: AddStoreItemsUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -216,5 +222,8 @@ class MediatorProvider(Provider):
         mediator.register(ApproveUrgentBuyoutRequest, approve_urgent_buyout_use_case)
         mediator.register(RejectUrgentBuyoutRequest, reject_urgnet_buyout_use_case)
         mediator.register(GetCatalogDeferredPublicationsRequest, get_catalog_deferred_publications_use_case)
-
+        mediator.register(GetUserStoreRequest, get_user_store_use_case)
+        mediator.register(CreateStoreRequest, create_store_use_case)
+        mediator.register(AddStoreItemsRequest, add_store_items_use_case)
+    
         return mediator

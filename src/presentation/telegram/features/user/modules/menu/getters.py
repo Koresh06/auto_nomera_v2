@@ -3,12 +3,14 @@ from datetime import datetime, timezone
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram_dialog import DialogManager
 
+from src.application.dtos.ad import AdDTO
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.user import UserDTO
 from src.application.exceptions.region import RegionNotFoundException
 from src.application.mediator import Mediator
 from src.application.use_cases.region.get_all import GetRegionsRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
+from src.application.use_cases.store.get_by_user import GetUserStoreRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 
 
@@ -38,10 +40,18 @@ async def getter_start_menu(
         and user.pre_publication_expires_at > now
     )
 
+    store: AdDTO | None = None
+    if user.region_id is not None:
+        store = await mediator.handle(
+            GetUserStoreRequest(user_id=user.id, region_id=user.region_id)
+        )
+
     return {
         "user": user,
         "title_region": title_region,
         "has_pre_publication": has_pre_publication,
+        "has_store": store is not None,
+        "store_ad_id": store.id if store else None,
     }
 
 @inject

@@ -80,6 +80,9 @@ from src.application.use_cases.slots.check_hold import CheckHoldUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
+from src.application.use_cases.store.add_items import AddStoreItemsUseCase
+from src.application.use_cases.store.create import CreateStoreUseCase
+from src.application.use_cases.store.get_by_user import GetUserStoreUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
 from src.application.use_cases.user.register import RegisterUserUseCase
 from src.application.use_cases.user.update import UpdateUserUseCase
@@ -701,3 +704,32 @@ class UseCasesProvider(Provider):
             publication_repo=publication_repo,
             settings=settings,
     )
+
+    @provide
+    def get_user_store_use_case(
+        self,
+        ad_repo: AdRepository,
+    ) -> GetUserStoreUseCase:
+        return GetUserStoreUseCase(ad_repo=ad_repo)
+    
+    @provide
+    def create_store_use_case(
+        self,
+        ad_repo: AdRepository,
+        transaction_manager: TransactionManager,
+    ) -> CreateStoreUseCase:
+        return CreateStoreUseCase(
+            ad_repo=ad_repo,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide 
+    def add_store_items_use_case(
+        self, 
+        ad_repo: AdRepository,
+        transaction_manager: TransactionManager,
+    ) -> AddStoreItemsUseCase:
+        return AddStoreItemsUseCase(
+            ad_repo=ad_repo,
+            transaction_manager=transaction_manager,
+        )

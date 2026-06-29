@@ -28,6 +28,8 @@ from src.presentation.telegram.features.user.modules.menu.handlers import (
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 from src.presentation.telegram.features.user.modules.paid_services.states import PaidServiceSG
 from src.presentation.telegram.features.user.modules.profile.states import ProfileSG
+from src.presentation.telegram.features.user.modules.store.create.states import StoreCreateSG
+from src.presentation.telegram.features.user.modules.store.main.states import StoreMainSG
 from src.presentation.telegram.features.user.modules.urgent_buyout.states import UrgentBououtSG
 
 
@@ -61,18 +63,18 @@ user_menu_dialog = Dialog(
                 state=CreateAdSG.plate,
                 data={"ad_type": AdType.BUY},
             ),
-            # Start(
-            #     Const("🏦 Мой магазин"),
-            #     id="my_store",
-            #     state=ViewStoreSG.start,
-            #     when="has_store",
-            # ),
-            # Start(
-            #     Const("🏦 Создать магазин"),
-            #     id="create_store",
-            #     state=StoreSG.confirm_create,
-            #     when=~F["has_store"],
-            # ),
+            Start(
+                Const("🏦 Мой магазин"),
+                id="my_store",
+                state=StoreMainSG.main,
+                when="has_store",
+            ),
+            Start(
+                Const("🏦 Создать магазин"),
+                id="create_store",
+                state=StoreCreateSG.confirm_create,
+                when=~F["has_store"],
+            ),
         ),
         Column(
             Start(
