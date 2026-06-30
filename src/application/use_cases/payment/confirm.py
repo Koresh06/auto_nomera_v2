@@ -160,8 +160,8 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                 slot_dict = return_data["slot"]
                 slot = SlotKey(
                     region_id=slot_dict["region_id"],
-                    local_day=date.fromisoformat(slot_dict["local_day"]),
-                    local_time=time.fromisoformat(slot_dict["local_time"]),
+                    local_day=date.fromisoformat(slot_dict["slot_day"]),
+                    local_time=time.fromisoformat(slot_dict["slot_time"]),
                 )
                 await self.reservation_service.converted_repo.mark_converted(
                     slot=slot,
