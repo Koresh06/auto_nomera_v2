@@ -250,8 +250,8 @@ async def _start_slot_payment(
                 "ad_id": ad.id,
                 "slot": {
                     "region_id": user.region_id,
-                    "local_day": slot.local_day.isoformat(),
-                    "local_time": slot.local_time.isoformat(),
+                    "slot_day": slot.local_day.isoformat(),
+                    "slot_time": slot.local_time.isoformat(),
                 },
                 "is_paid": True,
             },

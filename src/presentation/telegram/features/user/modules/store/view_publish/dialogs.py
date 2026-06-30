@@ -3,21 +3,40 @@ from aiogram.enums.button_style import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import (
-    Column, Next, Cancel, Back, Button, Group, Select, Start,
+    Column,
+    Next,
+    Cancel,
+    Back,
+    Button,
+    Group,
+    Select,
+    Start,
 )
 from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
-from src.presentation.telegram.features.user.modules.store.main.states import StoreMainSG
-from src.presentation.telegram.features.user.modules.store.view_publish.getters import getter_confirm, getter_store_preview
-from src.presentation.telegram.features.user.modules.store.view_publish.handlers import on_confirm_publish
-from src.presentation.telegram.features.user.shared.ad_getters import calendar_getter, getter_finish, getter_publication_service
-from src.presentation.telegram.features.user.shared.ad_handlers import on_pick_slot, on_service_paid_selected
+from src.presentation.telegram.features.user.modules.store.main.states import (
+    StoreMainSG,
+)
+from src.presentation.telegram.features.user.modules.store.view_publish.getters import (
+    getter_confirm,
+    getter_store_preview,
+)
+from src.presentation.telegram.features.user.modules.store.view_publish.handlers import (
+    on_confirm_publish,
+)
+from src.presentation.telegram.features.user.shared.ad_getters import (
+    calendar_getter,
+    getter_finish,
+    getter_publication_service,
+)
+from src.presentation.telegram.features.user.shared.ad_handlers import (
+    on_pick_slot,
+    on_service_paid_selected,
+)
 
 from .states import StoreViewPublishSG
-
-
 
 store_view_publish_dialog = Dialog(
     Window(
@@ -98,7 +117,7 @@ store_view_publish_dialog = Dialog(
             when=~F["is_auto_pub"],
         ),
         Format(
-            "✅ Ваше объявление о продаже опубликовано в нашем телеграм канале: <a href='{channel_username}'>{region_title}</a>\n",
+            "✅ Ваше объявление о продаже опубликовано в нашем телеграм канале: <a href='https://t.me/{channel_username}'>{region_title}</a>\n",
             when="is_auto_pub",
         ),
         Const("‼️ Подписывайтесь на канал, чтобы не потерять объявление!\n\n"),

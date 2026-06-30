@@ -136,7 +136,7 @@ async def getter_user_ads_for_service(
     )
 
     seen_ad_ids: set[int] = set()
-    eligible = []
+    eligible: list[PublicationDTO] = []
     for p in sorted(publications, key=lambda x: x.id):
         if p.status not in (PublicationStatus.PUBLISHED, PublicationStatus.SCHEDULED):
             continue

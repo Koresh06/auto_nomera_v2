@@ -78,7 +78,6 @@ paid_service_dialog = Dialog(
             width=2,
         ),
         Next(Const("📂 Подключённые услуги")),
-        # Cancel(Const("⬅️ Назад")),
         Start(
             Const("⬅️ Назад"),
             id="general_menu",
