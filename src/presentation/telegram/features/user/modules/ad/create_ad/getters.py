@@ -146,8 +146,8 @@ async def getter_confirm(
                 local_time=time.fromisoformat(slot_raw["slot_time"]),
             )
             data["region_id"] = slot_raw["region_id"]
-            data["slot_day"] = slot_raw["local_day"]
-            data["slot_time"] = slot_raw["local_time"]
+            data["slot_day"] = slot_raw["slot_day"]
+            data["slot_time"] = slot_raw["slot_time"]
 
         data["ad_id"] = ad_id
         data["ad_type"] = ad.ad_type.value if hasattr(ad.ad_type, "value") else ad.ad_type
