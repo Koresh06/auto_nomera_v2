@@ -35,6 +35,7 @@ class AiogramTelegramPublisher(TelegramPublisher):
         msg = await self.bot.send_message(
             chat_id=channel_id,
             text=text,
+            disable_web_page_preview=True,
         )
         return PublishResult(
             channel_id=channel_id,
