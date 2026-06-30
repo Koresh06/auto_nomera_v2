@@ -10,6 +10,7 @@ from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.publication.get_user import GetUserPublicationsRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
+from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
 from src.presentation.telegram.utils.build_media import build_media_attachment
 
 
@@ -30,19 +31,32 @@ async def getter_list_publications(
         )
     )
 
-    seen_ad_ids: set[int] = set()
+    sorted_pubs = sorted(publications, key=lambda x: x.id)
+
+    autopublish_ad_ids = {
+        p.ad_id
+        for p in sorted_pubs
+        if any(
+            s.type == PublicationServiceType.AUTOPUBLISH
+            and s.status in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
+            for s in p.services
+        )
+    }
+
+    seen_autopublish_ad_ids: set[int] = set()
     filtered: list[PublicationDTO] = []
-    for p in sorted(publications, key=lambda x: x.id):
-        if p.ad_id in seen_ad_ids:
-            continue
-        seen_ad_ids.add(p.ad_id)
+    for p in sorted_pubs:
+        if p.ad_id in autopublish_ad_ids:
+            if p.ad_id in seen_autopublish_ad_ids:
+                continue
+            seen_autopublish_ad_ids.add(p.ad_id)
+
         filtered.append(p)
 
     dialog_manager.dialog_data["user_id"] = user.id
     dialog_manager.dialog_data["region_id"] = user.region_id
 
     return {"publications": filtered}
-
 
 @inject
 async def getter_detail(
