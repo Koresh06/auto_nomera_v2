@@ -140,10 +140,13 @@ async def getter_finish(
     else:
         selected_services = "Нет"
 
+    is_auto_pub = any(s.type == PublicationServiceType.PRIORITY_PUBLISH for s in active_services)
+    print(is_auto_pub)
+
     media_file_id = data.get("media_file_id") or (ad.content.image_file_id if ad.content else None)
 
     return {
-        "is_auto_pub": False,
+        "is_auto_pub": is_auto_pub,
         "media": build_media_attachment(media_file_id),
         "slot_day": slot.date_display if slot else "—",
         "slot_time": slot.time_display if slot else "—",
