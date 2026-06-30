@@ -31,7 +31,7 @@ async def getter_list_publications(
     )
 
     seen_ad_ids: set[int] = set()
-    filtered = []
+    filtered: list[PublicationDTO] = []
     for p in sorted(publications, key=lambda x: x.id):
         if p.ad_id in seen_ad_ids:
             continue

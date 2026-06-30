@@ -93,7 +93,7 @@ paid_service_dialog = Dialog(
         SmartScrollingText(
             text=Format("{cards_text}"),
             id="scroll_cards",
-            items_per_page=3,
+            items_per_page=8,
             when=F["has_any"],
         ),
         Row(

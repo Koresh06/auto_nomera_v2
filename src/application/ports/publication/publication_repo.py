@@ -18,7 +18,7 @@ class PublicationRepository(Protocol):
         self,
         user_id: int,
         region_id: int,
-    ) -> list[tuple[Publication, str | None]]: ...
+    ) -> list[tuple[Publication, str | None, str | None]]: ...
 
     async def count_scheduled_by_user(
         self,

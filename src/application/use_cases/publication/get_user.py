@@ -32,4 +32,11 @@ class GetUserPublicationsUseCase(
             region_id=command.region_id,
         )
 
-        return [PublicationDTO.from_entity(pub, plate) for pub, plate in rows]
+        return [
+            PublicationDTO.from_entity(
+                pub,
+                plate_number=plate,
+                shop_name=shop_name,
+            )
+            for pub, plate, shop_name in rows
+        ]

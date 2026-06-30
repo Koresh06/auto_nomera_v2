@@ -12,7 +12,7 @@ class SmartScrollingText(Text, BaseScroll):
         self,
         text: Text,
         id: str,
-        items_per_page: int = 3,  # сколько карточек показывать на одной странице
+        items_per_page: int = 3,
         when: WhenCondition = None,
         on_page_changed: OnPageChangedVariants = None,
     ):

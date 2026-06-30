@@ -38,7 +38,7 @@ edit_ad_dialog = Dialog(
         Const("📋 У вас пока нет объявлений", when=~F["publications"]),
         ScrollingGroup(
             Select(
-                Format("{item.plate_number} — {item.slot_display}"),
+                Format("{item.display_title} — {item.slot_display}"),
                 id="pub_select",
                 item_id_getter=lambda p: p.id,
                 items="publications",

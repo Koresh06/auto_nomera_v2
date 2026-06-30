@@ -100,13 +100,11 @@ async def getter_connected_services_user(
             continue
 
         service_lines = "\n".join(
-            f"  • {svc.type.display} — {svc.price_paid_display}"
+            f"  • {svc.type.display} — {svc.price_paid_display} ({svc.created_at_display})"
             for svc in active_services
         )
-
         cards.append(
-            f"🚘 <b>{pub.plate_number or '—'}</b> ({pub.slot_display})\n"
-            f"{service_lines}"
+            f"<b>{pub.display_title}</b> ({pub.slot_display})\n{service_lines}"
         )
 
     has_any = len(cards) > 0
@@ -144,24 +142,26 @@ async def getter_user_ads_for_service(
             continue
 
         has_autopublish = any(
-            s.type == PublicationServiceType.AUTOPUBLISH
-            for s in p.services
+            s.type == PublicationServiceType.AUTOPUBLISH for s in p.services
         )
 
         if has_autopublish:
             seen_ad_ids.add(p.ad_id)
-            continue  
+            continue
 
         if any(
-            s.type == service_type and s.status in (
-                PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED
-            )
+            s.type == service_type
+            and s.status
+            in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
             for s in p.services
         ):
             seen_ad_ids.add(p.ad_id)
             continue
 
-        if service_type == PublicationServiceType.PRIORITY_PUBLISH and p.status != PublicationStatus.SCHEDULED:
+        if (
+            service_type == PublicationServiceType.PRIORITY_PUBLISH
+            and p.status != PublicationStatus.SCHEDULED
+        ):
             seen_ad_ids.add(p.ad_id)
             continue
 
@@ -171,13 +171,12 @@ async def getter_user_ads_for_service(
     ads = [
         {
             "id": p.id,
-            "title": f"{p.plate_number or '—'} — {p.slot_display}",
+            "title": f"{p.display_title or '—'} — {p.slot_display}",
         }
         for p in eligible
     ]
 
     dialog_manager.dialog_data["user_id"] = user.id
-
 
     return {
         "ads": ads,
@@ -230,7 +229,6 @@ async def getter_pre_publication_confirm(
     definition = next(
         (d for d in definitions if d.type == PublicationServiceType.PRE_PUBLICATION)
     )
-    
 
     now = datetime.now(timezone.utc)
     already_active = (
@@ -253,11 +251,18 @@ async def getter_pre_publication_confirm(
     return {
         "service_name": definition.title if definition else "",
         "price_text": definition.price_display if definition else "—",
-        "duration_text": str(definition.duration_days) if definition and definition.duration_days else "30",
+        "duration_text": (
+            str(definition.duration_days)
+            if definition and definition.duration_days
+            else "30"
+        ),
         "already_active": already_active,
         "current_expires_display": (
             user.pre_publication_expires_at.strftime("%d.%m.%Y")
-            if already_active else None
+            if already_active
+            else None
         ),
-        "new_expires_display": new_expires_at.strftime("%d.%m.%Y") if new_expires_at else None,
+        "new_expires_display": (
+            new_expires_at.strftime("%d.%m.%Y") if new_expires_at else None
+        ),
     }

@@ -113,6 +113,7 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
                 status=s.status,
                 price_paid=s.price_paid,
                 params=s.params or {},
+                created_at=s.created_at,
             )
             for s in (self.services or [])
         ]

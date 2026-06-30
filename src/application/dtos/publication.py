@@ -20,10 +20,15 @@ class PublicationDTO:
     scheduler_job_id: str | None
     services: list[PublicationServiceDTO]
     plate_number: str | None = None
-
+    shop_name: str | None = None
 
     @classmethod
-    def from_entity(cls, publication: "Publication", plate_number: str | None = None) -> "PublicationDTO":
+    def from_entity(
+        cls,
+        publication: "Publication",
+        plate_number: str | None = None,
+        shop_name: str | None = None,
+    ) -> "PublicationDTO":
         return cls(
             id=publication.id,
             ad_id=publication.ad_id,
@@ -36,6 +41,7 @@ class PublicationDTO:
             scheduler_job_id=publication.scheduler_job_id,
             services=[PublicationServiceDTO.from_entity(s) for s in publication.services],
             plate_number=plate_number,
+            shop_name=shop_name,
         )
     
     @property
@@ -43,3 +49,9 @@ class PublicationDTO:
         if self.slot is None:
             return "—"
         return self.slot.to_display
+    
+    @property
+    def display_title(self) -> str:
+        if self.shop_name:
+            return f"🏦 {self.shop_name}"
+        return f"🚘 {self.plate_number or '—'}"
