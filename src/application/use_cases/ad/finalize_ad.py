@@ -3,11 +3,9 @@ from dataclasses import dataclass
 
 from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
-from src.application.ports.region.region_repo import RegionRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.ad import AdType
 from src.domain.services.ad.plate_validator import validate_plate
-from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
 logger = logging.getLogger(__name__)

@@ -6,9 +6,6 @@ from dishka.integrations.aiogram import inject
 
 from src.application.mediator import Mediator
 from src.application.use_cases.payment.confirm import ConfirmPaymentRequest
-from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdRequest
-from src.domain.entities.payment import Payment
-from src.domain.enums.payment import PaymentPurpose
 
 
 logger = logging.getLogger(__name__)

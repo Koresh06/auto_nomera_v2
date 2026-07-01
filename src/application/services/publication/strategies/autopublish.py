@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 from src.domain.entities.publication import Publication
 from src.domain.entities.publication_service import PublicationService

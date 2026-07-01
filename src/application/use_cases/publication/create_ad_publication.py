@@ -3,7 +3,6 @@ import logging
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
-from src.application.ports.ad.ad_repo import AdRepository
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest, CreateAdDraftUseCase
 from src.application.use_cases.ad.finalize_ad import FinalizeAdRequest, FinalizeAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest, UpdateAdContentUseCase

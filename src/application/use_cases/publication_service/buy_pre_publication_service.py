@@ -6,7 +6,6 @@ from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.publication_service.service_definition_repo import ServiceDefinitionRepository
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
-from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.publication_service import PublicationServiceType
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 

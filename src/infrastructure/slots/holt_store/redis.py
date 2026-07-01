@@ -3,7 +3,6 @@ from datetime import timedelta
 from typing import Iterable, Set
 from redis.asyncio import Redis
 
-from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.domain.value_objects.hold_owner import HoldOwner
 from src.domain.value_objects.slot_key import SlotKey
 

@@ -6,8 +6,6 @@ from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.ad import Ad
-from src.domain.enums.ad import AdStatus, AdType
-from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 logger = logging.getLogger(__name__)
 

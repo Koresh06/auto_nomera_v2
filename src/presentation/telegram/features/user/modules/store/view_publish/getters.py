@@ -9,9 +9,6 @@ from src.application.mediator import Mediator
 from src.application.use_cases.store.get_by_user import GetUserStoreRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
-from src.application.use_cases.region.get_by_id import IdRegionRequest
-from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
-from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
 from src.domain.value_objects.slot_key import SlotKey
 
 

@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 
 from dishka.integrations.aiogram_dialog import FromDishka, inject
 from aiogram_dialog import DialogManager

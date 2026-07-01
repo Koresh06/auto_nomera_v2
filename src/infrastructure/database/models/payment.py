@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Integer, Numeric, String, Enum as SaEnum, BigInteger, DateTime
+from sqlalchemy import ForeignKey, Integer, Numeric, String, Enum as SaEnum, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

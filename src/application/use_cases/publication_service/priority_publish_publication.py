@@ -5,7 +5,6 @@ from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.use_cases.base import UseCase, UseCaseRequest
-from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
 from src.infrastructure.database.transaction_manager.base import TransactionManager

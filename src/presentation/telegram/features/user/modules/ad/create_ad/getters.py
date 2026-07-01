@@ -6,22 +6,14 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
 
 from src.application.dtos.ad import AdDTO
-from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.region import RegionDTO
-from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefRequest
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
-from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
-from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
-from src.domain.enums.publication_service import (
-    PublicationServiceStatus,
-    PublicationServiceType,
-)
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey

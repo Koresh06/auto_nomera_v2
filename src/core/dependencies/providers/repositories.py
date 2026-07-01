@@ -14,30 +14,13 @@ from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.application.ports.user.user_repo import UserRepository
-from src.infrastructure.repositories.ad.in_memory import InMemoryAdRepo
 from src.infrastructure.repositories.ad.sqlalchemy import SQLAlchemyAdRepo
 from src.infrastructure.repositories.payment.sqlalchemy import SQLAlchemyPaymentRepo
-from src.infrastructure.repositories.publication.in_memory import (
-    InMemoryPublicationRepo,
-)
 from src.infrastructure.repositories.publication.sqlalchemy import SQLAlchemyPublicationRepo
-from src.infrastructure.repositories.region.in_memory import (
-    InMemoryRegionRepo,
-    region_1,
-)
 from src.infrastructure.repositories.region.sqlalchemy import SQLAlchemyRegionRepository
-from src.infrastructure.repositories.service_def.in_memory import (
-    InMemoryServiceDefinitionRepository,
-)
 from src.infrastructure.repositories.service_def.sqlalchemy import SQLAlchemyServiceDefinitionRepo
-from src.infrastructure.repositories.slot.in_memory import (
-    InMemorySlotBookingRepo,
-    InMemorySlotConvertedRepo,
-)
 from src.infrastructure.repositories.slot.sqlalchemy import SQLAlchemySlotBookingRepo, SQLAlchemySlotConvertedRepo
-from src.infrastructure.repositories.user.in_memory import InMemoryUserRepo
 from src.infrastructure.repositories.user.sqlalchemy import SQLAlchemyUserRepo
-from src.infrastructure.slots.holt_store.in_memory import InMemorySlotHoldStore
 from src.infrastructure.slots.holt_store.redis import RedisSlotHoldStore
 
 

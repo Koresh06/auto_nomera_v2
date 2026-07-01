@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import logging
 
 from src.application.exceptions.ad import AdNotFoundException
-from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.region import RegionNotFoundException
 from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository

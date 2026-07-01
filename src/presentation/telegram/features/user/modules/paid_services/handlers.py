@@ -15,7 +15,6 @@ from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.exceptions.user import InsufficientBalance
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.service_definition import ServiceDefinitionDTO
-from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.application.use_cases.publication_service.apply_service import (

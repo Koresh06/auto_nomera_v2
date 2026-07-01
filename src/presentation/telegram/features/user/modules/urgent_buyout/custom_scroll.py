@@ -7,7 +7,6 @@ from aiogram_dialog.widgets.common import WhenCondition
 from aiogram_dialog.widgets.common import (
     BaseScroll,
     OnPageChangedVariants,
-    WhenCondition,
 )
 from aiogram_dialog.widgets.kbd.base import Keyboard
 
@@ -53,7 +52,7 @@ class CatalogScroll(BaseScroll, Keyboard):
                 ),
                 InlineKeyboardButton(
                     text=f"📄 {current_page + 1} / {pages}",
-                    callback_data=self._item_callback_data(f"list"),
+                    callback_data=self._item_callback_data("list"),
                 ),
                 InlineKeyboardButton(
                     text="➡️",

@@ -19,10 +19,6 @@ from src.application.use_cases.publication.finalize_and_schedule_existing_ad imp
 )
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdStatus, AdType
-from src.domain.exceptions.slot_reservation import (
-    SlotHoldNotFound,
-    SlotHoldOwnerMismatch,
-)
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
@@ -41,7 +37,6 @@ from src.application.mediator import Mediator
 from src.application.use_cases.publication.create_ad_publication import (
     CreateAndScheduleAdRequest,
 )
-from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
 from src.application.use_cases.user.update import UpdateUserRequest
 from src.presentation.telegram.features.user.modules.ad.create_ad.states import (
     CreateAdSG,
