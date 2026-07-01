@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class Price:
-    value: int  # 0 = договорная
+    value: int
 
     @staticmethod
     def format(value: int) -> str:

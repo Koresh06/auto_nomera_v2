@@ -30,7 +30,7 @@ from src.presentation.telegram.features.user.modules.ad.create_ad.texts import (
     PLATE_SALE_EDIT_TEXT,
 )
 from src.presentation.telegram.utils.text_validators import validate_phone_number
-from src.presentation.telegram.features.user.modules.ad.create_ad.validators import validate_price
+from src.presentation.telegram.utils.price_validators import validate_price
 from .states import EditAdSG
 
 

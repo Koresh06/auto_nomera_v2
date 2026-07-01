@@ -1,12 +1,10 @@
 import logging
 from datetime import date, time
-from decimal import Decimal
 
 from aiogram.types import Message, CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
-from aiogram_dialog.widgets.kbd import Select, Button
-from aiogram_dialog.widgets.kbd.select import OnItemClick
+from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.api.entities import MediaAttachment
 
 from dishka.integrations.aiogram_dialog import inject, FromDishka
@@ -21,38 +19,20 @@ from src.application.use_cases.publication.finalize_and_schedule_existing_ad imp
 )
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdStatus, AdType
-from src.domain.enums.payment import PaymentPurpose
-from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import (
-    PublicationServiceStatus,
-    PublicationServiceType,
-)
 from src.domain.exceptions.slot_reservation import (
     SlotHoldNotFound,
     SlotHoldOwnerMismatch,
 )
-from src.domain.exceptions.user import InsufficientBalance
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
-from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.use_cases.ad.find_by_plate import FindAdByPlateRequest
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.application.use_cases.publication.reuse_ad_and_schedule import (
     ReuseAdAndScheduleRequest,
-)
-from src.application.use_cases.publication_service.apply_service import (
-    ApplyServiceToPublishedRequest,
-)
-from src.application.use_cases.publication_service.buy_publication_service import (
-    BuyPublicationServiceRequest,
-)
-from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
-from src.application.use_cases.publication_service.priority_publish_publication import (
-    PriorityPublishPublicationRequest,
 )
 from src.application.use_cases.slots.check_hold import CheckHoldRequest
 from src.application.dtos.user import UpdateUserDTO, UserDTO
@@ -66,15 +46,11 @@ from src.application.use_cases.user.update import UpdateUserRequest
 from src.presentation.telegram.features.user.modules.ad.create_ad.states import (
     CreateAdSG,
 )
-from src.presentation.telegram.features.user.modules.ad.create_ad.validators import (
+from src.presentation.telegram.utils.price_validators import (
     validate_price,
     validate_price_urgent_buyout,
 )
 from src.presentation.telegram.features.user.modules.ad.edit.states import EditAdSG
-from src.presentation.telegram.features.user.modules.payment.helpers import (
-    PaymentStartParams,
-    start_payment,
-)
 from src.presentation.telegram.keyboards.urgent_moderation import (
     build_urgent_moderation_kb,
 )

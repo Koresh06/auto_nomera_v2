@@ -279,8 +279,6 @@ async def on_service_paid_selected(
     else:
         return_state = "CreateAdSG:publication_service"
 
-    print(return_state)
-
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=callback.from_user.id))
 
     logger.info(

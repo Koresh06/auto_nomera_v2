@@ -1,6 +1,3 @@
-import re
-
-
 def validate_price(value: str) -> int:
     """Валидирует и форматирует цену. Возвращает округлённое значение."""
     value = value.strip().replace(" ", "")

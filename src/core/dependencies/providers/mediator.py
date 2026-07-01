@@ -87,7 +87,10 @@ from src.application.use_cases.slots.hold_slot import HoldSlotRequest, HoldSlotU
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest, ReleaseHoldUseCase
 from src.application.use_cases.store.add_items import AddStoreItemsRequest, AddStoreItemsUseCase
 from src.application.use_cases.store.create import CreateStoreRequest, CreateStoreUseCase
+from src.application.use_cases.store.delete_items import DeleteStoreItemRequest, DeleteStoreItemUseCase
 from src.application.use_cases.store.get_by_user import GetUserStoreRequest, GetUserStoreUseCase
+from src.application.use_cases.store.update_items import UpdateStoreItemRequest, UpdateStoreItemUseCase
+from src.application.use_cases.store.update_store import UpdateStoreRequest, UpdateStoreUseCase
 from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
     GetTgIdRequest,
@@ -156,6 +159,9 @@ class MediatorProvider(Provider):
         get_user_store_use_case: GetUserStoreUseCase,
         create_store_use_case: CreateStoreUseCase,
         add_store_items_use_case: AddStoreItemsUseCase,
+        update_store_use_case: UpdateStoreUseCase,
+        update_store_item_use_case: UpdateStoreItemUseCase,
+        delete_store_item_use_case: DeleteStoreItemUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -225,5 +231,8 @@ class MediatorProvider(Provider):
         mediator.register(GetUserStoreRequest, get_user_store_use_case)
         mediator.register(CreateStoreRequest, create_store_use_case)
         mediator.register(AddStoreItemsRequest, add_store_items_use_case)
-    
+        mediator.register(UpdateStoreRequest, update_store_use_case)
+        mediator.register(UpdateStoreItemRequest, update_store_item_use_case)
+        mediator.register(DeleteStoreItemRequest, delete_store_item_use_case)
+
         return mediator

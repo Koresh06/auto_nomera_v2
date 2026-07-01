@@ -22,6 +22,8 @@ from src.presentation.telegram.features.user.modules.store.main.dialogs import s
 from src.presentation.telegram.features.user.modules.store.create.dialogs import create_store_dialog
 from src.presentation.telegram.features.user.modules.store.add_item.dialogs import store_add_items_dialog
 from src.presentation.telegram.features.user.modules.store.view_publish.dialogs import store_view_publish_dialog
+from src.presentation.telegram.features.user.modules.store.edit_store.dialogs import store_edit_dialog
+from src.presentation.telegram.features.user.modules.store.edit_item.dialogs import store_edit_items_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -53,4 +55,6 @@ def get_all_dialogs() -> list[Dialog]:
         create_store_dialog,
         store_add_items_dialog,
         store_view_publish_dialog,
+        store_edit_dialog,
+        store_edit_items_dialog,
     ]

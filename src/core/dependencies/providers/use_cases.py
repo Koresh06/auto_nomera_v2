@@ -82,7 +82,10 @@ from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
 from src.application.use_cases.store.add_items import AddStoreItemsUseCase
 from src.application.use_cases.store.create import CreateStoreUseCase
+from src.application.use_cases.store.delete_items import DeleteStoreItemUseCase
 from src.application.use_cases.store.get_by_user import GetUserStoreUseCase
+from src.application.use_cases.store.update_items import UpdateStoreItemUseCase
+from src.application.use_cases.store.update_store import UpdateStoreUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
 from src.application.use_cases.user.register import RegisterUserUseCase
 from src.application.use_cases.user.update import UpdateUserUseCase
@@ -733,3 +736,36 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
         )
+    
+    @provide
+    def update_store_use_case(
+        self,
+        ad_repo: AdRepository,
+        transaction_manager: TransactionManager,
+    ) -> UpdateStoreUseCase:
+        return UpdateStoreUseCase(
+            ad_repo=ad_repo,
+            transaction_manager=transaction_manager,
+    )
+
+    @provide
+    def update_store_item_use_case(
+        self,
+        ad_repo: AdRepository,
+        transaction_manager: TransactionManager,
+    ) -> UpdateStoreItemUseCase:
+        return UpdateStoreItemUseCase(
+            ad_repo=ad_repo,
+            transaction_manager=transaction_manager,
+    )
+
+    @provide
+    def delete_store_item_use_case(
+        self,
+        ad_repo: AdRepository,
+        transaction_manager: TransactionManager,
+    ) -> DeleteStoreItemUseCase:
+        return DeleteStoreItemUseCase(
+            ad_repo=ad_repo,
+            transaction_manager=transaction_manager,
+    )
