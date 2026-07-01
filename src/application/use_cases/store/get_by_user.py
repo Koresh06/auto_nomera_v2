@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.application.dtos.ad import AdDTO
@@ -21,5 +22,5 @@ class GetUserStoreUseCase(UseCase[GetUserStoreRequest, AdDTO | None]):
             region_id=command.region_id,
         )
         if ad is None:
-            return None
+            raise AdNotFoundException
         return AdDTO.from_entity(ad)

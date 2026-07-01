@@ -94,7 +94,7 @@ class AdModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
                 items.append(
                     StoreItem(
                         plate=item["plate"],
-                        price=Price(item["price"]),
+                        price=Price(int(item["price"])),
                     )
                 )
             if self.shop_name:
