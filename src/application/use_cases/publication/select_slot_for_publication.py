@@ -129,3 +129,4 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         logger.info(
             f"[SelectSlot:done] pub_id={publication.id} status={publication.status}"
         )
+        

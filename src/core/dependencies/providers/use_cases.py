@@ -4,7 +4,7 @@ from dishka import Provider, provide, Scope
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
-from src.application.ports.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceUseCase
+from src.application.use_cases.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceUseCase
 from src.application.services.payment.provider_registry import PaymentProviderRegistry
 from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdUseCase
 from src.application.use_cases.payment.mark import MarkPaymentFailedUseCase

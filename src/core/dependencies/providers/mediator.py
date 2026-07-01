@@ -1,7 +1,7 @@
 from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
-from src.application.ports.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest, ConfirmPaidSlotFromBalanceUseCase
+from src.application.use_cases.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest, ConfirmPaidSlotFromBalanceUseCase
 from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdRequest, GetPaymentByExternalIdUseCase
 from src.application.use_cases.payment.mark import MarkPaymentFailedRequest, MarkPaymentFailedUseCase
 from src.application.use_cases.publication.finalize_and_schedule_existing_ad import FinalizeAndScheduleExistingAdRequest, FinalizeAndScheduleExistingAdUseCase
