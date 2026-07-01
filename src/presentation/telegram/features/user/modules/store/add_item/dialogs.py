@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.kbd import Button, Cancel, Start, Column, Back
 from src.domain.services.ad.store_validator import parse_store_validator
 from src.presentation.telegram.features.error_handlers import on_input_error
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
-from src.presentation.telegram.features.user.modules.store.edit_item.states import StoreEditItemsSG
+from src.presentation.telegram.features.user.modules.store.edit_items.states import StoreEditItemsSG
 from src.presentation.telegram.features.user.modules.store.main.states import StoreMainSG
 from src.presentation.telegram.features.user.modules.store.view_publish.states import StoreViewPublishSG
 from .states import StoreAddItemsSG

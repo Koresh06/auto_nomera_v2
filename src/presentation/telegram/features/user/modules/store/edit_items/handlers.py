@@ -12,7 +12,7 @@ from src.application.use_cases.store.delete_items import DeleteStoreItemRequest
 from src.application.use_cases.store.update_items import UpdateStoreItemRequest
 from src.domain.services.ad.plate_validator import validate_plate
 from src.presentation.telegram.utils.price_validators import validate_price
-from src.presentation.telegram.features.user.modules.store.edit_item.states import StoreEditItemsSG
+from src.presentation.telegram.features.user.modules.store.edit_items.states import StoreEditItemsSG
 
 
 @inject

@@ -21,6 +21,6 @@ class PublicationServiceType(str, Enum):
 
 class PublicationServiceStatus(str, Enum):
     ACTIVE = "active" # активная услуга
-    USED = "used" # использована, но не оплачена
+    USED = "used" # использована
     CANCELED = "canceled" # отменена
     EXPIRED = "expired" # просрочена

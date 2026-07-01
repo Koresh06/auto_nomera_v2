@@ -1,8 +1,8 @@
 from decimal import Decimal
 import logging
 
-from aiogram.types import  CallbackQuery
-from aiogram_dialog import  DialogManager
+from aiogram.types import CallbackQuery
+from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 from aiogram_dialog.api.entities import MediaAttachment
@@ -19,15 +19,24 @@ from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefReq
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
-from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedRequest
-from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest
+from src.application.use_cases.publication_service.apply_service import (
+    ApplyServiceToPublishedRequest,
+)
+from src.application.use_cases.publication_service.buy_publication_service import (
+    BuyPublicationServiceRequest,
+)
 from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
-from src.application.use_cases.publication_service.priority_publish_publication import PriorityPublishPublicationRequest
+from src.application.use_cases.publication_service.priority_publish_publication import (
+    PriorityPublishPublicationRequest,
+)
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdStatus, AdType
 from src.domain.enums.payment import PaymentPurpose
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 from src.domain.exceptions.slot_reservation import (
     SlotAlreadyConverted,
     SlotAlreadyHeld,
@@ -45,7 +54,7 @@ from src.application.use_cases.publication.check_limiter import (
     CheckPublicationLimitRequest,
 )
 from src.application.use_cases.region.get_by_id import IdRegionRequest
-from src.application.dtos.user import  UserDTO
+from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest
 from src.presentation.telegram.features.user.modules.payment.helpers import (
@@ -181,7 +190,6 @@ async def _start_slot_payment(
     else:
         return_state = "CreateAdSG:confirm"
 
-
     if ad_type == AdType.STORE.value:
         store_ad_id: int = data["ad_id"]
         ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=store_ad_id))
@@ -289,9 +297,17 @@ async def on_service_paid_selected(
         GetPublicationByIdRequest(publication_id=pub_id)
     )
     bought_types = {
-        s.type for s in pub.services if s.status == PublicationServiceStatus.ACTIVE
+        s.type
+        for s in pub.services
+        if s.status in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
     }
-    if item_id in bought_types:
+    logger.info(
+        f"[ServiceSelected:check] service_type={service_type} "
+        f"pub.services={[(s.type, s.status) for s in pub.services]} "
+        f"bought_types={bought_types}"
+    )
+
+    if service_type in bought_types:
         await callback.answer("⚠️ Эта услуга уже активна.", show_alert=True)
         return
 
