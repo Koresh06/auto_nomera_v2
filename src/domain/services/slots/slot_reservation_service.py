@@ -6,7 +6,6 @@ from src.application.ports.slots.slot_converted_repo import SlotConvertedReposit
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.domain.exceptions.slot_reservation import (
     SlotAlreadyBooked,
-    SlotAlreadyConverted,
     SlotAlreadyHeld,
     SlotHoldNotFound,
     SlotHoldOwnerMismatch,
@@ -15,7 +14,6 @@ from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.value_objects.hold_owner import HoldOwner
 from src.domain.value_objects.slot_key import SlotKey
 from src.utils.get_datetime_utc_now import get_datetime_utc_now
-
 
 @dataclass(slots=True)
 class HoldResult:
@@ -43,32 +41,33 @@ class SlotReservationService:
     ) -> HoldResult:
         now = now_utc or get_datetime_utc_now()
         owner = HoldOwner(user_id=user_id)
-    
+
         if await self.booking_repo.is_booked(slot):
             raise SlotAlreadyBooked()
-    
+
         existing = await self.hold_store.get(slot)
         if existing is not None and existing != owner:
             raise SlotAlreadyHeld()
-    
+
         converted_info = await self.converted_repo.get_converted_owner_and_ad(slot)
         is_converted = converted_info is not None
-    
-        # своя незавершённая оплата — публикация ещё не создана этим юзером
-        is_own_pending_payment = (
-            converted_info is not None
-            and converted_info[0] == user_id
-            and converted_info[1] is None
-        )
-    
+        
+        is_own_pending_payment = False
+        if converted_info is not None:
+            converted_user_id, converted_ad_id = converted_info
+            is_own_pending_payment = (
+                converted_user_id == user_id
+                and converted_ad_id is None
+            )
+
         hold_until = now + self.hold_ttl
         await self.hold_store.set(slot, owner, self.hold_ttl)
-    
+
         is_system_paid = self.pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots, slot=slot
         )
         is_paid = (is_system_paid or is_converted) and not is_own_pending_payment
-    
+
         return HoldResult(
             slot=slot,
             hold_until_utc=hold_until,

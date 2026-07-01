@@ -29,6 +29,22 @@ class ReleaseHoldUseCase(UseCase[ReleaseHoldRequest, None]):
             slot=command.slot,
             user_id=command.user_id,
         )
-        logger.info("[ReleaseHold:done] slot released")
+
+        converted_info = await self.reservation_service.converted_repo.get_converted_owner_and_ad(
+            command.slot
+        )
+        if converted_info is not None:
+            converted_user_id, converted_ad_id = converted_info
+            if converted_user_id == command.user_id and converted_ad_id is None:
+                await self.reservation_service.converted_repo.unmark_converted(
+                    slot=command.slot,
+                    user_id=command.user_id,
+                )
+                logger.info(
+                    f"[ReleaseHold:unmark_converted] slot={command.slot.local_day} "
+                    f"{command.slot.local_time} user_id={command.user_id} "
+                    f"— paid but abandoned, keeping funds"
+                )
 
         await self.transaction_manager.commit()
+        logger.info("[ReleaseHold:done] slot released")
