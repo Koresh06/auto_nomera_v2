@@ -6,6 +6,7 @@ from aiogram_dialog import DialogManager
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.user import UserDTO
+from src.application.exceptions.ad import AdNotFoundException
 from src.application.exceptions.region import RegionNotFoundException
 from src.application.mediator import Mediator
 from src.application.use_cases.region.get_all import GetRegionsRequest
@@ -42,9 +43,12 @@ async def getter_start_menu(
 
     store: AdDTO | None = None
     if user.region_id is not None:
-        store = await mediator.handle(
-            GetUserStoreRequest(user_id=user.id, region_id=user.region_id)
-        )
+        try:
+            store = await mediator.handle(
+                GetUserStoreRequest(user_id=user.id, region_id=user.region_id)
+            )
+        except AdNotFoundException:
+            pass
 
     return {
         "user": user,

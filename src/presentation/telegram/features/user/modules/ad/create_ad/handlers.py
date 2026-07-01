@@ -235,39 +235,6 @@ async def on_price_input_success(
 
 
 @inject
-async def on_back_to_calendar(
-    callback: CallbackQuery,
-    widget: CallbackQuery,
-    dialog_manager: DialogManager,
-    mediator: FromDishka[Mediator],
-) -> None:
-    data = dialog_manager.dialog_data
-    user: UserDTO = await mediator.handle(
-        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
-    )
-
-    if "region_id" in data:
-        slot: SlotKey = SlotKey(
-            region_id=data["region_id"],
-            local_day=date.fromisoformat(data["slot_day"]),
-            local_time=time.fromisoformat(data["slot_time"]),
-        )
-        try:
-            await mediator.handle(
-                ReleaseHoldRequest(
-                    slot=slot,
-                    user_id=user.id,
-                )
-            )
-            logger.info("[ReleaseHold:done] slot released")
-        except (SlotHoldNotFound, SlotHoldOwnerMismatch) as e:
-            logger.info(str(e))
-        data.pop("region_id", None)
-        data.pop("slot_day", None)
-        data.pop("slot_time", None)
-
-
-@inject
 async def on_confirm_ad(
     callback: CallbackQuery,
     widget: Button,

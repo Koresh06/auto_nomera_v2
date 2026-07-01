@@ -1,3 +1,4 @@
+from datetime import date, time
 from decimal import Decimal
 import logging
 
@@ -11,7 +12,7 @@ from dishka.integrations.aiogram_dialog import inject, FromDishka
 
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.service_definition import ServiceDefinitionDTO
-from src.application.ports.slots.confirm_paid_slot_from_balance import (
+from src.application.use_cases.slots.confirm_paid_slot_from_balance import (
     ConfirmPaidSlotFromBalanceRequest,
 )
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
@@ -29,6 +30,7 @@ from src.application.use_cases.publication_service.get_all import GetAllServices
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationRequest,
 )
+from src.application.use_cases.slots.release_hold import ReleaseHoldRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdStatus, AdType
 from src.domain.enums.payment import PaymentPurpose
@@ -40,6 +42,8 @@ from src.domain.enums.publication_service import (
 from src.domain.exceptions.slot_reservation import (
     SlotAlreadyConverted,
     SlotAlreadyHeld,
+    SlotHoldNotFound,
+    SlotHoldOwnerMismatch,
 )
 from src.domain.exceptions.user import InsufficientBalance
 from src.domain.services.publication.limiter import LimitCheckResult
@@ -265,6 +269,40 @@ async def _start_slot_payment(
             },
         ),
     )
+
+
+@inject
+async def on_back_to_calendar(
+    callback: CallbackQuery,
+    widget: CallbackQuery,
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+) -> None:
+    data = dialog_manager.dialog_data
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
+
+    if "region_id" in data:
+        slot: SlotKey = SlotKey(
+            region_id=data["region_id"],
+            local_day=date.fromisoformat(data["slot_day"]),
+            local_time=time.fromisoformat(data["slot_time"]),
+        )
+        try:
+            await mediator.handle(
+                ReleaseHoldRequest(
+                    slot=slot,
+                    user_id=user.id,
+                )
+            )
+            logger.info("[ReleaseHold:done] slot released")
+        except (SlotHoldNotFound, SlotHoldOwnerMismatch) as e:
+            logger.info(str(e))
+        data.pop("region_id", None)
+        data.pop("slot_day", None)
+        data.pop("slot_time", None)
+
 
 
 @inject

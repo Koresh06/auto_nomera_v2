@@ -32,6 +32,7 @@ from src.presentation.telegram.features.user.shared.ad_getters import (
     getter_publication_service,
 )
 from src.presentation.telegram.features.user.shared.ad_handlers import (
+    on_back_to_calendar,
     on_pick_slot,
     on_service_paid_selected,
 )
@@ -48,10 +49,8 @@ store_view_publish_dialog = Dialog(
             "<b>Список доступных номеров:</b>\n\n"
             "{result_lines}"
         ),
-        Column(
-            Next(Const("✅ Публикация"), when="has_items"),
-            Cancel(Const("⬅️ Назад")),
-        ),
+        Next(Const("✅ Публикация"), when="has_items"),
+        Cancel(Const("⬅️ Назад"), style=Style(style=ButtonStyle.PRIMARY),),
         state=StoreViewPublishSG.preview,
         getter=getter_store_preview,
     ),
@@ -67,7 +66,10 @@ store_view_publish_dialog = Dialog(
             ),
             width=3,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StoreViewPublishSG.calendar,
         getter=calendar_getter,
     ),
@@ -81,13 +83,15 @@ store_view_publish_dialog = Dialog(
             "{result_lines}\n\n"
             "🕒 <b>Дата публикации</b>: {slot_day} {slot_time}\n\n"
         ),
-        Column(
-            Button(
-                Const("✅ Опубликовать"),
-                id="confirm_publish",
-                on_click=on_confirm_publish,
-            ),
-            Back(Const("⬅️ Назад")),
+        Button(
+            Const("✅ Опубликовать"),
+            id="confirm_publish",
+            on_click=on_confirm_publish,
+        ),
+        Back(
+            Const("⬅️ Назад"),
+            on_click=on_back_to_calendar,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=StoreViewPublishSG.confirm,
         getter=getter_confirm,

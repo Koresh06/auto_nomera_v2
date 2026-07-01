@@ -24,12 +24,11 @@ from src.domain.enums.ad import AdType
 from src.presentation.telegram.features.error_handlers import on_input_error
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 from src.presentation.telegram.features.user.shared.ad_getters import calendar_getter, getter_finish, getter_publication_service
-from src.presentation.telegram.features.user.shared.ad_handlers import on_pick_slot, on_service_paid_selected
+from src.presentation.telegram.features.user.shared.ad_handlers import on_back_to_calendar, on_pick_slot, on_service_paid_selected
 from src.presentation.telegram.utils.text_validators import capitalize_word, validate_phone_number
 
 from .states import CreateAdSG
 from .handlers import (
-    on_back_to_calendar,
     on_city_input,
     on_confirm_ad,
     on_delete_photo,
