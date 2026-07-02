@@ -22,7 +22,7 @@ class RegionSettings:
     )
     days_range: int = 7
     system_paid_slots_count: int = 3
-    publication_limit_enabled: bool = False
+    publication_limit_enabled: bool = True
     paid_slot_price: Decimal = Decimal("2")
 
     def __post_init__(self) -> None:

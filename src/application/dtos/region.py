@@ -18,6 +18,17 @@ class RegionDTO:
     metadata: RegionMetadata
     settings: RegionSettings
 
+    @property
+    def status_label(self) -> str:
+        return "🟢 Активен" if self.status == RegionStatus.ACTIVE else "🔴 Отключён"
+    
+    @property
+    def is_active(self) -> bool:
+        return self.status == RegionStatus.ACTIVE
+    
+    @property
+    def publication_limit_enabled_label(self) -> str:
+        return "✅ Включено" if self.settings.publication_limit_enabled else "❌ Отключено"
 
     @classmethod
     def from_entity(cls, region: Region) -> "RegionDTO":

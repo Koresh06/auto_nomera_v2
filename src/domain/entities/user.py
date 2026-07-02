@@ -88,3 +88,4 @@ class User(Entity):
             raise InsufficientBalance
         self.balance -= amount
         self.touch()
+

@@ -55,3 +55,7 @@ class Region(Entity):
     def update_settings(self, *, settings: RegionSettings) -> None:
         self.settings = settings
         self.touch()
+
+    def update_metadata(self, *, metadata: RegionMetadata) -> None:
+        self.metadata = metadata
+        self.touch()
