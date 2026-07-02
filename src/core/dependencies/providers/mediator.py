@@ -1,6 +1,9 @@
 from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
+from src.application.use_cases.region.toggle_status import ToggleRegionStatusCommand, ToggleRegionStatusUseCase
+from src.application.use_cases.region.update_metadata import UpdateRegionMetadataCommand, UpdateRegionMetadataUseCase
+from src.application.use_cases.region.update_settings import UpdateRegionSettingsCommand, UpdateRegionSettingsUseCase
 from src.application.use_cases.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest, ConfirmPaidSlotFromBalanceUseCase
 from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdRequest, GetPaymentByExternalIdUseCase
 from src.application.use_cases.payment.mark import MarkPaymentFailedRequest, MarkPaymentFailedUseCase
@@ -162,6 +165,9 @@ class MediatorProvider(Provider):
         update_store_use_case: UpdateStoreUseCase,
         update_store_item_use_case: UpdateStoreItemUseCase,
         delete_store_item_use_case: DeleteStoreItemUseCase,
+        update_region_setting_use_case: UpdateRegionSettingsUseCase,
+        update_region_metadata_use_case: UpdateRegionMetadataUseCase,
+        toggle_region_status_use_case: ToggleRegionStatusUseCase
     ) -> Mediator:
         mediator = Mediator()
 
@@ -234,5 +240,8 @@ class MediatorProvider(Provider):
         mediator.register(UpdateStoreRequest, update_store_use_case)
         mediator.register(UpdateStoreItemRequest, update_store_item_use_case)
         mediator.register(DeleteStoreItemRequest, delete_store_item_use_case)
+        mediator.register(UpdateRegionSettingsCommand, update_region_setting_use_case)
+        mediator.register(UpdateRegionMetadataCommand, update_region_metadata_use_case)
+        mediator.register(ToggleRegionStatusCommand, toggle_region_status_use_case)
 
         return mediator

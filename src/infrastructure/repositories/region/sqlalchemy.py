@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.application.exceptions.region import RegionNotFoundException
 from src.domain.entities.region import Region
 from src.application.ports.region.region_repo import RegionRepository
 from src.infrastructure.database.models import RegionModel
@@ -27,3 +28,14 @@ class SQLAlchemyRegionRepository(RegionRepository):
         await self._session.flush()
         await self._session.refresh(region_model)
         return region_model.to_entity()
+
+    async def update(self, region: Region) -> Region:
+        query = select(RegionModel).where(RegionModel.id == region.id)
+        result = await self._session.execute(query)
+        model = result.scalar_one_or_none()
+        if model is None:
+            raise RegionNotFoundException(region.id)
+        RegionModel._update_model(model, region)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return model.to_entity()

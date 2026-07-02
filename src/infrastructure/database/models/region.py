@@ -79,3 +79,18 @@ class RegionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             settings=RegionSettings(**settings_data),
             metadata=RegionMetadata(**(self.metadata_ or {})),
         )
+
+    def _update_model(self, region: "Region") -> None:
+        settings_dict = asdict(region.settings)
+        settings_dict["slot_times"] = [
+            t.strftime("%H:%M") for t in region.settings.slot_times
+        ]
+        settings_dict["paid_slot_price"] = str(region.settings.paid_slot_price)
+    
+        self.title = region.title
+        self.timezone = region.timezone.value
+        self.channel_id = region.channel_id
+        self.channel_username = region.channel_username
+        self.status = region.status
+        self.settings = settings_dict
+        self.metadata_ = asdict(region.metadata)

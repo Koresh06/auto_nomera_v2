@@ -4,6 +4,9 @@ from dishka import Provider, provide, Scope
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
+from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
+from src.application.use_cases.region.update_metadata import UpdateRegionMetadataUseCase
+from src.application.use_cases.region.update_settings import UpdateRegionSettingsUseCase
 from src.application.use_cases.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceUseCase
 from src.application.services.payment.provider_registry import PaymentProviderRegistry
 from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdUseCase
@@ -767,5 +770,38 @@ class UseCasesProvider(Provider):
     ) -> DeleteStoreItemUseCase:
         return DeleteStoreItemUseCase(
             ad_repo=ad_repo,
+            transaction_manager=transaction_manager,
+    )
+
+    @provide
+    def update_region_setting_use_case(
+        self,
+        region_repo: RegionRepository,
+        transaction_manager: TransactionManager,
+    ) -> UpdateRegionSettingsUseCase:
+        return UpdateRegionSettingsUseCase(
+            region_repo=region_repo,
+            transaction_manager=transaction_manager,
+    )
+
+    @provide
+    def update_region_metadata_use_case(
+        self,
+        region_repo: RegionRepository,
+        transaction_manager: TransactionManager,
+    ) -> UpdateRegionMetadataUseCase:
+        return UpdateRegionMetadataUseCase(
+            region_repo=region_repo,
+            transaction_manager=transaction_manager,
+    )
+
+    @provide
+    def toggle_region_status_use_case(
+        self,
+        region_repo: RegionRepository,
+        transaction_manager: TransactionManager,
+    ) -> ToggleRegionStatusUseCase:
+        return ToggleRegionStatusUseCase(
+            region_repo=region_repo,
             transaction_manager=transaction_manager,
     )
