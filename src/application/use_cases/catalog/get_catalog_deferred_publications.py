@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 
+from src.domain.services.region.region_guard import RegionGuard
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
@@ -27,11 +28,13 @@ class CatalogItem:
 
 @dataclass(kw_only=True)
 class GetCatalogDeferredPublicationsUseCase(UseCase[GetCatalogDeferredPublicationsRequest, list[CatalogItem]]):
+    region_guard: RegionGuard
     ad_repo: AdRepository
     publication_repo: PublicationRepository
     settings: AppSettings
 
     async def __call__(self, command: GetCatalogDeferredPublicationsRequest) -> list[CatalogItem]:
+        await self.region_guard.ensure_active(command.region_id)
         logger.info("[GetCatalog] region_id=%s", command.region_id)
 
         now_utc = datetime.now(timezone.utc)

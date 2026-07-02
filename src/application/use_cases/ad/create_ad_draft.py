@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from src.domain.entities.ad import Ad
 from src.domain.enums.ad import AdStatus, AdType
+from src.domain.services.region.region_guard import RegionGuard
 from src.application.dtos.ad import AdDTO
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
@@ -22,10 +23,12 @@ class CreateAdDraftRequest(UseCaseRequest):
 
 @dataclass(kw_only=True)
 class CreateAdDraftUseCase(UseCase[CreateAdDraftRequest, AdDTO]):
+    region_guard: RegionGuard
     ad_repo: AdRepository
     transaction_manager: TransactionManager
 
     async def __call__(self, command: CreateAdDraftRequest) -> AdDTO:
+        await self.region_guard.ensure_active(command.region_id)
         logger.info(
             f"[CreateAdDraft] user_id={command.user_id} "
             f"region_id={command.region_id} ad_type={command.ad_type}"

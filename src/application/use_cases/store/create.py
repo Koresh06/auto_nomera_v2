@@ -6,6 +6,7 @@ from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.application.dtos.ad import AdDTO
 from src.domain.entities.ad import Ad
 from src.domain.enums.ad import AdStatus, AdType
+from src.domain.services.region.region_guard import RegionGuard
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.store_content import StoreContent
 from src.infrastructure.database.transaction_manager.base import TransactionManager
@@ -26,10 +27,12 @@ class CreateStoreRequest(UseCaseRequest):
 
 @dataclass(kw_only=True)
 class CreateStoreUseCase(UseCase[CreateStoreRequest, AdDTO]):
+    region_guard: RegionGuard
     ad_repo: AdRepository
     transaction_manager: TransactionManager
 
     async def __call__(self, command: CreateStoreRequest) -> AdDTO:
+        await self.region_guard.ensure_active(command.region_id)
         existing = await self.ad_repo.find_store_by_user(
             user_id=command.user_id,
             region_id=command.region_id,

@@ -13,6 +13,7 @@ from src.application.use_cases.region.get_all import GetRegionsRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.store.get_by_user import GetUserStoreRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
+from src.domain.enums.region import RegionStatus
 
 
 @inject
@@ -65,7 +66,8 @@ async def list_regions_getter(
     **kwargs,
 ) -> dict[str, list[RegionDTO]]:
     regions: list[RegionDTO] = await mediator.handle(GetRegionsRequest())
-    return {"regions": regions}
+    active_regions: list[RegionDTO] = [r for r in regions if r.status == RegionStatus.ACTIVE]
+    return {"regions": active_regions}
 
 
 async def getter_user_menu(dialog_manager: DialogManager, **kwargs) -> dict:

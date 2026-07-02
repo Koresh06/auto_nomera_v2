@@ -2,6 +2,7 @@ from datetime import timedelta
 from aiogram import Bot
 from dishka import Provider, Scope, provide
 
+from src.application.ports.region.region_repo import RegionRepository
 from src.application.services.notification.notification_service import (
     NotificationService,
 )
@@ -14,6 +15,7 @@ from src.core.config import AppSettings
 from src.domain.enums.payment import PaymentMethod
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
+from src.domain.services.region.region_guard import RegionGuard
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
@@ -109,3 +111,7 @@ class ServicesProvider(Provider):
         )
         registry.register(PaymentMethod.CRYPTO, CryptomusProvider())
         return registry
+
+    @provide(scope=Scope.REQUEST)
+    def region_guard(self, region_repo: RegionRepository) -> RegionGuard:
+        return RegionGuard(region_repo)

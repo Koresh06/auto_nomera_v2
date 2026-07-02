@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from src.domain.services.region.region_guard import RegionGuard
 from src.application.dtos.calendar import CalendarDTO, CalendarSlotDTO
 from src.application.dtos.slot_key_codec import encode_slot_key
 from src.application.ports.region.region_repo import RegionRepository
@@ -19,6 +20,7 @@ class GetCalendarRequest(UseCaseRequest):
 
 @dataclass(kw_only=True)
 class GetCalendarUseCase(UseCase[GetCalendarRequest, CalendarDTO]):
+    region_guard: RegionGuard
     region_repo: RegionRepository
     booking_repo: SlotBookingRepository
     converted_repo: SlotConvertedRepository
@@ -26,6 +28,7 @@ class GetCalendarUseCase(UseCase[GetCalendarRequest, CalendarDTO]):
     calendar_builder: CalendarBuilder
 
     async def __call__(self, command: GetCalendarRequest) -> CalendarDTO:
+        await self.region_guard.ensure_active(command.region_id)
         now = command.now_utc or datetime.now(timezone.utc)
         region = await self.region_repo.get_by_id(command.region_id)
 

@@ -7,11 +7,17 @@ from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsUseCase
-from src.application.use_cases.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceUseCase
+from src.application.use_cases.slots.confirm_paid_slot_from_balance import (
+    ConfirmPaidSlotFromBalanceUseCase,
+)
 from src.application.services.payment.provider_registry import PaymentProviderRegistry
-from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdUseCase
+from src.application.use_cases.payment.get_by_external_id import (
+    GetPaymentByExternalIdUseCase,
+)
 from src.application.use_cases.payment.mark import MarkPaymentFailedUseCase
-from src.application.use_cases.publication.finalize_and_schedule_existing_ad import FinalizeAndScheduleExistingAdUseCase
+from src.application.use_cases.publication.finalize_and_schedule_existing_ad import (
+    FinalizeAndScheduleExistingAdUseCase,
+)
 from src.application.use_cases.publication.get_user import GetUserPublicationsUseCase
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
@@ -22,8 +28,12 @@ from src.application.ports.publication_service.service_definition_repo import (
 from src.application.ports.tasks.task_queue import TaskQueue
 from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.ports.user.user_repo import UserRepository
-from src.application.services.notification.notification_service import NotificationService
-from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutUseCase
+from src.application.services.notification.notification_service import (
+    NotificationService,
+)
+from src.application.use_cases.ad.approve_urgent_buyout import (
+    ApproveUrgentBuyoutUseCase,
+)
 from src.application.use_cases.ad.archive_ad import ArchiveAdUseCase
 from src.application.use_cases.ad.count_ads_by_user import CountAdsByUserUseCase
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftUseCase
@@ -33,12 +43,20 @@ from src.application.use_cases.ad.finalize_ad import FinalizeAdUseCase
 from src.application.use_cases.ad.find_by_plate import FindAdByPlateUseCase
 from src.application.use_cases.ad.get_by_id import GetByIdAdUseCase
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentUseCase
-from src.application.use_cases.catalog.get_catalog_deferred_publications import GetCatalogDeferredPublicationsUseCase
-from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentUseCase
-from src.application.use_cases.notification.notify_pre_publication_users import NotifyPrePublicationUsersUseCase
+from src.application.use_cases.catalog.get_catalog_deferred_publications import (
+    GetCatalogDeferredPublicationsUseCase,
+)
+from src.application.use_cases.notification.notify_admins_urgent import (
+    NotifyAdminsAboutUrgentUseCase,
+)
+from src.application.use_cases.notification.notify_pre_publication_users import (
+    NotifyPrePublicationUsersUseCase,
+)
 from src.application.use_cases.payment.confirm import ConfirmPaymentUseCase
 from src.application.use_cases.payment.create import CreatePaymentUseCase
-from src.application.use_cases.publication.check_limiter import CheckPublicationLimitUseCase
+from src.application.use_cases.publication.check_limiter import (
+    CheckPublicationLimitUseCase,
+)
 from src.application.use_cases.publication.create_ad_publication import (
     CreateAndScheduleAdUseCase,
 )
@@ -50,15 +68,25 @@ from src.application.use_cases.publication.get_by_id import GetPublicationByIdUs
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationUseCase,
 )
-from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdAndScheduleUseCase
+from src.application.use_cases.publication.reuse_ad_and_schedule import (
+    ReuseAdAndScheduleUseCase,
+)
 from src.application.use_cases.publication_service.add_service_to_publication import (
     AddServiceToPublicationUseCase,
 )
-from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedUseCase
-from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceUseCase
-from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceUseCase
+from src.application.use_cases.publication_service.apply_service import (
+    ApplyServiceToPublishedUseCase,
+)
+from src.application.use_cases.publication_service.buy_pre_publication_service import (
+    BuyPrePublicationServiceUseCase,
+)
+from src.application.use_cases.publication_service.buy_publication_service import (
+    BuyPublicationServiceUseCase,
+)
 from src.application.use_cases.publication_service.get_all import GetAllServicesUseCase
-from src.application.use_cases.publication_service.get_by_id import GetByIdServiceDefinitionUseCase
+from src.application.use_cases.publication_service.get_by_id import (
+    GetByIdServiceDefinitionUseCase,
+)
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationUseCase,
 )
@@ -78,7 +106,9 @@ from src.application.use_cases.publication_service.unpin_message import (
 from src.application.use_cases.region.create import CreateRegionUseCase
 from src.application.use_cases.region.get_all import GetAllRegionsUseCase
 from src.application.use_cases.region.get_by_id import GegByIdRegionUseCase
-from src.application.use_cases.seeds.service_definitions import SeedServiceDefinitionsUseCase
+from src.application.use_cases.seeds.service_definitions import (
+    SeedServiceDefinitionsUseCase,
+)
 from src.application.use_cases.slots.check_hold import CheckHoldUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
@@ -95,6 +125,7 @@ from src.application.use_cases.user.update import UpdateUserUseCase
 from src.core.config import AppSettings
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
+from src.domain.services.region.region_guard import RegionGuard
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
@@ -108,10 +139,12 @@ class UseCasesProvider(Provider):
     @provide
     def register_user_use_case(
         self,
+        region_guard: RegionGuard,
         user_repo: UserRepository,
         transaction_manager: TransactionManager,
     ) -> RegisterUserUseCase:
         return RegisterUserUseCase(
+            region_guard=region_guard,
             user_repo=user_repo,
             transaction_manager=transaction_manager,
         )
@@ -164,6 +197,7 @@ class UseCasesProvider(Provider):
     @provide
     def get_caledar_use_case(
         self,
+        region_guard: RegionGuard,
         region_repo: RegionRepository,
         booking_repo: SlotBookingRepository,
         converted_repo: SlotConvertedRepository,
@@ -171,6 +205,7 @@ class UseCasesProvider(Provider):
         calendar_builder: CalendarBuilder,
     ) -> GetCalendarUseCase:
         return GetCalendarUseCase(
+            region_guard=region_guard,
             region_repo=region_repo,
             booking_repo=booking_repo,
             converted_repo=converted_repo,
@@ -230,7 +265,7 @@ class UseCasesProvider(Provider):
             pricing_policy=pricing_policy,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def confirm_paid_slot_from_balance_use_case(
         self,
@@ -241,8 +276,8 @@ class UseCasesProvider(Provider):
         return ConfirmPaidSlotFromBalanceUseCase(
             user_repo=user_repo,
             converted_repo=converted_repo,
-            transaction_manager=transaction_manager
-    )
+            transaction_manager=transaction_manager,
+        )
 
     @provide
     def release_hold_use_case(
@@ -333,7 +368,7 @@ class UseCasesProvider(Provider):
             renderer=renderer,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def buy_publication_service_use_case(
         self,
@@ -348,7 +383,7 @@ class UseCasesProvider(Provider):
             service_def_repo=service_def_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def buy_pre_publication_service_use_case(
         self,
@@ -361,14 +396,14 @@ class UseCasesProvider(Provider):
             service_def_repo=service_def_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def get_publication_by_id_use_case(
         self,
         publication_repo: PublicationRepository,
     ) -> GetPublicationByIdUseCase:
         return GetPublicationByIdUseCase(publication_repo=publication_repo)
-    
+
     @provide
     def get_all_services_use_case(
         self,
@@ -385,35 +420,32 @@ class UseCasesProvider(Provider):
 
     @provide
     def ensure_ad_image_ref_use_case(
-        self,
-        bot: Bot,
-        message_manager: CustomMessageManager
+        self, bot: Bot, message_manager: CustomMessageManager
     ) -> EnsureAdImageRefUseCase:
-        return EnsureAdImageRefUseCase(
-            bot=bot,
-            message_manager=message_manager
-        )
+        return EnsureAdImageRefUseCase(bot=bot, message_manager=message_manager)
 
     @provide
     def create_ad_draft_use_case(
-        self, ad_repo: AdRepository, transaction_manager: TransactionManager
+        self,
+        region_guard: RegionGuard,
+        ad_repo: AdRepository,
+        transaction_manager: TransactionManager,
     ) -> CreateAdDraftUseCase:
         return CreateAdDraftUseCase(
+            region_guard=region_guard,
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
         )
 
     @provide
     def update_ad_content_use_case(
-        self,
-        ad_repo: AdRepository,
-        transaction_manager: TransactionManager
+        self, ad_repo: AdRepository, transaction_manager: TransactionManager
     ) -> UpdateAdContentUseCase:
         return UpdateAdContentUseCase(
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def get_by_id_ad_use_case(
         self,
@@ -429,7 +461,7 @@ class UseCasesProvider(Provider):
         return FinalizeAdUseCase(
             ad_repo=ad_repo,
         )
-    
+
     @provide
     def find_ad_by_plate_use_case(
         self,
@@ -438,7 +470,7 @@ class UseCasesProvider(Provider):
         return FindAdByPlateUseCase(
             ad_repo=ad_repo,
         )
-    
+
     @provide
     def archive_ad_use_case(
         self,
@@ -452,12 +484,11 @@ class UseCasesProvider(Provider):
             publication_repo=publication_repo,
             task_queue=task_queue,
             transaction_manager=transaction_manager,
-    )
+        )
 
-    @provide 
+    @provide
     def count_ads_by_user_use_case(
-        self,
-        ad_repo: AdRepository
+        self, ad_repo: AdRepository
     ) -> CountAdsByUserUseCase:
         return CountAdsByUserUseCase(ad_repo=ad_repo)
 
@@ -473,15 +504,17 @@ class UseCasesProvider(Provider):
             publication_repo=publication_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def check_publication_limit_use_case(
         self,
+        region_guard: RegionGuard,
         publication_repo: PublicationRepository,
         ad_repo: AdRepository,
-        region_repo: RegionRepository
+        region_repo: RegionRepository,
     ) -> CheckPublicationLimitUseCase:
         return CheckPublicationLimitUseCase(
+            region_guard=region_guard,
             publication_repo=publication_repo,
             ad_repo=ad_repo,
             region_repo=region_repo,
@@ -503,7 +536,7 @@ class UseCasesProvider(Provider):
             create_publication=create_publication,
             select_slot=select_slot,
         )
-    
+
     @provide
     def finalize_and_schedule_existing_ad_use_case(
         self,
@@ -516,17 +549,15 @@ class UseCasesProvider(Provider):
             create_publication=create_publication,
             select_slot=select_slot,
         )
-    
+
     @provide
     def check_hold_use_case(
-        self,
-        hold_store: SlotHoldStore,
-        converted_repo: SlotConvertedRepository
+        self, hold_store: SlotHoldStore, converted_repo: SlotConvertedRepository
     ) -> CheckHoldUseCase:
         return CheckHoldUseCase(
             hold_store=hold_store,
             converted_repo=converted_repo,
-    )
+        )
 
     @provide
     def reuse_ad_and_schedule_use_case(
@@ -538,7 +569,7 @@ class UseCasesProvider(Provider):
             create_publication=create_publication,
             select_slot=select_slot,
         )
-    
+
     @provide
     def create_payment_use_case(
         self,
@@ -582,7 +613,7 @@ class UseCasesProvider(Provider):
             teleporter=teleporter,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def get_payment_by_external_id_use_case(
         self,
@@ -591,7 +622,7 @@ class UseCasesProvider(Provider):
         return GetPaymentByExternalIdUseCase(
             payment_repo=payment_repo,
         )
-    
+
     @provide
     def mark_payment_failed_use_case(
         self,
@@ -602,7 +633,7 @@ class UseCasesProvider(Provider):
             payment_repo=payment_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def get_by_id_service_definition_use_case(
         self,
@@ -611,10 +642,10 @@ class UseCasesProvider(Provider):
         return GetByIdServiceDefinitionUseCase(
             service_def_repo=service_def_repo,
         )
-    
+
     @provide
     def seed_service_definitons_use_case(
-        self, 
+        self,
         service_def_repo: ServiceDefinitionRepository,
         transaction_manager: TransactionManager,
     ) -> SeedServiceDefinitionsUseCase:
@@ -622,10 +653,10 @@ class UseCasesProvider(Provider):
             service_def_repo=service_def_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def apply_service_to_published_use_case(
-        self, 
+        self,
         publication_repo: PublicationRepository,
         ad_repo: AdRepository,
         region_repo: RegionRepository,
@@ -649,7 +680,7 @@ class UseCasesProvider(Provider):
             time_resolver=time_resolver,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def notify_admins_urgent_use_case(
         self,
@@ -660,7 +691,7 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             notification_service=notification_service,
         )
-    
+
     @provide
     def notify_pre_publication_users_use_case(
         self,
@@ -673,7 +704,7 @@ class UseCasesProvider(Provider):
             user_repo=user_repo,
             notification_service=notification_service,
         )
-    
+
     @provide
     def approve_urgent_buyout_use_case(
         self,
@@ -686,7 +717,7 @@ class UseCasesProvider(Provider):
             task_queue=task_queue,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def reject_urgnet_buyout_use_case(
         self,
@@ -697,19 +728,21 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def get_catalog_deferred_publications_use_case(
         self,
+        region_guard: RegionGuard,
         ad_repo: AdRepository,
         publication_repo: PublicationRepository,
         settings: AppSettings,
     ) -> GetCatalogDeferredPublicationsUseCase:
         return GetCatalogDeferredPublicationsUseCase(
+            region_guard=region_guard,
             ad_repo=ad_repo,
             publication_repo=publication_repo,
             settings=settings,
-    )
+        )
 
     @provide
     def get_user_store_use_case(
@@ -717,21 +750,23 @@ class UseCasesProvider(Provider):
         ad_repo: AdRepository,
     ) -> GetUserStoreUseCase:
         return GetUserStoreUseCase(ad_repo=ad_repo)
-    
+
     @provide
     def create_store_use_case(
         self,
+        region_guard: RegionGuard,
         ad_repo: AdRepository,
         transaction_manager: TransactionManager,
     ) -> CreateStoreUseCase:
         return CreateStoreUseCase(
+            region_guard=region_guard,
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
         )
-    
-    @provide 
+
+    @provide
     def add_store_items_use_case(
-        self, 
+        self,
         ad_repo: AdRepository,
         transaction_manager: TransactionManager,
     ) -> AddStoreItemsUseCase:
@@ -739,7 +774,7 @@ class UseCasesProvider(Provider):
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def update_store_use_case(
         self,
@@ -749,7 +784,7 @@ class UseCasesProvider(Provider):
         return UpdateStoreUseCase(
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
-    )
+        )
 
     @provide
     def update_store_item_use_case(
@@ -760,7 +795,7 @@ class UseCasesProvider(Provider):
         return UpdateStoreItemUseCase(
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
-    )
+        )
 
     @provide
     def delete_store_item_use_case(
@@ -771,7 +806,7 @@ class UseCasesProvider(Provider):
         return DeleteStoreItemUseCase(
             ad_repo=ad_repo,
             transaction_manager=transaction_manager,
-    )
+        )
 
     @provide
     def update_region_setting_use_case(
@@ -782,7 +817,7 @@ class UseCasesProvider(Provider):
         return UpdateRegionSettingsUseCase(
             region_repo=region_repo,
             transaction_manager=transaction_manager,
-    )
+        )
 
     @provide
     def update_region_metadata_use_case(
@@ -793,7 +828,7 @@ class UseCasesProvider(Provider):
         return UpdateRegionMetadataUseCase(
             region_repo=region_repo,
             transaction_manager=transaction_manager,
-    )
+        )
 
     @provide
     def toggle_region_status_use_case(
@@ -804,4 +839,4 @@ class UseCasesProvider(Provider):
         return ToggleRegionStatusUseCase(
             region_repo=region_repo,
             transaction_manager=transaction_manager,
-    )
+        )

@@ -11,6 +11,7 @@ from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.region import Region
 from src.domain.enums.ad import AdType
 from src.domain.services.publication.limiter import FREE_LIMITS, INTERVAL, LimitCheckResult
+from src.domain.services.region.region_guard import RegionGuard
 
 
 @dataclass(frozen=True, eq=False)
@@ -25,11 +26,13 @@ class CheckPublicationLimitRequest(UseCaseRequest):
 
 @dataclass(kw_only=True)
 class CheckPublicationLimitUseCase(UseCase[CheckPublicationLimitRequest, LimitCheckResult]):
+    region_guard: RegionGuard
     publication_repo: PublicationRepository
     ad_repo: AdRepository
     region_repo: RegionRepository
 
     async def __call__(self, command: CheckPublicationLimitRequest) -> LimitCheckResult:
+        await self.region_guard.ensure_active(command.region_id)
         region: Region | None = await self.region_repo.get_by_id(command.region_id)
         if region is None:
             raise RegionNotFoundException(command.region_id)

@@ -25,3 +25,12 @@ class InvalidDaysRange(RegionDomainError):
 class InvalidSystemPaidSlotsCount(RegionDomainError):
     """Время начала и конца слота не соответствуют формату"""
     pass
+
+
+class RegionNotFoundException(RegionDomainError):
+    """Регион не найден"""
+    pass
+
+class RegionDisabledError(RegionDomainError):
+    """Регион не активен"""
+    pass

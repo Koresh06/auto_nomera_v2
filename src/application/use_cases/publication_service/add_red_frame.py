@@ -12,6 +12,6 @@ class AddRedFrameUseCase:
     def __init__(self, image_processor: ImageProcessor) -> None:
         self._image_processor = image_processor
 
-    async def execute(self, *, image_file_id: str) -> AddFrameResult:
-        image_file_id = await self._image_processor.add_red_frame(file_id=image_file_id)
+    async def execute(self, *,  chat_id: int, image_file_id: str) -> AddFrameResult:
+        image_file_id = await self._image_processor.add_red_frame(chat_id=chat_id, file_id=image_file_id)
         return AddFrameResult(image_file_id=image_file_id)
