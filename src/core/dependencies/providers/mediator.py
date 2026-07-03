@@ -105,6 +105,7 @@ from src.application.use_cases.user.register import (
     UserRegisterRequest,
     RegisterUserUseCase,
 )
+from src.application.use_cases.user.set_block import SetUserBlockCommand, SetUserBlockUseCase
 from src.application.use_cases.user.update import UpdateUserRequest, UpdateUserUseCase
 
 
@@ -174,6 +175,7 @@ class MediatorProvider(Provider):
         update_service_use_case: UpdateServiceUseCase,
         toggle_service_status_use_case: ToggleServiceStatusUseCase,
         admin_adjust_balance_use_case: AdminAdjustBalanceUseCase,
+        set_user_block_use_case: SetUserBlockUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -252,5 +254,6 @@ class MediatorProvider(Provider):
         mediator.register(ToggleServiceStatusCommand, toggle_service_status_use_case)
         mediator.register(UpdateServiceCommand, update_service_use_case)
         mediator.register(AdminAdjustBalanceCommand, admin_adjust_balance_use_case)
+        mediator.register(SetUserBlockCommand, set_user_block_use_case)
 
         return mediator

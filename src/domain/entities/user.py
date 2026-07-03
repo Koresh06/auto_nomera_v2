@@ -17,6 +17,7 @@ class User(Entity):
     region_id: int
     balance: Decimal = Decimal("0.00")
     is_blocked: bool = False
+    is_payment_blocked: bool = False
     pre_publication_expires_at: datetime | None = None
 
     @property
@@ -69,6 +70,14 @@ class User(Entity):
 
     def unblock(self) -> None:
         self.is_blocked = False
+        self.touch()
+
+    def block_payments(self) -> None:
+        self.is_payment_blocked = True
+        self.touch()
+
+    def unblock_payments(self) -> None:
+        self.is_payment_blocked = False
         self.touch()
 
     def change_region(self, region_id: int) -> None:

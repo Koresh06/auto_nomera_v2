@@ -17,6 +17,7 @@ class UserDTO:
     region_id: int
     balance: Decimal
     is_blocked: bool
+    is_payment_blocked: bool 
     pre_publication_expires_at: datetime | None
     
     @property
@@ -35,6 +36,7 @@ class UserDTO:
             region_id=user.region_id,
             balance=user.balance,
             is_blocked=user.is_blocked,
+            is_payment_blocked=user.is_payment_blocked,
             pre_publication_expires_at=user.pre_publication_expires_at,
         )
 
@@ -48,4 +50,5 @@ class UpdateUserDTO:
     phone: str | None = None
     balance: Decimal | None = None
     is_blocked: bool | None = None
+    is_payment_blocked: bool | None = None
     pre_publication_expires_at: datetime | None = None

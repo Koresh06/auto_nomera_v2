@@ -6,6 +6,7 @@ from aiogram_dialog.widgets.kbd import Select
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 
 from src.application.dtos.user import UserDTO
+from src.application.exceptions.user import PaymentBlockedException
 from src.application.mediator import Mediator
 from src.application.use_cases.payment.create import CreatePaymentRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
@@ -35,17 +36,24 @@ async def on_payment_method_selected(
         "return_data": start_data.get("return_data"),
     }
 
-    payment: Payment = await mediator.handle(
-        CreatePaymentRequest(
-            user_id=user.id,
-            amount=amount,
-            method=method,
-            purpose=PaymentPurpose(start_data["purpose"]),
-            purpose_id=start_data.get("purpose_id"),
-            description=start_data.get("description"),
-            meta=meta,
+    try:
+        payment: Payment = await mediator.handle(
+            CreatePaymentRequest(
+                user_id=user.id,
+                amount=amount,
+                method=method,
+                purpose=PaymentPurpose(start_data["purpose"]),
+                purpose_id=start_data.get("purpose_id"),
+                description=start_data.get("description"),
+                meta=meta,
+            )
         )
-    )
+    except PaymentBlockedException:
+        await callback.answer(
+            "🚫 Платежи для вашего аккаунта заблокированы. Обратитесь в поддержку.",
+            show_alert=True,
+        )
+        return
 
     dialog_manager.dialog_data["payment_method"] = method.value
     dialog_manager.dialog_data["amount"] = str(amount)

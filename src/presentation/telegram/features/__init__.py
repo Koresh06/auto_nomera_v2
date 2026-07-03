@@ -29,6 +29,7 @@ from src.presentation.telegram.features.admin.modules.region.edit.settings.dialo
 from src.presentation.telegram.features.admin.modules.region.edit.metadata.dialogs import edit_region_metadata_dialog
 from src.presentation.telegram.features.admin.modules.paid_services.dialogs import paid_service_admin_dialog
 from src.presentation.telegram.features.admin.modules.balance.dialogs import admin_balance_dialog
+from src.presentation.telegram.features.admin.modules.blocking.dialogs import blocked_user_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -67,4 +68,5 @@ def get_all_dialogs() -> list[Dialog]:
         edit_region_metadata_dialog,
         paid_service_admin_dialog,
         admin_balance_dialog,
+        blocked_user_dialog,
     ]

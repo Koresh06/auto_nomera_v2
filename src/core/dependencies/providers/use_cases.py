@@ -2,6 +2,7 @@ from aiogram import Bot
 from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.cache.block import BlockCache
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
@@ -124,6 +125,7 @@ from src.application.use_cases.store.update_store import UpdateStoreUseCase
 from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
 from src.application.use_cases.user.register import RegisterUserUseCase
+from src.application.use_cases.user.set_block import SetUserBlockUseCase
 from src.application.use_cases.user.update import UpdateUserUseCase
 from src.core.config import AppSettings
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
@@ -874,5 +876,18 @@ class UseCasesProvider(Provider):
     ) -> AdminAdjustBalanceUseCase:
         return AdminAdjustBalanceUseCase(
             user_repo=user_repo,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def set_user_block_use_case(
+        self,
+        user_repo: UserRepository,
+        block_cache: BlockCache,
+        transaction_manager: TransactionManager,
+    ) -> SetUserBlockUseCase:
+        return SetUserBlockUseCase(
+            user_repo=user_repo,
+            block_cache=block_cache,
             transaction_manager=transaction_manager,
         )
