@@ -121,6 +121,7 @@ from src.application.use_cases.store.delete_items import DeleteStoreItemUseCase
 from src.application.use_cases.store.get_by_user import GetUserStoreUseCase
 from src.application.use_cases.store.update_items import UpdateStoreItemUseCase
 from src.application.use_cases.store.update_store import UpdateStoreUseCase
+from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
 from src.application.use_cases.user.register import RegisterUserUseCase
 from src.application.use_cases.user.update import UpdateUserUseCase
@@ -862,5 +863,16 @@ class UseCasesProvider(Provider):
     ) -> ToggleServiceStatusUseCase:
         return ToggleServiceStatusUseCase(
             service_repo=service_repo,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def admin_adjust_balance_use_case(
+        self,
+        user_repo: UserRepository,
+        transaction_manager: TransactionManager,
+    ) -> AdminAdjustBalanceUseCase:
+        return AdminAdjustBalanceUseCase(
+            user_repo=user_repo,
             transaction_manager=transaction_manager,
         )

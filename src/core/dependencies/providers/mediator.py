@@ -96,6 +96,7 @@ from src.application.use_cases.store.delete_items import DeleteStoreItemRequest,
 from src.application.use_cases.store.get_by_user import GetUserStoreRequest, GetUserStoreUseCase
 from src.application.use_cases.store.update_items import UpdateStoreItemRequest, UpdateStoreItemUseCase
 from src.application.use_cases.store.update_store import UpdateStoreRequest, UpdateStoreUseCase
+from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceCommand, AdminAdjustBalanceUseCase
 from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
     GetTgIdRequest,
@@ -172,6 +173,7 @@ class MediatorProvider(Provider):
         toggle_region_status_use_case: ToggleRegionStatusUseCase,
         update_service_use_case: UpdateServiceUseCase,
         toggle_service_status_use_case: ToggleServiceStatusUseCase,
+        admin_adjust_balance_use_case: AdminAdjustBalanceUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -249,5 +251,6 @@ class MediatorProvider(Provider):
         mediator.register(ToggleRegionStatusCommand, toggle_region_status_use_case)
         mediator.register(ToggleServiceStatusCommand, toggle_service_status_use_case)
         mediator.register(UpdateServiceCommand, update_service_use_case)
+        mediator.register(AdminAdjustBalanceCommand, admin_adjust_balance_use_case)
 
         return mediator
