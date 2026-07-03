@@ -123,7 +123,9 @@ from src.application.use_cases.store.get_by_user import GetUserStoreUseCase
 from src.application.use_cases.store.update_items import UpdateStoreItemUseCase
 from src.application.use_cases.store.update_store import UpdateStoreUseCase
 from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceUseCase
+from src.application.use_cases.user.get_admin import GetAdminsUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
+from src.application.use_cases.user.manage_admin import ManageAdminUseCase
 from src.application.use_cases.user.register import RegisterUserUseCase
 from src.application.use_cases.user.set_block import SetUserBlockUseCase
 from src.application.use_cases.user.update import UpdateUserUseCase
@@ -889,5 +891,25 @@ class UseCasesProvider(Provider):
         return SetUserBlockUseCase(
             user_repo=user_repo,
             block_cache=block_cache,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def get_admins_use_case(
+        self,
+        user_repo: UserRepository,
+    ) -> GetAdminsUseCase:
+        return GetAdminsUseCase(
+            user_repo=user_repo,
+        )
+    
+    @provide
+    def manage_admin_use_case(
+        self,
+        user_repo: UserRepository,
+        transaction_manager: TransactionManager,
+    ) -> ManageAdminUseCase:
+        return ManageAdminUseCase(
+            user_repo=user_repo,
             transaction_manager=transaction_manager,
         )

@@ -2,6 +2,7 @@ from typing import Protocol
 
 from src.application.dtos.user import UpdateUserDTO
 from src.domain.entities.user import User
+from src.domain.enums.role import UserRole
 
 
 class UserRepository(Protocol):
@@ -16,3 +17,5 @@ class UserRepository(Protocol):
     async def update(self, tg_id: int, data: UpdateUserDTO) -> User: ...
 
     async def find_with_active_pre_publication(self, region_id: int) -> list[User]: ...
+
+    async def get_by_role(self, role: UserRole) -> list[User]: ...

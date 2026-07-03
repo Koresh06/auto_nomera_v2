@@ -52,7 +52,7 @@ admin_menu_dialog = Dialog(
         Start(
             Const("🛡 Управление админами"),
             id="admin_management",
-            state=AdminManagementSG.start,
+            state=AdminManagementSG.menu,
             when=F["is_super_admin"],
         ),
         Start(

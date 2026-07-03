@@ -8,6 +8,7 @@ from src.application.dtos.user import UpdateUserDTO
 from src.application.exceptions.user import UserNotFoundException
 from src.domain.entities.user import User
 from src.application.ports.user.user_repo import UserRepository
+from src.domain.enums.role import UserRole
 from src.infrastructure.database.models import UserModel
 
 
@@ -67,3 +68,9 @@ class SQLAlchemyUserRepo(UserRepository):
         )
         result = await self._session.execute(query)
         return [model.to_entity() for model in result.scalars().all()]
+    
+    async def get_by_role(self, role: UserRole) -> list[User]:
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.role == role)
+        )
+        return [m.to_entity() for m in result.scalars().all()]

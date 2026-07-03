@@ -97,10 +97,12 @@ from src.application.use_cases.store.get_by_user import GetUserStoreRequest, Get
 from src.application.use_cases.store.update_items import UpdateStoreItemRequest, UpdateStoreItemUseCase
 from src.application.use_cases.store.update_store import UpdateStoreRequest, UpdateStoreUseCase
 from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceCommand, AdminAdjustBalanceUseCase
+from src.application.use_cases.user.get_admin import GetAdminsCommand, GetAdminsUseCase
 from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
     GetTgIdRequest,
 )
+from src.application.use_cases.user.manage_admin import ManageAdminCommand, ManageAdminUseCase
 from src.application.use_cases.user.register import (
     UserRegisterRequest,
     RegisterUserUseCase,
@@ -176,6 +178,8 @@ class MediatorProvider(Provider):
         toggle_service_status_use_case: ToggleServiceStatusUseCase,
         admin_adjust_balance_use_case: AdminAdjustBalanceUseCase,
         set_user_block_use_case: SetUserBlockUseCase,
+        get_admins_use_case: GetAdminsUseCase,
+        manage_admin_use_case: ManageAdminUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -255,5 +259,7 @@ class MediatorProvider(Provider):
         mediator.register(UpdateServiceCommand, update_service_use_case)
         mediator.register(AdminAdjustBalanceCommand, admin_adjust_balance_use_case)
         mediator.register(SetUserBlockCommand, set_user_block_use_case)
+        mediator.register(GetAdminsCommand, get_admins_use_case)
+        mediator.register(ManageAdminCommand, manage_admin_use_case)
 
         return mediator

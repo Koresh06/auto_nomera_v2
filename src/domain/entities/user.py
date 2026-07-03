@@ -64,6 +64,10 @@ class User(Entity):
         self.role = UserRole.ADMIN
         self.touch()
 
+    def revoke_admin(self) -> None:
+        self.role = UserRole.USER
+        self.touch()
+
     def block(self) -> None:
         self.is_blocked = True
         self.touch()

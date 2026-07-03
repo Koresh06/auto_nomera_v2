@@ -2,4 +2,7 @@ from aiogram.fsm.state import StatesGroup, State
 
 
 class AdminManagementSG(StatesGroup):
-    start = State()
+    menu = State()         
+    admin_detail = State() 
+    add_input = State()    
+    add_confirm = State()  

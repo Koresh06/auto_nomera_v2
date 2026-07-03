@@ -16,3 +16,9 @@ class PaymentBlockedException(ApplicationException):
     def __init__(self, user_id: int) -> None:
         super().__init__(f"Payments blocked for user {user_id}")
         self.user_id = user_id
+
+
+class AlreadyAdminException(ApplicationException):
+    def __init__(self, user_id: int) -> None:
+        super().__init__(f"User {user_id} is already admin")
+        self.user_id = user_id
