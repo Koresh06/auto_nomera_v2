@@ -74,3 +74,19 @@ class SQLAlchemyUserRepo(UserRepository):
             select(UserModel).where(UserModel.role == role)
         )
         return [m.to_entity() for m in result.scalars().all()]
+    
+    async def get_all(self) -> list[User]:
+        result = await self._session.execute(select(UserModel))
+        return [m.to_entity() for m in result.scalars().all()]
+    
+    async def get_all_active(self) -> list[User]:
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.is_blocked == False)
+        )
+        return [m.to_entity() for m in result.scalars().all()]
+    
+    async def get_by_region(self, region_id: int) -> list[User]:
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.region_id == region_id)
+        )
+        return [m.to_entity() for m in result.scalars().all()]

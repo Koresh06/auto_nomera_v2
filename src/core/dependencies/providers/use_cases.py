@@ -5,6 +5,8 @@ from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.cache.block import BlockCache
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
+from src.application.use_cases.miling.enqueue import EnqueueMailingUseCase
+from src.application.use_cases.miling.execute import ExecuteMailingUseCase
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsUseCase
@@ -912,4 +914,26 @@ class UseCasesProvider(Provider):
         return ManageAdminUseCase(
             user_repo=user_repo,
             transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def execute_mailing_use_case(
+        self,
+        user_repo: UserRepository,
+        region_repo: RegionRepository,
+       notification_service: NotificationService,
+    ) -> ExecuteMailingUseCase:
+        return ExecuteMailingUseCase(
+            user_repo=user_repo,
+            region_repo=region_repo,
+            notification_service=notification_service,
+        )
+    
+    @provide
+    def enqueue_mailing_use_case(
+        self,
+        task_queue: TaskQueue,
+    ) -> EnqueueMailingUseCase:
+        return EnqueueMailingUseCase(
+            task_queue=task_queue,
         )

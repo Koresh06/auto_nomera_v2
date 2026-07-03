@@ -1,6 +1,8 @@
 from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
+from src.application.use_cases.miling.enqueue import EnqueueMailingRequest, EnqueueMailingUseCase
+from src.application.use_cases.miling.execute import ExecuteMailingRequest, ExecuteMailingUseCase
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusCommand, ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataCommand, UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsCommand, UpdateRegionSettingsUseCase
@@ -180,6 +182,8 @@ class MediatorProvider(Provider):
         set_user_block_use_case: SetUserBlockUseCase,
         get_admins_use_case: GetAdminsUseCase,
         manage_admin_use_case: ManageAdminUseCase,
+        execute_mailing_use_case: ExecuteMailingUseCase,
+        enqueue_mailing_use_case: EnqueueMailingUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -261,5 +265,7 @@ class MediatorProvider(Provider):
         mediator.register(SetUserBlockCommand, set_user_block_use_case)
         mediator.register(GetAdminsCommand, get_admins_use_case)
         mediator.register(ManageAdminCommand, manage_admin_use_case)
+        mediator.register(ExecuteMailingRequest, execute_mailing_use_case)
+        mediator.register(EnqueueMailingRequest, enqueue_mailing_use_case)
 
         return mediator

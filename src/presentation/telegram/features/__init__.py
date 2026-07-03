@@ -31,6 +31,7 @@ from src.presentation.telegram.features.admin.modules.paid_services.dialogs impo
 from src.presentation.telegram.features.admin.modules.balance.dialogs import admin_balance_dialog
 from src.presentation.telegram.features.admin.modules.blocking.dialogs import blocked_user_dialog
 from src.presentation.telegram.features.admin.modules.admin_management.dialogs import admin_management_dialog
+from src.presentation.telegram.features.admin.modules.mailing.dialogs import mailing_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -71,4 +72,5 @@ def get_all_dialogs() -> list[Dialog]:
         admin_balance_dialog,
         blocked_user_dialog,
         admin_management_dialog,
+        mailing_dialog,
     ]

@@ -1,4 +1,5 @@
 from src.application.mediator import Mediator
+from src.application.use_cases.miling.execute import ExecuteMailingRequest
 from src.application.use_cases.notification.notify_pre_publication_users import NotifyPrePublicationUsersRequest
 from src.application.use_cases.payment.confirm import ConfirmPaymentRequest
 from src.application.use_cases.payment.mark import MarkPaymentFailedRequest
@@ -9,6 +10,7 @@ from src.application.use_cases.publication.publish_publication import (
 from src.application.use_cases.publication_service.unpin_message import (
     UnpinMessageRequest,
 )
+from src.domain.enums.miling import MailingType
 
 
 def register_taskiq_tasks(broker, *, container):
@@ -48,10 +50,29 @@ def register_taskiq_tasks(broker, *, container):
             mediator = await request_container.get(Mediator)
             await mediator.handle(MarkPaymentFailedRequest(external_id=external_id))
 
+    @broker.task(name="execute_mailing")
+    async def execute_mailing(
+        mail_type: str,
+        from_chat_id: int,
+        message_id: int,
+        region_id: int | None = None,
+    ) -> None:
+        async with container() as request_container:
+            mediator = await request_container.get(Mediator)
+            await mediator.handle(
+                ExecuteMailingRequest(
+                    mail_type=MailingType(mail_type),
+                    from_chat_id=from_chat_id,
+                    message_id=message_id,
+                    region_id=region_id,
+                )
+            )
+
     return {
         "publish_publication": publish_publication,
         "unpin_message": unpin_message,
         "notify_pre_publication_users": notify_pre_publication_users,
         "confirm_payment": confirm_payment,
         "mark_payment_failed": mark_payment_failed,
+        "execute_mailing": execute_mailing,
     }
