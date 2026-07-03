@@ -42,46 +42,7 @@ class SQLAlchemyServiceDefinitionRepo(ServiceDefinitionRepository):
             )
         )
         return [m.to_entity() for m in result.scalars().all()]
-
-    async def create(self, service: ServiceDefinition) -> ServiceDefinition:
-        model = ServiceDefinitionModel.from_entity(service)
-        self._session.add(model)
-        await self._session.flush()
-        await self._session.refresh(model)
-        return model.to_entity()
-
-    async def update(
-        self,
-        service_type: PublicationServiceType,
-        *,
-        title: str | None = None,
-        price: int | None = None,
-        is_active: bool | None = None,
-        description: str | None = None,
-    ) -> ServiceDefinition:
-        result = await self._session.execute(
-            select(ServiceDefinitionModel).where(
-                ServiceDefinitionModel.type == service_type
-            )
-        )
-        model = result.scalar_one_or_none()
-        if model is None:
-            raise ServiceDefinitionException(f"ServiceDefinition type={service_type} not found")
-
-        if title is not None:
-            model.title = title
-        if price is not None:
-            model.price = price
-        if is_active is not None:
-            model.is_active = is_active
-        if description is not None:
-            model.description = description
-
-        await self._session.flush()
-        await self._session.refresh(model)
-        return model.to_entity()
     
-
     async def get_by_id(self, service_id: int) -> ServiceDefinition:
         result = await self._session.execute(
             select(ServiceDefinitionModel).where(
@@ -91,4 +52,22 @@ class SQLAlchemyServiceDefinitionRepo(ServiceDefinitionRepository):
         model = result.scalar_one_or_none()
         if model is None:
             raise ServiceDefinitionException(f"ServiceDefinition id={service_id} not found")
+        return model.to_entity()
+
+    async def create(self, service: ServiceDefinition) -> ServiceDefinition:
+        model = ServiceDefinitionModel.from_entity(service)
+        self._session.add(model)
+        await self._session.flush()
+        await self._session.refresh(model)
+        return model.to_entity()
+
+    async def save(self, service: ServiceDefinition) -> ServiceDefinition:
+        query = select(ServiceDefinitionModel).where(ServiceDefinitionModel.id == service.id)
+        result = await self._session.execute(query)
+        model = result.scalar_one_or_none()
+        if model is None:
+            raise ServiceDefinitionException(f"ServiceDefinition id={service.id} not found")
+        ServiceDefinitionModel._update_model(model, service)
+        await self._session.flush()
+        await self._session.refresh(model)
         return model.to_entity()

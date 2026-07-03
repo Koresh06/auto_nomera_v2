@@ -38,3 +38,6 @@ DEFAULT_SERVICES = [
         "description": "Ваше объявление будет автоматически публиковаться ежедневно в одно и тоже время.",
     },
 ]
+
+
+DEFAULT_SERVICES_BY_TYPE = {s["type"]: s for s in DEFAULT_SERVICES}

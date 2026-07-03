@@ -34,7 +34,7 @@ admin_menu_dialog = Dialog(
         Start(
             Const("💎 Платные услуги"),
             id="paid_services",
-            state=PaidServiceAdminSG.start,
+            state=PaidServiceAdminSG.list,
             when=F["is_super_admin"],
         ),
         Start(

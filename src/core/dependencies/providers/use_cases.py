@@ -7,6 +7,8 @@ from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsUseCase
+from src.application.use_cases.service_difinition.toggle_status import ToggleServiceStatusUseCase
+from src.application.use_cases.service_difinition.update import UpdateServiceUseCase
 from src.application.use_cases.slots.confirm_paid_slot_from_balance import (
     ConfirmPaidSlotFromBalanceUseCase,
 )
@@ -83,8 +85,8 @@ from src.application.use_cases.publication_service.buy_pre_publication_service i
 from src.application.use_cases.publication_service.buy_publication_service import (
     BuyPublicationServiceUseCase,
 )
-from src.application.use_cases.publication_service.get_all import GetAllServicesUseCase
-from src.application.use_cases.publication_service.get_by_id import (
+from src.application.use_cases.service_difinition.get_all import GetAllServicesUseCase
+from src.application.use_cases.service_difinition.get_by_id import (
     GetByIdServiceDefinitionUseCase,
 )
 from src.application.use_cases.publication_service.priority_publish_publication import (
@@ -838,5 +840,27 @@ class UseCasesProvider(Provider):
     ) -> ToggleRegionStatusUseCase:
         return ToggleRegionStatusUseCase(
             region_repo=region_repo,
+            transaction_manager=transaction_manager,
+        )
+
+    @provide
+    def update_service_use_case(
+        self,
+        service_repo: ServiceDefinitionRepository,
+        transaction_manager: TransactionManager,
+    ) -> UpdateServiceUseCase:
+        return UpdateServiceUseCase(
+            service_repo=service_repo,
+            transaction_manager=transaction_manager,
+        )
+    
+    @provide
+    def toggle_service_status_use_case(
+        self,
+        service_repo: ServiceDefinitionRepository,
+        transaction_manager: TransactionManager,
+    ) -> ToggleServiceStatusUseCase:
+        return ToggleServiceStatusUseCase(
+            service_repo=service_repo,
             transaction_manager=transaction_manager,
         )

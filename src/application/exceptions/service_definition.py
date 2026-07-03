@@ -11,3 +11,9 @@ class ServiceDefinitionException(ApplicationException):
 
 class ServiceNotAvailableException(ApplicationException):
     message = "Услуга недоступна"
+
+
+class ServiceDefinitionNotFoundException(Exception):
+    def __init__(self, service_id: int) -> None:
+        super().__init__(f"ServiceDefinition {service_id} not found")
+        self.service_id = service_id

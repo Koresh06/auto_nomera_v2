@@ -62,3 +62,12 @@ class ServiceDefinitionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             is_active=self.is_active,
             params_schema=self.params_schema,
         )
+    
+    def _update_model(self, service: "ServiceDefinition") -> None:
+        self.title = service.title
+        self.type = service.type
+        self.price = service.price
+        self.duration_days = service.duration_days
+        self.description = service.description
+        self.is_active = service.is_active
+        self.params_schema = service.params_schema

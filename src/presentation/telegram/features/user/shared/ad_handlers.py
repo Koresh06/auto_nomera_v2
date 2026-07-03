@@ -26,7 +26,7 @@ from src.application.use_cases.publication_service.apply_service import (
 from src.application.use_cases.publication_service.buy_publication_service import (
     BuyPublicationServiceRequest,
 )
-from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
+from src.application.use_cases.service_difinition.get_all import GetAllServicesRequest
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationRequest,
 )

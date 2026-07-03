@@ -4,6 +4,8 @@ from src.application.mediator import Mediator
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusCommand, ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataCommand, UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsCommand, UpdateRegionSettingsUseCase
+from src.application.use_cases.service_difinition.toggle_status import ToggleServiceStatusCommand, ToggleServiceStatusUseCase
+from src.application.use_cases.service_difinition.update import UpdateServiceCommand, UpdateServiceUseCase
 from src.application.use_cases.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest, ConfirmPaidSlotFromBalanceUseCase
 from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdRequest, GetPaymentByExternalIdUseCase
 from src.application.use_cases.payment.mark import MarkPaymentFailedRequest, MarkPaymentFailedUseCase
@@ -56,8 +58,8 @@ from src.application.use_cases.publication_service.add_service_to_publication im
 from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedRequest, ApplyServiceToPublishedUseCase
 from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceRequest, BuyPrePublicationServiceUseCase
 from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest, BuyPublicationServiceUseCase
-from src.application.use_cases.publication_service.get_all import GetAllServicesRequest, GetAllServicesUseCase
-from src.application.use_cases.publication_service.get_by_id import GetByIdServiceDefinitionRequest, GetByIdServiceDefinitionUseCase
+from src.application.use_cases.service_difinition.get_all import GetAllServicesRequest, GetAllServicesUseCase
+from src.application.use_cases.service_difinition.get_by_id import GetByIdServiceDefinitionRequest, GetByIdServiceDefinitionUseCase
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationRequest,
     PriorityPublishPublicationUseCase,
@@ -167,7 +169,9 @@ class MediatorProvider(Provider):
         delete_store_item_use_case: DeleteStoreItemUseCase,
         update_region_setting_use_case: UpdateRegionSettingsUseCase,
         update_region_metadata_use_case: UpdateRegionMetadataUseCase,
-        toggle_region_status_use_case: ToggleRegionStatusUseCase
+        toggle_region_status_use_case: ToggleRegionStatusUseCase,
+        update_service_use_case: UpdateServiceUseCase,
+        toggle_service_status_use_case: ToggleServiceStatusUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -243,5 +247,7 @@ class MediatorProvider(Provider):
         mediator.register(UpdateRegionSettingsCommand, update_region_setting_use_case)
         mediator.register(UpdateRegionMetadataCommand, update_region_metadata_use_case)
         mediator.register(ToggleRegionStatusCommand, toggle_region_status_use_case)
+        mediator.register(ToggleServiceStatusCommand, toggle_service_status_use_case)
+        mediator.register(UpdateServiceCommand, update_service_use_case)
 
         return mediator

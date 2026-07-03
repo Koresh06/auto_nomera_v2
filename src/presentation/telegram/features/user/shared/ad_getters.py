@@ -10,7 +10,7 @@ from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
-from src.application.use_cases.publication_service.get_all import GetAllServicesRequest
+from src.application.use_cases.service_difinition.get_all import GetAllServicesRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest

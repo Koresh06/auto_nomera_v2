@@ -27,6 +27,7 @@ from src.presentation.telegram.features.admin.modules.region.main.dialog import 
 from src.presentation.telegram.features.admin.modules.region.create.dialog import create_region_dialog
 from src.presentation.telegram.features.admin.modules.region.edit.settings.dialogs import edit_region_settings_dialog
 from src.presentation.telegram.features.admin.modules.region.edit.metadata.dialogs import edit_region_metadata_dialog
+from src.presentation.telegram.features.admin.modules.paid_services.dialogs import paid_service_admin_dialog
 
 
 
@@ -64,4 +65,5 @@ def get_all_dialogs() -> list[Dialog]:
         create_region_dialog,
         edit_region_settings_dialog,
         edit_region_metadata_dialog,
+        paid_service_admin_dialog,
     ]

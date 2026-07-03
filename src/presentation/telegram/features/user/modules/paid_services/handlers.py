@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
-from src.application.use_cases.publication_service.get_by_id import (
+from src.application.use_cases.service_difinition.get_by_id import (
     GetByIdServiceDefinitionRequest,
 )
 from src.domain.enums.payment import PaymentPurpose
