@@ -1,5 +1,5 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import Button, Cancel, Column, Row, Back, SwitchTo
+from aiogram_dialog.widgets.kbd import Cancel, Column, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.input import TextInput
 
@@ -7,7 +7,7 @@ from src.presentation.telegram.features.admin.modules.region.edit.states import 
     EditRegionMetadataSG,
 )
 from src.presentation.telegram.features.error_handlers import on_input_error
-from .handlers import on_metadata_confirm, on_metadata_url_success
+from .handlers import on_metadata_url_success
 from .getters import getter_metadata_menu
 from .validators import validate_url
 
@@ -37,14 +37,7 @@ edit_region_metadata_dialog = Dialog(
                 state=EditRegionMetadataSG.max_channel_url,
             ),
         ),
-        Row(
-            Button(
-                Const("✅ Сохранить"),
-                id="confirm",
-                on_click=on_metadata_confirm,
-            ),
-            Cancel(Const("❌ Отмена")),
-        ),
+        Cancel(Const("⬅️ Назад")),
         state=EditRegionMetadataSG.menu,
         getter=getter_metadata_menu,
         disable_web_page_preview=True,
@@ -61,7 +54,11 @@ edit_region_metadata_dialog = Dialog(
             on_success=on_metadata_url_success,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        SwitchTo(
+            Const("⬅️ Назад"),
+            id="back_menu",
+            state=EditRegionMetadataSG.menu,
+        ),
         state=EditRegionMetadataSG.tg_group_url,
         getter=getter_metadata_menu,
         disable_web_page_preview=True,
@@ -78,7 +75,11 @@ edit_region_metadata_dialog = Dialog(
             on_success=on_metadata_url_success,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        SwitchTo(
+            Const("⬅️ Назад"),
+            id="back_menu",
+            state=EditRegionMetadataSG.menu,
+        ),
         state=EditRegionMetadataSG.vk_group_url,
         getter=getter_metadata_menu,
         disable_web_page_preview=True,
@@ -95,7 +96,11 @@ edit_region_metadata_dialog = Dialog(
             on_success=on_metadata_url_success,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        SwitchTo(
+            Const("⬅️ Назад"),
+            id="back_menu",
+            state=EditRegionMetadataSG.menu,
+        ),
         state=EditRegionMetadataSG.max_channel_url,
         getter=getter_metadata_menu,
         disable_web_page_preview=True,

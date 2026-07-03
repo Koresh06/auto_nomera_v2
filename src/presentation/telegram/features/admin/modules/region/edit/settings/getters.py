@@ -13,38 +13,25 @@ SLOT_TIME_CANDIDATES: tuple[time, ...] = (
     time(16, 0), time(18, 0), time(20, 0), time(22, 0),
 )
 
-
 @inject
 async def getter_settings_menu(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    data = dialog_manager.dialog_data
+    region_id: int = dialog_manager.start_data["region_id"]
+    region: RegionDTO = await mediator.handle(IdRegionRequest(region_id=region_id))
+    s = region.settings
 
-    if "settings_loaded" not in data:
-        region_id: int = dialog_manager.start_data["region_id"]
-        region: RegionDTO = await mediator.handle(
-            IdRegionRequest(region_id=region_id)
-        )
-        s = region.settings
-        data["region_id"] = region_id
-        data["slot_times"] = [t.strftime("%H:%M") for t in s.slot_times]
-        data["days_range"] = s.days_range
-        data["system_paid_slots_count"] = s.system_paid_slots_count
-        data["publication_limit_enabled"] = s.publication_limit_enabled
-        data["paid_slot_price"] = str(s.paid_slot_price)
-        data["settings_loaded"] = True
-
-    slot_times_str = ", ".join(data["slot_times"])
-    limit_label = "✅ Да" if data["publication_limit_enabled"] else "❌ Нет"
+    dialog_manager.dialog_data["publication_limit_enabled"] = s.publication_limit_enabled
+    dialog_manager.dialog_data["slot_times"] = [t.strftime("%H:%M") for t in s.slot_times]
 
     return {
-        "slot_times_str": slot_times_str,
-        "days_range": data["days_range"],
-        "system_paid_slots_count": data["system_paid_slots_count"],
-        "limit_label": limit_label,
-        "paid_slot_price": data["paid_slot_price"],
+        "slot_times_str": ", ".join(t.strftime("%H:%M") for t in s.slot_times),
+        "days_range": s.days_range,
+        "system_paid_slots_count": s.system_paid_slots_count,
+        "limit_label": "✅ Да" if s.publication_limit_enabled else "❌ Нет",
+        "paid_slot_price": str(s.paid_slot_price),
     }
 
 

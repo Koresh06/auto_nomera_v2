@@ -20,13 +20,10 @@ from .getters import (
     getter_slot_times,
 )
 from .handlers import (
-    on_days_range_success,
-    on_paid_slot_price_success,
     on_reset_defaults,
-    on_settings_confirm,
+    on_settings_field_update,
     on_slot_time_toggle,
     on_slot_times_done,
-    on_system_paid_count_success,
     on_toggle_publication_limit,
 )
 
@@ -73,14 +70,7 @@ edit_region_settings_dialog = Dialog(
             id="reset_defaults",
             on_click=on_reset_defaults,
         ),
-        Row(
-            Button(
-                Const("✅ Сохранить"),
-                id="confirm",
-                on_click=on_settings_confirm,
-            ),
-            Cancel(Const("❌ Отмена")),
-        ),
+        Cancel(Const("⬅️ Назад")),
         state=EditRegionSettingsSG.menu,
         getter=getter_settings_menu,
     ),
@@ -100,21 +90,22 @@ edit_region_settings_dialog = Dialog(
             id="slot_times_done",
             on_click=on_slot_times_done,
         ),
-        Back(Const("⬅️ Назад")),
+        SwitchTo(
+            Const("⬅️ Назад"),
+            id="back_menu",
+            state=EditRegionSettingsSG.menu,
+        ),
         state=EditRegionSettingsSG.slot_times,
         getter=getter_slot_times,
     ),
     Window(
         Format(
-            "📅 <b>Календарь слотов</b>\n\n"
-            "Текущее значение: {days_range} дн.\n"
-            "Введите число от 1 до 31:"
+            "📅 <b>Горизонт календаря</b>\n\nТекущее: {days_range} дн.\nВведите число от 1 до 31:"
         ),
         TextInput(
             id="days_range_input",
-            type_factory=int,
-            on_success=on_days_range_success,
-            on_error=on_input_error,
+            type_factory=str,
+            on_success=on_settings_field_update,
         ),
         SwitchTo(
             Const("⬅️ Назад"),
@@ -126,14 +117,12 @@ edit_region_settings_dialog = Dialog(
     ),
     Window(
         Format(
-            "💰 <b>Системно-платные слоты</b>\n\n"
-            "Текущее значение: {system_paid_slots_count}\n"
-            "Введите количество:"
+            "💰 <b>Системно-платные слоты</b>\n\nТекущее: {system_paid_slots_count}\nВведите количество:"
         ),
         TextInput(
             id="paid_count_input",
-            type_factory=int,
-            on_success=on_system_paid_count_success,
+            type_factory=str,
+            on_success=on_settings_field_update,
         ),
         SwitchTo(
             Const("⬅️ Назад"),
@@ -145,14 +134,12 @@ edit_region_settings_dialog = Dialog(
     ),
     Window(
         Format(
-            "💵 <b>Цена платного слота</b>\n\n"
-            "Текущая цена: {paid_slot_price} ₽\n"
-            "Введите новую цену:"
+            "💵 <b>Цена платного слота</b>\n\nТекущая: {paid_slot_price} ₽\nВведите новую цену:"
         ),
         TextInput(
             id="price_input",
-            type_factory=float,
-            on_success=on_paid_slot_price_success,
+            type_factory=str,
+            on_success=on_settings_field_update,
         ),
         SwitchTo(
             Const("⬅️ Назад"),

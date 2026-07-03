@@ -1,14 +1,10 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format, Multi
-from aiogram_dialog.widgets.kbd import Start, Column, Select, Row, Button, Back
+from aiogram_dialog.widgets.kbd import Start, Column, Select, Row, Button, Back, Cancel
 
 from src.presentation.telegram.features.admin.modules.region.create.states import (
     CreateRegionSG,
-)
-from src.presentation.telegram.features.admin.modules.region.edit.states import (
-    EditRegionMetadataSG,
-    EditRegionSettingsSG,
 )
 from .states import MainRegionSG
 from .handlers import (
@@ -32,6 +28,7 @@ main_region_dialog = Dialog(
             id="region_create",
             state=CreateRegionSG.title,
         ),
+        Cancel(Const("⬅️ Назад")),
         state=MainRegionSG.start,
     ),
     Window(

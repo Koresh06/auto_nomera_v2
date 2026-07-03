@@ -1,24 +1,11 @@
 from dataclasses import dataclass
-from typing import Final
 
+from src.application.common.unsent import _Unset, UNSET
 from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.exceptions.service_definition import ServiceDefinitionNotFoundException
 from src.application.ports.publication_service.service_definition_repo import ServiceDefinitionRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.infrastructure.database.transaction_manager.base import TransactionManager
-
-
-class _Unset:
-    _instance = None
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-    def __repr__(self) -> str:
-        return "UNSET"
-
-UNSET: Final = _Unset()
-
 
 @dataclass(frozen=True, eq=False)
 class UpdateServiceCommand(UseCaseRequest):
