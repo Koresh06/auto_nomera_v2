@@ -17,7 +17,7 @@ from src.presentation.telegram.features.admin.modules.region.main.states import 
 )
 from src.presentation.telegram.features.admin.modules.stats.globals.states import GlobalStatsSG
 from src.presentation.telegram.features.admin.modules.stats.publications.states import PublishStatsSG
-from src.presentation.telegram.features.admin.modules.stats.replenishment.states import ReplenishmentStatsSG
+from src.presentation.telegram.features.admin.modules.stats.replenishment.states import StatsReplenishmentSG
 
 from .getters import getter_admin_menu
 from .states import AdminMenuSG
@@ -68,7 +68,7 @@ admin_menu_dialog = Dialog(
         Start(
             Const("💰 Статистика пополнений"),
             id="replenishment_stats",
-            state=ReplenishmentStatsSG.general,
+            state=StatsReplenishmentSG.general,
         ),
         Start(
             Const("🔢 Статистика публикаций"),

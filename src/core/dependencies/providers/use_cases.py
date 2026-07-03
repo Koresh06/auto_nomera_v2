@@ -118,6 +118,7 @@ from src.application.use_cases.slots.check_hold import CheckHoldUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
+from src.application.use_cases.stats.payment import GetPaymentStatsUseCase, GetRegionBreakdownUseCase
 from src.application.use_cases.store.add_items import AddStoreItemsUseCase
 from src.application.use_cases.store.create import CreateStoreUseCase
 from src.application.use_cases.store.delete_items import DeleteStoreItemUseCase
@@ -936,4 +937,22 @@ class UseCasesProvider(Provider):
     ) -> EnqueueMailingUseCase:
         return EnqueueMailingUseCase(
             task_queue=task_queue,
+        )
+    
+    @provide
+    def get_payment_stats_use_case(
+        self,
+        payment_repo: PaymentRepository,
+    ) -> GetPaymentStatsUseCase:
+        return GetPaymentStatsUseCase(
+            payment_repo=payment_repo,
+        )
+    
+    @provide
+    def get_region_breakdown_use_case(
+        self,
+        payment_repo: PaymentRepository,
+    ) -> GetRegionBreakdownUseCase:
+        return GetRegionBreakdownUseCase(
+            payment_repo=payment_repo,
         )

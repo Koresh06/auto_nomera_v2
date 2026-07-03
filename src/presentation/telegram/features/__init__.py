@@ -32,6 +32,7 @@ from src.presentation.telegram.features.admin.modules.balance.dialogs import adm
 from src.presentation.telegram.features.admin.modules.blocking.dialogs import blocked_user_dialog
 from src.presentation.telegram.features.admin.modules.admin_management.dialogs import admin_management_dialog
 from src.presentation.telegram.features.admin.modules.mailing.dialogs import mailing_dialog
+from src.presentation.telegram.features.admin.modules.stats.replenishment.dialogs import stats_replenishment_dialog
 
 
 def get_all_routers() -> list[Router]:
@@ -73,4 +74,5 @@ def get_all_dialogs() -> list[Dialog]:
         blocked_user_dialog,
         admin_management_dialog,
         mailing_dialog,
+        stats_replenishment_dialog,
     ]

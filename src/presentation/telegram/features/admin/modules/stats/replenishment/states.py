@@ -1,5 +1,7 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
-class ReplenishmentStatsSG(StatesGroup):
+class StatsReplenishmentSG(StatesGroup):
     general = State()
+    regions_list = State()
+    region_detail = State()

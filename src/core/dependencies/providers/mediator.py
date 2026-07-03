@@ -92,6 +92,7 @@ from src.application.use_cases.slots.get_calendar import (
 )
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest, HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest, ReleaseHoldUseCase
+from src.application.use_cases.stats.payment import GetPaymentStatsRequest, GetPaymentStatsUseCase, GetRegionBreakdownRequest, GetRegionBreakdownUseCase
 from src.application.use_cases.store.add_items import AddStoreItemsRequest, AddStoreItemsUseCase
 from src.application.use_cases.store.create import CreateStoreRequest, CreateStoreUseCase
 from src.application.use_cases.store.delete_items import DeleteStoreItemRequest, DeleteStoreItemUseCase
@@ -184,6 +185,8 @@ class MediatorProvider(Provider):
         manage_admin_use_case: ManageAdminUseCase,
         execute_mailing_use_case: ExecuteMailingUseCase,
         enqueue_mailing_use_case: EnqueueMailingUseCase,
+        get_payment_stats_use_case: GetPaymentStatsUseCase,
+        get_region_breakdown_use_case: GetRegionBreakdownUseCase
     ) -> Mediator:
         mediator = Mediator()
 
@@ -267,5 +270,7 @@ class MediatorProvider(Provider):
         mediator.register(ManageAdminCommand, manage_admin_use_case)
         mediator.register(ExecuteMailingRequest, execute_mailing_use_case)
         mediator.register(EnqueueMailingRequest, enqueue_mailing_use_case)
+        mediator.register(GetPaymentStatsRequest, get_payment_stats_use_case)
+        mediator.register(GetRegionBreakdownRequest, get_region_breakdown_use_case)
 
         return mediator
