@@ -10,5 +10,6 @@ class BuyServiceSG(StatesGroup):
     select_ad = State()
     confirm = State()
 
+
 class PrePublicationSG(StatesGroup):
     confirm = State()

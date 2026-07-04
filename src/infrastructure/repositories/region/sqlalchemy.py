@@ -16,12 +16,12 @@ class SQLAlchemyRegionRepository(RegionRepository):
         result = await self._session.execute(query)
         region_model = result.scalar_one_or_none()
         return region_model.to_entity() if region_model else None
-    
+
     async def get_all(self) -> list[Region]:
         query = select(RegionModel)
         result = await self._session.execute(query)
         return [region_model.to_entity() for region_model in result.scalars().all()]
-    
+
     async def create(self, region: Region) -> Region:
         region_model = RegionModel.from_entity(region)
         self._session.add(region_model)

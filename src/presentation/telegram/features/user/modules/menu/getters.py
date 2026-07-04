@@ -29,9 +29,7 @@ async def getter_start_menu(
     title_region = None
     if user.region_id is not None:
         try:
-            region: RegionDTO = await mediator.handle(
-                IdRegionRequest(user.region_id)
-            )
+            region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
             title_region = region.title
         except RegionNotFoundException:
             title_region = None
@@ -59,6 +57,7 @@ async def getter_start_menu(
         "store_ad_id": store.id if store else None,
     }
 
+
 @inject
 async def list_regions_getter(
     dialog_manager: DialogManager,
@@ -66,7 +65,9 @@ async def list_regions_getter(
     **kwargs,
 ) -> dict[str, list[RegionDTO]]:
     regions: list[RegionDTO] = await mediator.handle(GetRegionsRequest())
-    active_regions: list[RegionDTO] = [r for r in regions if r.status == RegionStatus.ACTIVE]
+    active_regions: list[RegionDTO] = [
+        r for r in regions if r.status == RegionStatus.ACTIVE
+    ]
     return {"regions": active_regions}
 
 

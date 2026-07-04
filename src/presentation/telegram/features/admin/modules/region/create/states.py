@@ -6,7 +6,7 @@ class CreateRegionSG(StatesGroup):
     timezone = State()
     channel_id = State()
     channel_username = State()
-    tg_group_url = State()    
+    tg_group_url = State()
     vk_group_url = State()
     max_channel_url = State()
     confirm = State()

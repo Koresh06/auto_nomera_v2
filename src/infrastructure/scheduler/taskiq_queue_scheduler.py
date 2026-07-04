@@ -13,7 +13,7 @@ class TaskQueueScheduler(Scheduler):
         *,
         queue: TaskQueue,
         publication_repo: PublicationRepository,
-        transaction_manager: TransactionManager
+        transaction_manager: TransactionManager,
     ) -> None:
         self._queue = queue
         self._publication_repo = publication_repo
@@ -29,7 +29,6 @@ class TaskQueueScheduler(Scheduler):
         if pub is None:
             raise PublicationNotFoundException(publication_id)
 
-
         job_id = await self._queue.schedule(
             task_name="publish_publication",
             args=(publication_id,),
@@ -44,7 +43,7 @@ class TaskQueueScheduler(Scheduler):
         pub = await self._publication_repo.get_by_id(publication_id)
         if pub is None:
             raise PublicationNotFoundException(publication_id)
-        
+
         if not pub.scheduler_job_id:
             return
         await self._queue.cancel(job_id=pub.scheduler_job_id)

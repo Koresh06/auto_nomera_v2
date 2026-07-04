@@ -3,10 +3,19 @@ from dataclasses import dataclass
 
 from src.domain.value_objects.slot_key import SlotKey
 from src.application.dtos.publication import PublicationDTO
-from src.application.use_cases.ad.finalize_ad import FinalizeAdRequest, FinalizeAdUseCase
+from src.application.use_cases.ad.finalize_ad import (
+    FinalizeAdRequest,
+    FinalizeAdUseCase,
+)
 from src.application.use_cases.base import UseCase, UseCaseRequest
-from src.application.use_cases.publication.create_publication_from_ad import CreatePublicationFromAdRequest, CreatePublicationFromAdUseCase
-from src.application.use_cases.publication.select_slot_for_publication import SelectSlotForPublicationRequest, SelectSlotForPublicationUseCase
+from src.application.use_cases.publication.create_publication_from_ad import (
+    CreatePublicationFromAdRequest,
+    CreatePublicationFromAdUseCase,
+)
+from src.application.use_cases.publication.select_slot_for_publication import (
+    SelectSlotForPublicationRequest,
+    SelectSlotForPublicationUseCase,
+)
 
 
 logger = logging.getLogger(__name__)

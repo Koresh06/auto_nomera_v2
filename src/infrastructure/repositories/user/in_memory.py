@@ -24,7 +24,7 @@ class InMemoryUserRepo(UserRepository):
     async def get_by_tg_id(self, tg_id: int) -> User | None:
         user_id = self._by_tg.get(tg_id)
         return None if user_id is None else self._items[user_id]
-    
+
     async def update(self, user_id: int, data: UpdateUserDTO) -> User:
         user = self._items[user_id]
         for field in fields(data):

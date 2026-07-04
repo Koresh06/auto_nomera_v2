@@ -4,7 +4,9 @@ from aiogram_dialog import DialogManager
 from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.service_difinition.get_all import GetAllServicesRequest
-from src.application.use_cases.service_difinition.get_by_id import GetByIdServiceDefinitionRequest
+from src.application.use_cases.service_difinition.get_by_id import (
+    GetByIdServiceDefinitionRequest,
+)
 
 
 @inject

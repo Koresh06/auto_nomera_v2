@@ -35,6 +35,7 @@ async def getter_list_publications(
 
     return {"publications": publications}
 
+
 @inject
 async def getter_detail(
     dialog_manager: DialogManager,

@@ -4,7 +4,11 @@ from decimal import Decimal
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.dtos.payment_stats import MethodStatDTO, PaymentStatsDTO, RegionStatDTO
+from src.application.dtos.payment_stats import (
+    MethodStatDTO,
+    PaymentStatsDTO,
+    RegionStatDTO,
+)
 from src.application.exceptions.payment import PaymentNotFoundByIdException
 from src.domain.entities.payment import Payment
 from src.application.ports.payment.payment_repo import PaymentRepository
@@ -30,7 +34,7 @@ class SQLAlchemyPaymentRepo(PaymentRepository):
         result = await self.session.execute(query)
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
-    
+
     async def save(self, payment: Payment) -> None:
         query = select(PaymentModel).where(PaymentModel.id == payment.id)
         result = await self.session.execute(query)
@@ -70,9 +74,7 @@ class SQLAlchemyPaymentRepo(PaymentRepository):
             .group_by(PaymentModel.method)
         )
         if region_id is not None:
-            method_q = method_q.join(
-                UserModel, PaymentModel.user_id == UserModel.id
-            )
+            method_q = method_q.join(UserModel, PaymentModel.user_id == UserModel.id)
 
         rows = (await self.session.execute(method_q)).all()
 

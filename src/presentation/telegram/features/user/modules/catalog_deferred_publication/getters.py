@@ -11,7 +11,10 @@ from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.application.dtos.catalog_card import CatalogCardDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
-from src.application.use_cases.catalog.get_catalog_deferred_publications import CatalogItem, GetCatalogDeferredPublicationsRequest
+from src.application.use_cases.catalog.get_catalog_deferred_publications import (
+    CatalogItem,
+    GetCatalogDeferredPublicationsRequest,
+)
 from src.presentation.telegram.utils.build_media import build_media_attachment
 
 
@@ -24,7 +27,6 @@ async def getter_urgent_catalog(
     tg_id = dialog_manager.event.from_user.id
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
     dialog_manager.dialog_data["region_id"] = user.region_id
-
 
     region_dto: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
     region = region_dto.to_entity()
@@ -70,7 +72,6 @@ async def getter_urgent_catalog(
             pub_time=pub_time,
             ad_type_display=ad.ad_type.display,
             ad_text=ad_text,
-
         )
         current_media = build_media_attachment(c.image_file_id if c else None)
 
@@ -82,6 +83,7 @@ async def getter_urgent_catalog(
         "card": card,
         "is_admin": tg_id in settings.telegram.admin_ids,
     }
+
 
 @inject
 async def getter_catalog_list(

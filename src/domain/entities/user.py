@@ -4,7 +4,11 @@ from decimal import Decimal
 
 from src.domain.entities.base import Entity
 from src.domain.enums.role import UserRole
-from src.domain.exceptions.user import InsufficientBalance, InvalidTelegramId, EmptyUsername
+from src.domain.exceptions.user import (
+    InsufficientBalance,
+    InvalidTelegramId,
+    EmptyUsername,
+)
 
 
 @dataclass(kw_only=True)
@@ -28,6 +32,7 @@ class User(Entity):
 
     def activate_pre_publication(self, days: int = 30) -> None:
         from datetime import timedelta
+
         now = datetime.now(timezone.utc)
         base = self.pre_publication_expires_at
         if base is None or base <= now:
@@ -93,7 +98,7 @@ class User(Entity):
             raise ValueError("Amount must be positive")
         self.balance += amount
         self.touch()
-    
+
     def charge(self, amount: Decimal) -> None:
         if amount <= 0:
             raise ValueError("Amount must be positive")
@@ -101,4 +106,3 @@ class User(Entity):
             raise InsufficientBalance
         self.balance -= amount
         self.touch()
-

@@ -14,13 +14,19 @@ from aiogram_dialog.widgets.kbd import (
 from aiogram_dialog.widgets.markup.reply_keyboard import ReplyKeyboardFactory
 
 from src.presentation.telegram.features.error_handlers import on_input_error
-from src.presentation.telegram.features.user.modules.ad.create_ad.getters import getter_user_phone
+from src.presentation.telegram.features.user.modules.ad.create_ad.getters import (
+    getter_user_phone,
+)
 from src.presentation.telegram.features.user.modules.ad.create_ad.handlers import (
     on_phone_input_success,
     on_phone_received_contact,
 )
-from src.presentation.telegram.features.user.modules.store.create.handlers import on_finish
-from src.presentation.telegram.features.user.modules.store.main.states import StoreMainSG
+from src.presentation.telegram.features.user.modules.store.create.handlers import (
+    on_finish,
+)
+from src.presentation.telegram.features.user.modules.store.main.states import (
+    StoreMainSG,
+)
 from src.presentation.telegram.utils.text_validators import (
     capitalize_word,
     validate_phone_number,

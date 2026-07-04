@@ -7,7 +7,10 @@ from dishka.integrations.aiogram_dialog import inject
 
 from src.application.exceptions.store import StoreItemsAlreadyExistException
 from src.application.mediator import Mediator
-from src.application.use_cases.store.add_items import AddStoreItemsRequest, AddStoreItemsResult
+from src.application.use_cases.store.add_items import (
+    AddStoreItemsRequest,
+    AddStoreItemsResult,
+)
 from src.domain.services.ad.store_validator import StoreInputParseResult
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.store_content import StoreItem
@@ -43,8 +46,7 @@ async def on_confirm_save(
     parsed_items: list[dict] = data.get("parsed_items", [])
 
     items = [
-        StoreItem(plate=i["plate"], price=Price(i["price_value"]))
-        for i in parsed_items
+        StoreItem(plate=i["plate"], price=Price(i["price_value"])) for i in parsed_items
     ]
 
     try:

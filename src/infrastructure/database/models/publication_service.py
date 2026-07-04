@@ -50,6 +50,5 @@ class PublicationServiceModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
         back_populates="services",
     )
 
-
     def __repr__(self) -> str:
         return f"PublicationServiceModel(id={self.id}, type={self.type}, status={self.status})"

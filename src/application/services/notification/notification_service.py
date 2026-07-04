@@ -8,10 +8,10 @@ class NotificationButton:
     callback_data: str
 
 
-@dataclass  
+@dataclass
 class NotificationMarkup:
     buttons: list[list[NotificationButton]]
-    
+
 
 class NotificationService(Protocol):
     async def notify_admins(
@@ -22,7 +22,6 @@ class NotificationService(Protocol):
         reply_markup: Any | None = None,
     ) -> None: ...
 
-
     async def notify_users(
         self,
         *,
@@ -30,8 +29,7 @@ class NotificationService(Protocol):
         text: str,
         reply_markup: Any | None = None,
     ) -> None: ...
-    
-    
+
     async def notify_user(
         self,
         *,
@@ -47,7 +45,4 @@ class NotificationService(Protocol):
         from_chat_id: int,
         message_id: int,
         throttle_seconds: float = 0.05,
-    ) -> dict:
-        ...
-
-    
+    ) -> dict: ...

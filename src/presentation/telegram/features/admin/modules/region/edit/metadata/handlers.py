@@ -5,7 +5,9 @@ from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.application.mediator import Mediator
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataCommand
-from src.presentation.telegram.features.admin.modules.region.edit.states import EditRegionMetadataSG
+from src.presentation.telegram.features.admin.modules.region.edit.states import (
+    EditRegionMetadataSG,
+)
 
 
 _FIELD_BY_WIDGET = {

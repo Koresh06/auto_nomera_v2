@@ -2,7 +2,9 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager, StartMode
 
-from src.presentation.telegram.features.user.modules.catalog_deferred_publication.states import CatalogDeferredPublishSG
+from src.presentation.telegram.features.user.modules.catalog_deferred_publication.states import (
+    CatalogDeferredPublishSG,
+)
 
 
 router = Router()
@@ -14,6 +16,6 @@ async def catalog_deferred_publication(
     dialog_manager: DialogManager,
 ) -> None:
     await dialog_manager.start(
-            CatalogDeferredPublishSG.start,
-            mode=StartMode.RESET_STACK,
-        )
+        CatalogDeferredPublishSG.start,
+        mode=StartMode.RESET_STACK,
+    )

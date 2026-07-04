@@ -1,5 +1,3 @@
-
-
 from src.application.mediator import Mediator
 
 from src.application.use_cases.region.get_all import (
@@ -16,9 +14,6 @@ from src.domain.enums.region import RegionStatus
 from src.domain.value_objects.region_settings import RegionSettings
 from src.domain.value_objects.timezone_name import TimezoneName
 from src.domain.value_objects.region_metadata import RegionMetadata
-
-
-
 
 
 from src.infrastructure.repositories.region.in_memory import InMemoryRegionRepo

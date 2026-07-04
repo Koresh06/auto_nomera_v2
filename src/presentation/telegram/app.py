@@ -53,7 +53,7 @@ async def create_app():
     setup_middlewares(dp=dp, container=container)
 
     await container.get(BgManagerFactory)
-    
+
     await bot.delete_webhook(drop_pending_updates=True)
 
     try:

@@ -10,8 +10,9 @@ from aiogram_dialog.widgets.input import ManagedTextInput
 from src.application.mediator import Mediator
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsCommand
 from src.domain.value_objects.region_settings import RegionSettings
-from src.presentation.telegram.features.admin.modules.region.edit.states import EditRegionSettingsSG
-
+from src.presentation.telegram.features.admin.modules.region.edit.states import (
+    EditRegionSettingsSG,
+)
 
 
 def _parse_field(widget_id: str, raw: str) -> tuple[str, object]:
@@ -87,9 +88,7 @@ async def on_toggle_publication_limit(
         )
     )
     dialog_manager.dialog_data["publication_limit_enabled"] = new_value
-    await callback.answer(
-        f"Лимит публикаций: {'включён' if new_value else 'выключен'}"
-    )
+    await callback.answer(f"Лимит публикаций: {'включён' if new_value else 'выключен'}")
     await dialog_manager.show(show_mode=ShowMode.EDIT)
 
 

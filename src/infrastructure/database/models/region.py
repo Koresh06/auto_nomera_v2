@@ -86,7 +86,7 @@ class RegionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             t.strftime("%H:%M") for t in region.settings.slot_times
         ]
         settings_dict["paid_slot_price"] = str(region.settings.paid_slot_price)
-    
+
         self.title = region.title
         self.timezone = region.timezone.value
         self.channel_id = region.channel_id

@@ -17,9 +17,7 @@ class ToggleRegionStatusCommand(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class ToggleRegionStatusUseCase(
-    UseCase[ToggleRegionStatusCommand, RegionDTO]
-):
+class ToggleRegionStatusUseCase(UseCase[ToggleRegionStatusCommand, RegionDTO]):
     region_repo: RegionRepository
     transaction_manager: TransactionManager
 

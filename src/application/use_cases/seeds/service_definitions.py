@@ -2,7 +2,9 @@ import logging
 from dataclasses import dataclass
 
 from src.domain.entities.service_definition import ServiceDefinition
-from src.application.ports.publication_service.service_definition_repo import ServiceDefinitionRepository
+from src.application.ports.publication_service.service_definition_repo import (
+    ServiceDefinitionRepository,
+)
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 from src.infrastructure.seeds.service_definitions import DEFAULT_SERVICES

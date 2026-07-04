@@ -25,7 +25,7 @@ class AiogramDialogTeleporter(DialogTeleporter):
             chat_id=chat_id,
             load=True,
         )
-    
+
         await bg.start(
             state=state,
             data=data or {},

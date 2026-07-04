@@ -35,11 +35,7 @@ class RedisSlotHoldStore:
             return set()
 
         values = await self._redis.mget(*keys)
-        return {
-            slot
-            for slot, value in zip(slots_list, values)
-            if value is not None
-        }
+        return {slot for slot, value in zip(slots_list, values) if value is not None}
 
     async def exists_for_user(self, slot: SlotKey, user_id: int) -> bool:
         owner = await self.get(slot)

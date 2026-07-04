@@ -12,7 +12,6 @@ from src.application.mediator import Mediator
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.region import RegionStatus
-from src.domain.exceptions.region import RegionNotFoundException
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 
 
@@ -40,15 +39,11 @@ async def process_start_command(
             mode=StartMode.RESET_STACK,
         )
         return
-    
-    region: RegionDTO = await mediator.handle(
-        IdRegionRequest(region_id=user.region_id)
-    )
+
+    region: RegionDTO = await mediator.handle(IdRegionRequest(region_id=user.region_id))
 
     if region.status != RegionStatus.ACTIVE:
-        await message.answer(
-            "🚫 <b>Ваш регион был отключён.</b>\nВыберите новый:"
-        )
+        await message.answer("🚫 <b>Ваш регион был отключён.</b>\nВыберите новый:")
         await dialog_manager.start(
             UserMenuSG.chooise_region,
             mode=StartMode.RESET_STACK,

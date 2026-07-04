@@ -7,8 +7,12 @@ from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.use_cases.miling.enqueue import EnqueueMailingUseCase
 from src.application.use_cases.miling.execute import ExecuteMailingUseCase
-from src.application.use_cases.publication.cancel_by_admin import CancelPublicationByAdminUseCase
-from src.application.use_cases.publication.get_admin_scheduled_catalog import GetAdminScheduledCatalogUseCase
+from src.application.use_cases.publication.cancel_by_admin import (
+    CancelPublicationByAdminUseCase,
+)
+from src.application.use_cases.publication.get_admin_scheduled_catalog import (
+    GetAdminScheduledCatalogUseCase,
+)
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsUseCase
@@ -179,7 +183,7 @@ class UseCasesProvider(Provider):
         return GetByTgIdUserUseCase(
             user_repo=user_repo,
         )
-    
+
     @provide
     def get_by_id_user_use_case(
         self,
@@ -997,7 +1001,7 @@ class UseCasesProvider(Provider):
             publication_repo=publication_repo,
             region_repo=region_repo,
         )
-    
+
     @provide
     def cancel_publication_by_admin_use_case(
         self,
@@ -1011,7 +1015,7 @@ class UseCasesProvider(Provider):
             task_queue=task_queue,
             notification_service=notification_service,
             transaction_manager=transaction_manager,
-    )
+        )
 
     @provide
     def get_admin_scheduled_catalog_use_case(

@@ -35,4 +35,11 @@ dev = [
     "ruff>=0.15.5",
 ]
 
+[tool.ruff.lint]
+ignore = [
+    "E501",  # line too long (длинные Format-строки в диалогах)
+]
 
+[tool.ruff.lint.per-file-ignores]
+"**/dialogs.py" = ["E501"]
+"**/*_dialog.py" = ["E501"]

@@ -1,8 +1,9 @@
 from aiogram.fsm.state import StatesGroup, State
 
+
 class EditRegionSettingsSG(StatesGroup):
     menu = State()
-    slot_times = State()        
+    slot_times = State()
     days_range = State()
     system_paid_slots_count = State()
     publication_limit_enabled = State()

@@ -47,6 +47,7 @@ async def getter_default_ad(
         "is_urgent": ad_type == AdType.URGENT_BUYOUT,
     }
 
+
 @inject
 async def getter_duplicate_ad(
     dialog_manager: DialogManager,
@@ -81,7 +82,9 @@ async def getter_media_plate(dialog_manager: DialogManager, **kwargs) -> dict:
             ),
             type=ContentType.PHOTO,
         )
-    dialog_manager.dialog_data["media_file_id"] = media.file_id.file_id if media and media.file_id else None
+    dialog_manager.dialog_data["media_file_id"] = (
+        media.file_id.file_id if media and media.file_id else None
+    )
 
     return {
         "media": media,
@@ -100,7 +103,6 @@ async def getter_user_phone(
     )
     dialog_manager.dialog_data["current_phone"] = user.phone
     return {"phone": user.phone}
-
 
 
 @inject
@@ -127,7 +129,9 @@ async def getter_confirm(
         price_raw = c.price.value if c else 0
         price = c.price.display if c else ""
         contacts = c.contacts.display if c else ""
-        media: MediaAttachment | None = build_media_attachment(c.image_file_id if c else None)
+        media: MediaAttachment | None = build_media_attachment(
+            c.image_file_id if c else None
+        )
 
         slot_raw = start_data.get("slot")
         slot = None
@@ -142,13 +146,17 @@ async def getter_confirm(
             data["slot_time"] = slot_raw["slot_time"]
 
         data["ad_id"] = ad_id
-        data["ad_type"] = ad.ad_type.value if hasattr(ad.ad_type, "value") else ad.ad_type
+        data["ad_type"] = (
+            ad.ad_type.value if hasattr(ad.ad_type, "value") else ad.ad_type
+        )
         data["region_id"] = user.region_id
         data["plate"] = plate
         data["city"] = city
         data["price"] = price_raw
         data["phone"] = c.contacts.phone if c and c.contacts else ""
-        data["media_file_id"] = media.file_id.file_id if media and media.file_id else None
+        data["media_file_id"] = (
+            media.file_id.file_id if media and media.file_id else None
+        )
         data["is_paid"] = start_data.get("is_paid", True)
         data["from_existing_draft"] = True
 
@@ -162,12 +170,11 @@ async def getter_confirm(
             "media": media,
         }
 
-    
     channel_username: str = data["channel_username"]
 
     ad_type_raw = data.get("ad_type")
     needs_slot = ad_type_raw != AdType.URGENT_BUYOUT.value
-    
+
     slot = None
     if needs_slot:
         slot = SlotKey(
@@ -177,8 +184,10 @@ async def getter_confirm(
         )
 
     if data.get("reuse_ad"):
-        existing_ad_id = data["existing_ad_id"] 
-        existing_ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=existing_ad_id))
+        existing_ad_id = data["existing_ad_id"]
+        existing_ad: AdDTO = await mediator.handle(
+            GetByIdAdRequest(ad_id=existing_ad_id)
+        )
         c = existing_ad.content
         plate = c.plate_number if c else ""
         city = c.city if c else ""
@@ -187,8 +196,12 @@ async def getter_confirm(
         contacts = c.contacts.display if c else ""
         phone = c.contacts.phone if c else ""
 
-        media: MediaAttachment | None = build_media_attachment(c.image_file_id if c else None)
-        data["media_file_id"] = media.file_id.file_id if media and media.file_id else None
+        media: MediaAttachment | None = build_media_attachment(
+            c.image_file_id if c else None
+        )
+        data["media_file_id"] = (
+            media.file_id.file_id if media and media.file_id else None
+        )
     else:
         plate = data.get("plate")
         city = dialog_manager.find("city").get_value()
@@ -204,12 +217,13 @@ async def getter_confirm(
                 chat_id=tg_id,
             )
         )
-        data["media_file_id"] = media.file_id.file_id if media and media.file_id else None
+        data["media_file_id"] = (
+            media.file_id.file_id if media and media.file_id else None
+        )
 
     data["phone"] = phone
     data["price"] = price_raw
     data["city"] = city
-
 
     return {
         "plate": plate,
@@ -220,5 +234,3 @@ async def getter_confirm(
         "slot_time": slot.time_display if slot else "",
         "media": media,
     }
-
-

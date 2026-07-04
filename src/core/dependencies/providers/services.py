@@ -28,7 +28,6 @@ from src.infrastructure.telegram.notification_service import AiogramNotification
 
 
 class ServicesProvider(Provider):
-
     @provide(scope=Scope.APP)
     def slot_hold_ttl(self, settings: AppSettings) -> timedelta:
         return timedelta(seconds=settings.app.hold_slots_time)

@@ -3,8 +3,14 @@ from dataclasses import dataclass
 
 from src.application.dtos.publication import PublicationDTO
 from src.application.use_cases.base import UseCase, UseCaseRequest
-from src.application.use_cases.publication.create_publication_from_ad import CreatePublicationFromAdRequest, CreatePublicationFromAdUseCase
-from src.application.use_cases.publication.select_slot_for_publication import SelectSlotForPublicationRequest, SelectSlotForPublicationUseCase
+from src.application.use_cases.publication.create_publication_from_ad import (
+    CreatePublicationFromAdRequest,
+    CreatePublicationFromAdUseCase,
+)
+from src.application.use_cases.publication.select_slot_for_publication import (
+    SelectSlotForPublicationRequest,
+    SelectSlotForPublicationUseCase,
+)
 from src.domain.value_objects.slot_key import SlotKey
 
 
@@ -24,7 +30,9 @@ class ReuseAdAndScheduleUseCase(UseCase[ReuseAdAndScheduleRequest, PublicationDT
     select_slot: SelectSlotForPublicationUseCase
 
     async def __call__(self, command: ReuseAdAndScheduleRequest) -> PublicationDTO:
-        logger.info(f"[ReuseAdAndSchedule] ad_id={command.ad_id} slot={command.slot.local_day} {command.slot.local_time}")
+        logger.info(
+            f"[ReuseAdAndSchedule] ad_id={command.ad_id} slot={command.slot.local_day} {command.slot.local_time}"
+        )
 
         pub: PublicationDTO = await self.create_publication(
             CreatePublicationFromAdRequest(ad_id=command.ad_id)

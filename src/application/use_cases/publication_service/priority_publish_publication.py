@@ -6,7 +6,10 @@ from src.application.ports.publication.publication_repo import PublicationReposi
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 
@@ -37,7 +40,8 @@ class PriorityPublishPublicationUseCase(
         # помечаем услугу как использованную
         service = next(
             (
-                s for s in publication.services
+                s
+                for s in publication.services
                 if s.type == PublicationServiceType.PRIORITY_PUBLISH
                 and s.status == PublicationServiceStatus.ACTIVE
             ),

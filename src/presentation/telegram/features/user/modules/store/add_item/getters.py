@@ -10,7 +10,6 @@ from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.services.ad.store_validator import MAX_ITEMS
 
 
-
 @inject
 async def add_items_getter(
     dialog_manager: DialogManager,
@@ -35,8 +34,7 @@ async def add_items_getter(
 
     if parsed_items:
         result_lines = "\n".join(
-            f"✖️ {item['plate']} ➖ {item['price_display']}"
-            for item in parsed_items
+            f"✖️ {item['plate']} ➖ {item['price_display']}" for item in parsed_items
         )
         added_count = len(parsed_items)
     else:

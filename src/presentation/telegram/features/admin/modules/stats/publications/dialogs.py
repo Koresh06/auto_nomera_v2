@@ -83,9 +83,7 @@ publish_stats_dialog = Dialog(
         getter=getter_schedule_regions,
     ),
     Window(
-        Format(
-            "🗓 <b>Расписание — {region_title}</b>\n\n" "{legend}\n\n" "{schedule_text}"
-        ),
+        Format("🗓 <b>Расписание — {region_title}</b>\n\n{legend}\n\n{schedule_text}"),
         Button(
             Const("📦 Каталог отложенных публикаций"),
             id="deferred_catalog",

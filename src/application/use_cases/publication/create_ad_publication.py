@@ -3,9 +3,18 @@ import logging
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
-from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest, CreateAdDraftUseCase
-from src.application.use_cases.ad.finalize_ad import FinalizeAdRequest, FinalizeAdUseCase
-from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest, UpdateAdContentUseCase
+from src.application.use_cases.ad.create_ad_draft import (
+    CreateAdDraftRequest,
+    CreateAdDraftUseCase,
+)
+from src.application.use_cases.ad.finalize_ad import (
+    FinalizeAdRequest,
+    FinalizeAdUseCase,
+)
+from src.application.use_cases.ad.update_ad_content import (
+    UpdateAdContentRequest,
+    UpdateAdContentUseCase,
+)
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdRequest,
@@ -90,7 +99,7 @@ class CreateAndScheduleAdUseCase(UseCase[CreateAndScheduleAdRequest, Publication
                 slot=command.slot,
                 user_id=command.user_id,
                 ad_id=ad.id,
-                payment_confirmed=command.payment_confirmed
+                payment_confirmed=command.payment_confirmed,
             )
         )
         logger.info(f"[CreateAndScheduleAd:slot_selected] pub_id={pub.id}")

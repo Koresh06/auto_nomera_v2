@@ -9,9 +9,16 @@ from src.application.use_cases.region.get_by_id import IdRegionRequest
 
 
 SLOT_TIME_CANDIDATES: tuple[time, ...] = (
-    time(8, 0), time(10, 0), time(12, 0), time(14, 0),
-    time(16, 0), time(18, 0), time(20, 0), time(22, 0),
+    time(8, 0),
+    time(10, 0),
+    time(12, 0),
+    time(14, 0),
+    time(16, 0),
+    time(18, 0),
+    time(20, 0),
+    time(22, 0),
 )
+
 
 @inject
 async def getter_settings_menu(
@@ -23,8 +30,12 @@ async def getter_settings_menu(
     region: RegionDTO = await mediator.handle(IdRegionRequest(region_id=region_id))
     s = region.settings
 
-    dialog_manager.dialog_data["publication_limit_enabled"] = s.publication_limit_enabled
-    dialog_manager.dialog_data["slot_times"] = [t.strftime("%H:%M") for t in s.slot_times]
+    dialog_manager.dialog_data["publication_limit_enabled"] = (
+        s.publication_limit_enabled
+    )
+    dialog_manager.dialog_data["slot_times"] = [
+        t.strftime("%H:%M") for t in s.slot_times
+    ]
 
     return {
         "slot_times_str": ", ".join(t.strftime("%H:%M") for t in s.slot_times),

@@ -393,5 +393,3 @@ async def on_edit_ad(
             "back_to_finish": True,
         },
     )
-
-

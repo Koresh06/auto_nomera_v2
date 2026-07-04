@@ -35,7 +35,6 @@ async def getter_store_preview(
     dialog_manager.dialog_data["ad_id"] = store.id
     dialog_manager.dialog_data["ad_type"] = store.ad_type
 
-
     return {
         "store_name": s.shop_name if s else "—",
         "store_city": s.city if s else "—",
@@ -43,7 +42,6 @@ async def getter_store_preview(
         "result_lines": result_lines,
         "has_items": len(items) > 0,
     }
-
 
 
 @inject

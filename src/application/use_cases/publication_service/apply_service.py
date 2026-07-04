@@ -14,7 +14,10 @@ from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 from src.domain.exceptions.publication import InvalidPublicationState
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
@@ -62,7 +65,7 @@ class ApplyServiceToPublishedUseCase(UseCase[ApplyServiceToPublishedRequest, Non
         region = await self.region_repo.get_by_id(publication.region_id)
         if region is None:
             raise RegionNotFoundException(publication.region_id)
-        
+
         user = await self.user_repo.get_by_id(ad.user_id)
         if user is None:
             raise AdNotFoundException(ad.user_id)
@@ -70,7 +73,8 @@ class ApplyServiceToPublishedUseCase(UseCase[ApplyServiceToPublishedRequest, Non
         # находим нужную услугу
         service = next(
             (
-                s for s in publication.services
+                s
+                for s in publication.services
                 if s.type == command.service_type
                 and s.status == PublicationServiceStatus.ACTIVE
             ),
@@ -78,7 +82,7 @@ class ApplyServiceToPublishedUseCase(UseCase[ApplyServiceToPublishedRequest, Non
         )
         if service is None:
             raise ServiceNotAvailableException()
-        
+
         text = self.renderer.render(ad=ad, region=region)
 
         context = ServiceContext(

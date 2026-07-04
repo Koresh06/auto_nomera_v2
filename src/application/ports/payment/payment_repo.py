@@ -19,10 +19,8 @@ class PaymentRepository(Protocol):
         region_id: int | None = None,
     ) -> PaymentStatsDTO: ...
 
-
     async def get_region_breakdown(
         self,
         *,
         since_utc: datetime | None = None,
     ) -> list[RegionStatDTO]: ...
-    

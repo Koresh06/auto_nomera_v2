@@ -50,7 +50,10 @@ store_view_publish_dialog = Dialog(
             "{result_lines}"
         ),
         Next(Const("✅ Публикация"), when="has_items"),
-        Cancel(Const("⬅️ Назад"), style=Style(style=ButtonStyle.PRIMARY),),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StoreViewPublishSG.preview,
         getter=getter_store_preview,
     ),

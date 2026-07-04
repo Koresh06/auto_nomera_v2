@@ -19,14 +19,16 @@ async def build_urgent_moderation_kb(ad_id: int) -> InlineKeyboardMarkup:
     kb.button(
         text="✅ Одобрить",
         callback_data=UrgentModerationCD(
-            action=UrgentModerationAction.APPROVE, ad_id=ad_id,
+            action=UrgentModerationAction.APPROVE,
+            ad_id=ad_id,
         ).pack(),
         style="success",
     )
     kb.button(
         text="❌ Отклонить",
         callback_data=UrgentModerationCD(
-            action=UrgentModerationAction.REJECT, ad_id=ad_id,
+            action=UrgentModerationAction.REJECT,
+            ad_id=ad_id,
         ).pack(),
         style="danger",
     )

@@ -47,7 +47,6 @@ class PillowImageProcessor(ImageProcessor):
 
         return new_file_id
 
-
     def _darawing_red_border(
         self,
         img: Image.Image,

@@ -25,7 +25,7 @@ async def getter_store_items(
     items = list(s.items) if s else []
 
     dialog_manager.dialog_data["ad_id"] = store.id
-    
+
     return {"items": items}
 
 
@@ -54,6 +54,7 @@ async def getter_item(
         "plate": plate,
         "price": price_display,
     }
+
 
 @inject
 async def getter_confirm_item(

@@ -15,7 +15,9 @@ from aiogram_dialog.widgets.kbd import (
 )
 
 from src.domain.enums.ad import AdType
-from src.presentation.telegram.features.user.modules.ad.create_ad.states import CreateAdSG
+from src.presentation.telegram.features.user.modules.ad.create_ad.states import (
+    CreateAdSG,
+)
 from src.presentation.telegram.features.user.modules.ad.edit.states import EditAdSG
 from src.presentation.telegram.features.user.modules.balance.states import TopupSG
 from src.presentation.telegram.features.user.modules.menu.getters import (
@@ -26,11 +28,19 @@ from src.presentation.telegram.features.user.modules.menu.handlers import (
     register_user_or_change_region,
 )
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
-from src.presentation.telegram.features.user.modules.paid_services.states import PaidServiceSG
+from src.presentation.telegram.features.user.modules.paid_services.states import (
+    PaidServiceSG,
+)
 from src.presentation.telegram.features.user.modules.profile.states import ProfileSG
-from src.presentation.telegram.features.user.modules.store.create.states import StoreCreateSG
-from src.presentation.telegram.features.user.modules.store.main.states import StoreMainSG
-from src.presentation.telegram.features.user.modules.catalog_deferred_publication.states import CatalogDeferredPublishSG
+from src.presentation.telegram.features.user.modules.store.create.states import (
+    StoreCreateSG,
+)
+from src.presentation.telegram.features.user.modules.store.main.states import (
+    StoreMainSG,
+)
+from src.presentation.telegram.features.user.modules.catalog_deferred_publication.states import (
+    CatalogDeferredPublishSG,
+)
 
 
 user_menu_dialog = Dialog(

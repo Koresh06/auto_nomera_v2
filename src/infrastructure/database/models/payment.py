@@ -51,7 +51,6 @@ class PaymentModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
 
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="payments")
 
-
     @classmethod
     def from_entity(cls, payment: "Payment") -> "PaymentModel":
         return cls(
@@ -85,7 +84,7 @@ class PaymentModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             expires_at=self.expires_at,
             paid_at=self.paid_at,
         )
-    
+
     def _update_model(self, payment: "Payment") -> None:
         self.external_id = payment.external_id
         self.user_id = payment.user_id

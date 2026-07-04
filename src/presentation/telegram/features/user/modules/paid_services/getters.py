@@ -133,12 +133,13 @@ async def getter_user_ads_for_service(
     )
 
     eligible: list[PublicationDTO] = []
-    for p in publications:      
+    for p in publications:
         if p.status not in (PublicationStatus.PUBLISHED, PublicationStatus.SCHEDULED):
             continue
         if any(
             s.type == service_type
-            and s.status in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
+            and s.status
+            in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
             for s in p.services
         ):
             continue

@@ -17,7 +17,10 @@ from src.domain.entities.publication import Publication
 from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.ad import AdType
 from src.domain.enums.publication import PublicationStatus
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.application.services.publication.context import ServiceContext
@@ -53,18 +56,25 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         now = command.now_utc or datetime.now(timezone.utc)
 
         pub = await self.publication_repo.get_by_id(command.publication_id)
-        logger.info(f"[Publish] pub_id={command.publication_id} status={pub.status if pub else None}")
-    
+        logger.info(
+            f"[Publish] pub_id={command.publication_id} status={pub.status if pub else None}"
+        )
+
         if pub is None:
-            logger.warning("[Publish] publication_id=%s not found, skipping", command.publication_id)
+            logger.warning(
+                "[Publish] publication_id=%s not found, skipping",
+                command.publication_id,
+            )
             return
-    
+
         if pub.status in (
             PublicationStatus.PUBLISHED,
             PublicationStatus.CANCELED,
             PublicationStatus.REPLACED,
         ):
-            logger.info(f"[Publish:skip] pub_id={pub.id} status={pub.status} — already done")
+            logger.info(
+                f"[Publish:skip] pub_id={pub.id} status={pub.status} — already done"
+            )
             return
 
         pub.mark_publishing()
@@ -77,11 +87,11 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         region = await self.region_repo.get_by_id(pub.region_id)
         if region is None:
             raise RegionNotFoundException(pub.region_id)
-        
+
         user = await self.user_repo.get_by_id(ad.user_id)
         if user is None:
             raise UserNotFoundException(ad.user_id)
-        
+
         text = self.renderer.render(ad=ad, region=region)
 
         ctx = ServiceContext(
@@ -99,7 +109,9 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         # 1) HIGHLIGHT — до публикации
         highlight_svc = _get_active_service(pub, PublicationServiceType.HIGHLIGHT)
         if highlight_svc is not None and ad.ad_type != AdType.STORE:
-            await STRATEGIES[PublicationServiceType.HIGHLIGHT].apply(pub, highlight_svc, ctx)
+            await STRATEGIES[PublicationServiceType.HIGHLIGHT].apply(
+                pub, highlight_svc, ctx
+            )
             await self.publication_repo.save(pub)
 
         # 2) публикация в канал
@@ -109,7 +121,9 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
                 text=text,
             )
         else:
-            image_file_id = ctx.highlight_file_id or (ad.content.image_file_id if ad.content else None)
+            image_file_id = ctx.highlight_file_id or (
+                ad.content.image_file_id if ad.content else None
+            )
             if not image_file_id:
                 pub.mark_failed()
                 await self.publication_repo.save(pub)
@@ -134,7 +148,9 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         # 4) AUTOPUBLISH — создаём серию после первой публикации
         auto_svc = _get_active_service(pub, PublicationServiceType.AUTOPUBLISH)
         if auto_svc is not None:
-            await STRATEGIES[PublicationServiceType.AUTOPUBLISH].apply(pub, auto_svc, ctx)
+            await STRATEGIES[PublicationServiceType.AUTOPUBLISH].apply(
+                pub, auto_svc, ctx
+            )
             await self.publication_repo.save(pub)
 
         await self.transaction_manager.commit()

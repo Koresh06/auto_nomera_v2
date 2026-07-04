@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 class SelectSlotForPublicationRequest(UseCaseRequest):
     publication_id: int
     slot: SlotKey
-    user_id: int  
-    ad_id: int  
+    user_id: int
+    ad_id: int
     now_utc: datetime | None = None
     payment_confirmed: bool = False
 
@@ -78,8 +78,10 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         )
 
         # узнаём владельца конверсии и привязанный ad_id (если есть)
-        converted_info = await self.reservation_service.converted_repo.get_converted_owner_and_ad(
-            command.slot
+        converted_info = (
+            await self.reservation_service.converted_repo.get_converted_owner_and_ad(
+                command.slot
+            )
         )
         is_converted = converted_info is not None
 
@@ -133,4 +135,3 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         logger.info(
             f"[SelectSlot:done] pub_id={publication.id} status={publication.status}"
         )
-        

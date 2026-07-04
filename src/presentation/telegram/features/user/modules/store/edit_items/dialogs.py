@@ -52,9 +52,7 @@ store_edit_items_dialog = Dialog(
     ),
     Window(
         Format(
-            "🚘 <b>Номер:</b> {plate}\n"
-            "💰 <b>Цена:</b> {price}\n\n"
-            "Выберите действие:"
+            "🚘 <b>Номер:</b> {plate}\n💰 <b>Цена:</b> {price}\n\nВыберите действие:"
         ),
         Row(
             SwitchTo(
@@ -120,8 +118,7 @@ store_edit_items_dialog = Dialog(
             when=F["new_plate"],
         ),
         Format(
-            "🧾 <b>Проверьте изменения:</b>\n\n"
-            "💰 Новая цена: <b>{new_price}</b> руб.",
+            "🧾 <b>Проверьте изменения:</b>\n\n💰 Новая цена: <b>{new_price}</b> руб.",
             when=F["new_price"],
         ),
         Button(

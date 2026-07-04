@@ -22,7 +22,9 @@ class TelegramStarsProvider(PaymentProvider):
         external_id: str,
         **kwargs,
     ) -> dict:
-        stars = int((amount / self.xtr_to_rub_rate).to_integral_value(rounding=ROUND_CEILING))
+        stars = int(
+            (amount / self.xtr_to_rub_rate).to_integral_value(rounding=ROUND_CEILING)
+        )
 
         invoice_link = await self.bot.create_invoice_link(
             title=description or "Оплата",

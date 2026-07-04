@@ -21,4 +21,3 @@ class GegByIdRegionUseCase(UseCase[IdRegionRequest, RegionDTO | None]):
         if region is None:
             raise RegionNotFoundException(command.region_id)
         return RegionDTO.from_entity(region)
-

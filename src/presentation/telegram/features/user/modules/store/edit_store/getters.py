@@ -8,6 +8,7 @@ from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.store.get_by_user import GetUserStoreRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 
+
 @inject
 async def getter_store_edit_start(
     dialog_manager: DialogManager,
@@ -45,5 +46,6 @@ async def getter_store_edit_confirm(
     return {
         "new_shop_name": data.get("new_name") or (s.shop_name if s else "—"),
         "new_city": data.get("new_city") or (s.city if s else "—"),
-        "new_phone": data.get("phone") or (s.contacts.phone if s and s.contacts else "—"),
+        "new_phone": data.get("phone")
+        or (s.contacts.phone if s and s.contacts else "—"),
     }

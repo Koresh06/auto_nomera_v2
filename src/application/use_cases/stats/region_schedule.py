@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from src.application.dtos.schedule_stats import RegionScheduleDTO, ScheduleDayDTO, ScheduleSlotDTO
+from src.application.dtos.schedule_stats import (
+    RegionScheduleDTO,
+    ScheduleDayDTO,
+    ScheduleSlotDTO,
+)
 from src.application.exceptions.region import RegionNotFoundException
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.region.region_repo import RegionRepository

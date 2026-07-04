@@ -15,6 +15,7 @@ def _current_period(dialog_manager: DialogManager, scope: str) -> StatsPeriod:
     raw = dialog_manager.dialog_data.get(f"period_{scope}", StatsPeriod.MONTH.value)
     return StatsPeriod(raw)
 
+
 @inject
 async def getter_general_stats(
     dialog_manager: DialogManager,
@@ -24,12 +25,15 @@ async def getter_general_stats(
     period = _current_period(dialog_manager, "general")
     stats: PaymentStatsDTO = await mediator.handle(
         GetPaymentStatsRequest(period=period)
-    ) 
+    )
 
-    method_lines = "\n".join(
-        f"  {m.label}: <b>{m.count}</b> ({m.amount_display} руб.)"
-        for m in sorted(stats.by_method, key=lambda x: x.amount, reverse=True)
-    ) or "  —"
+    method_lines = (
+        "\n".join(
+            f"  {m.label}: <b>{m.count}</b> ({m.amount_display} руб.)"
+            for m in sorted(stats.by_method, key=lambda x: x.amount, reverse=True)
+        )
+        or "  —"
+    )
 
     top = stats.top_method
     top_region = stats.top_region
@@ -41,7 +45,8 @@ async def getter_general_stats(
         "top_method": top.label if top else "—",
         "top_region": (
             f"{top_region.region_title} ({top_region.amount_display} руб.)"
-            if top_region else "—"
+            if top_region
+            else "—"
         ),
         "method_lines": method_lines,
         **period_flags(period),
@@ -72,10 +77,13 @@ async def getter_region_stats(
         GetPaymentStatsRequest(period=period, region_id=region_id)
     )
 
-    method_lines = "\n".join(
-        f"  {m.label}: <b>{m.count}</b> ({m.amount_display} руб.)"
-        for m in sorted(stats.by_method, key=lambda x: x.amount, reverse=True)
-    ) or "  —"
+    method_lines = (
+        "\n".join(
+            f"  {m.label}: <b>{m.count}</b> ({m.amount_display} руб.)"
+            for m in sorted(stats.by_method, key=lambda x: x.amount, reverse=True)
+        )
+        or "  —"
+    )
 
     return {
         "region_title": region.title,

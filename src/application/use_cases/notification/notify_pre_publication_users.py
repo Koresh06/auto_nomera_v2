@@ -6,9 +6,13 @@ from src.domain.entities.user import User
 from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.user.user_repo import UserRepository
-from src.application.services.notification.notification_service import NotificationService
+from src.application.services.notification.notification_service import (
+    NotificationService,
+)
 from src.application.use_cases.base import UseCase, UseCaseRequest
-from src.presentation.telegram.keyboards.deferred_publication import catalog_deferred_publication_kb
+from src.presentation.telegram.keyboards.deferred_publication import (
+    catalog_deferred_publication_kb,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +40,10 @@ class NotifyPrePublicationUsersUseCase(UseCase[NotifyPrePublicationUsersRequest,
             region_id=ad.region_id
         )
         if not users:
-            logger.info("[NotifyPrePublicationUsers:skip] no active users in region_id=%s", ad.region_id)
+            logger.info(
+                "[NotifyPrePublicationUsers:skip] no active users in region_id=%s",
+                ad.region_id,
+            )
             return
 
         c = ad.content
@@ -50,4 +57,9 @@ class NotifyPrePublicationUsersUseCase(UseCase[NotifyPrePublicationUsersRequest,
             reply_markup=await catalog_deferred_publication_kb(),
         )
 
-        logger.info("[NotifyPrePublicationUsers:done] region_id=%s ad_id=%s notified=%s", ad.region_id, command.ad_id, len(users))
+        logger.info(
+            "[NotifyPrePublicationUsers:done] region_id=%s ad_id=%s notified=%s",
+            ad.region_id,
+            command.ad_id,
+            len(users),
+        )

@@ -28,7 +28,7 @@ class TelegramProvider(Provider):
             token=settings.telegram.bot_token,
             default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
-    
+
     @provide
     def fsm_storage(self, redis: Redis) -> RedisStorage:
         return RedisStorage(
@@ -51,7 +51,7 @@ class TelegramProvider(Provider):
     @provide
     def bg_manager_factory(self, dp: Dispatcher) -> BgManagerFactory:
         return setup_dialogs(dp)
-    
+
     @provide
     def dialog_teleporter(
         self,

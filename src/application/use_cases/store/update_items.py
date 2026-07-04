@@ -58,7 +58,5 @@ class UpdateStoreItemUseCase(UseCase[UpdateStoreItemRequest, AdDTO]):
         await self.ad_repo.save(ad)
         await self.transaction_manager.commit()
         logger.info("[UpdateStoreItem:done] ad_id=%s", command.ad_id)
-        
+
         return AdDTO.from_entity(ad)
-
-

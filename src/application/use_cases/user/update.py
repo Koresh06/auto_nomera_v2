@@ -22,7 +22,6 @@ class UpdateUserUseCase(UseCase[UpdateUserRequest, None]):
         user = await self.user_repo.get_by_tg_id(tg_id=command.tg_id)
         if user is None:
             raise UserNotFoundException()
-        
+
         await self.user_repo.update(tg_id=command.tg_id, data=command.data)
         await self.transaction_manager.commit()
-

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 class ApproveUrgentBuyoutRequest(UseCaseRequest):
     ad_id: int
 
+
 @dataclass(kw_only=True)
 class ApproveUrgentBuyoutUseCase(UseCase[ApproveUrgentBuyoutRequest, None]):
     ad_repo: AdRepository

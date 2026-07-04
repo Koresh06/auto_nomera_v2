@@ -71,7 +71,7 @@ store_edit_dialog = Dialog(
         state=StoreEditSG.name,
     ),
     Window(
-        Format("🌎 <b>Текущий город:</b> {store_city}\n\n" "Введите новый город:"),
+        Format("🌎 <b>Текущий город:</b> {store_city}\n\nВведите новый город:"),
         TextInput(
             id="city",
             type_factory=capitalize_word,
@@ -89,8 +89,7 @@ store_edit_dialog = Dialog(
     ),
     Window(
         Format(
-            "📲 <b>Текущий телефон:</b> {store_phone}\n\n"
-            "Введите новый номер (с +7):"
+            "📲 <b>Текущий телефон:</b> {store_phone}\n\nВведите новый номер (с +7):"
         ),
         TextInput(
             id="phone",

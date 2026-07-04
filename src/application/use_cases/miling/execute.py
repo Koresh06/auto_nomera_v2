@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True, eq=False)
 class ExecuteMailingRequest(UseCaseRequest):
     mail_type: MailingType
-    from_chat_id: int 
-    message_id: int 
+    from_chat_id: int
+    message_id: int
     region_id: int | None = None
 
 

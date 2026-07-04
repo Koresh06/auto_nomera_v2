@@ -2,10 +2,8 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Select,
     Button,
-    Back,
     Cancel,
     Column,
-    Row,
     SwitchTo,
 )
 from aiogram_dialog.widgets.text import Const, Format, Multi
@@ -14,7 +12,6 @@ from aiogram_dialog.widgets.input import TextInput
 from src.presentation.telegram.features.admin.modules.region.edit.states import (
     EditRegionSettingsSG,
 )
-from src.presentation.telegram.features.error_handlers import on_input_error
 from .getters import (
     getter_settings_menu,
     getter_slot_times,

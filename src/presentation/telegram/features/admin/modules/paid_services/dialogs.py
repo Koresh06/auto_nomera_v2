@@ -1,5 +1,13 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import Select, Button, Back, Cancel, Column, SwitchTo, Group
+from aiogram_dialog.widgets.kbd import (
+    Select,
+    Button,
+    Back,
+    Cancel,
+    Column,
+    SwitchTo,
+    Group,
+)
 from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.input import TextInput
 

@@ -50,16 +50,16 @@ class SQLAlchemyUserRepo(UserRepository):
         user_model = result.scalar_one_or_none()
         if user_model is None:
             raise UserNotFoundException(tg_id)
-    
+
         for field in fields(data):
             value = getattr(data, field.name)
             if value is not None and hasattr(user_model, field.name):
                 setattr(user_model, field.name, value)
-    
+
         await self._session.merge(user_model)
         await self._session.flush()
         return user_model.to_entity()
-    
+
     async def find_with_active_pre_publication(self, region_id: int) -> list[User]:
         now = datetime.now(timezone.utc)
         query = select(UserModel).where(
@@ -68,23 +68,23 @@ class SQLAlchemyUserRepo(UserRepository):
         )
         result = await self._session.execute(query)
         return [model.to_entity() for model in result.scalars().all()]
-    
+
     async def get_by_role(self, role: UserRole) -> list[User]:
         result = await self._session.execute(
             select(UserModel).where(UserModel.role == role)
         )
         return [m.to_entity() for m in result.scalars().all()]
-    
+
     async def get_all(self) -> list[User]:
         result = await self._session.execute(select(UserModel))
         return [m.to_entity() for m in result.scalars().all()]
-    
+
     async def get_all_active(self) -> list[User]:
         result = await self._session.execute(
             select(UserModel).where(UserModel.is_blocked == False)
         )
         return [m.to_entity() for m in result.scalars().all()]
-    
+
     async def get_by_region(self, region_id: int) -> list[User]:
         result = await self._session.execute(
             select(UserModel).where(UserModel.region_id == region_id)

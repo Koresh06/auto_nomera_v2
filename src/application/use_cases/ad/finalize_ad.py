@@ -26,7 +26,7 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
         ad = await self.ad_repo.get_by_id(command.ad_id)
         if ad is None:
             raise AdNotFoundException(command.ad_id)
-        
+
         logger.info(f"[FinalizeAd] ad_type={ad.ad_type} content={ad.content}")
 
         if ad.ad_type == AdType.STORE:
@@ -41,7 +41,9 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
                 raise ValueError("Contacts required")
             if len(sc.items) == 0:
                 raise ValueError("At least one store item required")
-            logger.info(f"[FinalizeAd:store] shop={sc.shop_name!r} items={len(sc.items)}")
+            logger.info(
+                f"[FinalizeAd:store] shop={sc.shop_name!r} items={len(sc.items)}"
+            )
             return
 
         if ad.content is None:
@@ -52,9 +54,9 @@ class FinalizeAdUseCase(UseCase[FinalizeAdRequest, None]):
             raise ValueError("Plate number is required")
         if not c.city:
             raise ValueError("City is required")
-        if c.price is None:                      
-            raise ValueError("Price is required") 
-        if c.contacts is None:                     
+        if c.price is None:
+            raise ValueError("Price is required")
+        if c.contacts is None:
             raise ValueError("Contacts are required")
 
         allow_mask = ad.ad_type == AdType.BUY

@@ -6,8 +6,12 @@ from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.mediator import Mediator
-from src.application.use_cases.service_difinition.get_by_id import GetByIdServiceDefinitionRequest
-from src.application.use_cases.service_difinition.toggle_status import ToggleServiceStatusCommand
+from src.application.use_cases.service_difinition.get_by_id import (
+    GetByIdServiceDefinitionRequest,
+)
+from src.application.use_cases.service_difinition.toggle_status import (
+    ToggleServiceStatusCommand,
+)
 from src.application.use_cases.service_difinition.update import UpdateServiceCommand
 from src.infrastructure.seeds.service_definitions import DEFAULT_SERVICES_BY_TYPE
 
@@ -43,12 +47,12 @@ async def on_toggle_status(
         )
         await dialog_manager.show(show_mode=ShowMode.EDIT)
         return
-    
+
     dialog_manager.dialog_data["toggle_confirm_pending"] = False
     await mediator.handle(ToggleServiceStatusCommand(service_id=service_id))
     await callback.answer("✅ Статус изменён")
     await dialog_manager.show(show_mode=ShowMode.EDIT)
-    
+
 
 def _parse_field(widget_id: str, raw: str) -> tuple[str, object]:
     """Возвращает (имя_поля_команды, значение) или бросает ValueError с текстом ошибки."""

@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from src.domain.entities.publication_service import PublicationService
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
-
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 
 
 @dataclass(frozen=True)
@@ -20,7 +22,7 @@ class PublicationServiceDTO:
         if self.price_paid is None:
             return "—"
         return f"{self.price_paid:,.0f} руб.".replace(",", " ")
-    
+
     @property
     def created_at_display(self) -> str:
         return f"{self.created_at:%d.%m.%Y %H:%M}"

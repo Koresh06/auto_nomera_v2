@@ -1,28 +1,79 @@
 from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
-from src.application.use_cases.miling.enqueue import EnqueueMailingRequest, EnqueueMailingUseCase
-from src.application.use_cases.miling.execute import ExecuteMailingRequest, ExecuteMailingUseCase
-from src.application.use_cases.publication.cancel_by_admin import CancelPublicationByAdminRequest, CancelPublicationByAdminUseCase
-from src.application.use_cases.publication.get_admin_scheduled_catalog import GetAdminScheduledCatalogRequest, GetAdminScheduledCatalogUseCase
-from src.application.use_cases.region.toggle_status import ToggleRegionStatusCommand, ToggleRegionStatusUseCase
-from src.application.use_cases.region.update_metadata import UpdateRegionMetadataCommand, UpdateRegionMetadataUseCase
-from src.application.use_cases.region.update_settings import UpdateRegionSettingsCommand, UpdateRegionSettingsUseCase
-from src.application.use_cases.service_difinition.toggle_status import ToggleServiceStatusCommand, ToggleServiceStatusUseCase
-from src.application.use_cases.service_difinition.update import UpdateServiceCommand, UpdateServiceUseCase
-from src.application.use_cases.slots.confirm_paid_slot_from_balance import ConfirmPaidSlotFromBalanceRequest, ConfirmPaidSlotFromBalanceUseCase
-from src.application.use_cases.payment.get_by_external_id import GetPaymentByExternalIdRequest, GetPaymentByExternalIdUseCase
-from src.application.use_cases.payment.mark import MarkPaymentFailedRequest, MarkPaymentFailedUseCase
-from src.application.use_cases.publication.finalize_and_schedule_existing_ad import FinalizeAndScheduleExistingAdRequest, FinalizeAndScheduleExistingAdUseCase
-from src.application.use_cases.publication.get_user import GetUserPublicationsRequest, GetUserPublicationsUseCase
-from src.application.use_cases.ad.approve_urgent_buyout import ApproveUrgentBuyoutRequest, ApproveUrgentBuyoutUseCase
+from src.application.use_cases.miling.enqueue import (
+    EnqueueMailingRequest,
+    EnqueueMailingUseCase,
+)
+from src.application.use_cases.miling.execute import (
+    ExecuteMailingRequest,
+    ExecuteMailingUseCase,
+)
+from src.application.use_cases.publication.cancel_by_admin import (
+    CancelPublicationByAdminRequest,
+    CancelPublicationByAdminUseCase,
+)
+from src.application.use_cases.publication.get_admin_scheduled_catalog import (
+    GetAdminScheduledCatalogRequest,
+    GetAdminScheduledCatalogUseCase,
+)
+from src.application.use_cases.region.toggle_status import (
+    ToggleRegionStatusCommand,
+    ToggleRegionStatusUseCase,
+)
+from src.application.use_cases.region.update_metadata import (
+    UpdateRegionMetadataCommand,
+    UpdateRegionMetadataUseCase,
+)
+from src.application.use_cases.region.update_settings import (
+    UpdateRegionSettingsCommand,
+    UpdateRegionSettingsUseCase,
+)
+from src.application.use_cases.service_difinition.toggle_status import (
+    ToggleServiceStatusCommand,
+    ToggleServiceStatusUseCase,
+)
+from src.application.use_cases.service_difinition.update import (
+    UpdateServiceCommand,
+    UpdateServiceUseCase,
+)
+from src.application.use_cases.slots.confirm_paid_slot_from_balance import (
+    ConfirmPaidSlotFromBalanceRequest,
+    ConfirmPaidSlotFromBalanceUseCase,
+)
+from src.application.use_cases.payment.get_by_external_id import (
+    GetPaymentByExternalIdRequest,
+    GetPaymentByExternalIdUseCase,
+)
+from src.application.use_cases.payment.mark import (
+    MarkPaymentFailedRequest,
+    MarkPaymentFailedUseCase,
+)
+from src.application.use_cases.publication.finalize_and_schedule_existing_ad import (
+    FinalizeAndScheduleExistingAdRequest,
+    FinalizeAndScheduleExistingAdUseCase,
+)
+from src.application.use_cases.publication.get_user import (
+    GetUserPublicationsRequest,
+    GetUserPublicationsUseCase,
+)
+from src.application.use_cases.ad.approve_urgent_buyout import (
+    ApproveUrgentBuyoutRequest,
+    ApproveUrgentBuyoutUseCase,
+)
 from src.application.use_cases.ad.archive_ad import ArchiveAdRequest, ArchiveAdUseCase
-from src.application.use_cases.ad.count_ads_by_user import CountAdsByUserRequest, CountAdsByUserUseCase
+from src.application.use_cases.ad.count_ads_by_user import (
+    CountAdsByUserRequest,
+    CountAdsByUserUseCase,
+)
 from src.application.use_cases.ad.create_ad_draft import (
     CreateAdDraftRequest,
     CreateAdDraftUseCase,
 )
-from src.application.use_cases.ad.eject_urgent_buyout import RejectUrgentBuyoutRequest, RejectUrgentBuyoutUseCase
+from src.application.use_cases.ad.eject_urgent_buyout import (
+    RejectUrgentBuyoutRequest,
+    RejectUrgentBuyoutUseCase,
+)
 from src.application.use_cases.ad.ensure_ad_image_ref import (
     EnsureAdImageRefRequest,
     EnsureAdImageRefUseCase,
@@ -31,39 +82,87 @@ from src.application.use_cases.ad.finalize_ad import (
     FinalizeAdRequest,
     FinalizeAdUseCase,
 )
-from src.application.use_cases.ad.find_by_plate import FindAdByPlateRequest, FindAdByPlateUseCase
+from src.application.use_cases.ad.find_by_plate import (
+    FindAdByPlateRequest,
+    FindAdByPlateUseCase,
+)
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest, GetByIdAdUseCase
 from src.application.use_cases.ad.update_ad_content import (
     UpdateAdContentRequest,
     UpdateAdContentUseCase,
 )
-from src.application.use_cases.catalog.get_catalog_deferred_publications import GetCatalogDeferredPublicationsRequest, GetCatalogDeferredPublicationsUseCase
-from src.application.use_cases.notification.notify_admins_urgent import NotifyAdminsAboutUrgentRequest, NotifyAdminsAboutUrgentUseCase
-from src.application.use_cases.notification.notify_pre_publication_users import NotifyPrePublicationUsersRequest, NotifyPrePublicationUsersUseCase
-from src.application.use_cases.payment.confirm import ConfirmPaymentRequest, ConfirmPaymentUseCase
-from src.application.use_cases.payment.create import CreatePaymentRequest, CreatePaymentUseCase
-from src.application.use_cases.publication.check_limiter import CheckPublicationLimitRequest, CheckPublicationLimitUseCase
-from src.application.use_cases.publication.create_ad_publication import CreateAndScheduleAdRequest, CreateAndScheduleAdUseCase
+from src.application.use_cases.catalog.get_catalog_deferred_publications import (
+    GetCatalogDeferredPublicationsRequest,
+    GetCatalogDeferredPublicationsUseCase,
+)
+from src.application.use_cases.notification.notify_admins_urgent import (
+    NotifyAdminsAboutUrgentRequest,
+    NotifyAdminsAboutUrgentUseCase,
+)
+from src.application.use_cases.notification.notify_pre_publication_users import (
+    NotifyPrePublicationUsersRequest,
+    NotifyPrePublicationUsersUseCase,
+)
+from src.application.use_cases.payment.confirm import (
+    ConfirmPaymentRequest,
+    ConfirmPaymentUseCase,
+)
+from src.application.use_cases.payment.create import (
+    CreatePaymentRequest,
+    CreatePaymentUseCase,
+)
+from src.application.use_cases.publication.check_limiter import (
+    CheckPublicationLimitRequest,
+    CheckPublicationLimitUseCase,
+)
+from src.application.use_cases.publication.create_ad_publication import (
+    CreateAndScheduleAdRequest,
+    CreateAndScheduleAdUseCase,
+)
 from src.application.use_cases.publication.create_publication_from_ad import (
     CreatePublicationFromAdRequest,
     CreatePublicationFromAdUseCase,
 )
-from src.application.use_cases.publication.edit_published import EditPublishedAdRequest, EditPublishedAdUseCase
-from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest, GetPublicationByIdUseCase
+from src.application.use_cases.publication.edit_published import (
+    EditPublishedAdRequest,
+    EditPublishedAdUseCase,
+)
+from src.application.use_cases.publication.get_by_id import (
+    GetPublicationByIdRequest,
+    GetPublicationByIdUseCase,
+)
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationRequest,
     PublishPublicationUseCase,
 )
-from src.application.use_cases.publication.reuse_ad_and_schedule import ReuseAdAndScheduleRequest, ReuseAdAndScheduleUseCase
+from src.application.use_cases.publication.reuse_ad_and_schedule import (
+    ReuseAdAndScheduleRequest,
+    ReuseAdAndScheduleUseCase,
+)
 from src.application.use_cases.publication_service.add_service_to_publication import (
     AddServiceToPublicationRequest,
     AddServiceToPublicationUseCase,
 )
-from src.application.use_cases.publication_service.apply_service import ApplyServiceToPublishedRequest, ApplyServiceToPublishedUseCase
-from src.application.use_cases.publication_service.buy_pre_publication_service import BuyPrePublicationServiceRequest, BuyPrePublicationServiceUseCase
-from src.application.use_cases.publication_service.buy_publication_service import BuyPublicationServiceRequest, BuyPublicationServiceUseCase
-from src.application.use_cases.service_difinition.get_all import GetAllServicesRequest, GetAllServicesUseCase
-from src.application.use_cases.service_difinition.get_by_id import GetByIdServiceDefinitionRequest, GetByIdServiceDefinitionUseCase
+from src.application.use_cases.publication_service.apply_service import (
+    ApplyServiceToPublishedRequest,
+    ApplyServiceToPublishedUseCase,
+)
+from src.application.use_cases.publication_service.buy_pre_publication_service import (
+    BuyPrePublicationServiceRequest,
+    BuyPrePublicationServiceUseCase,
+)
+from src.application.use_cases.publication_service.buy_publication_service import (
+    BuyPublicationServiceRequest,
+    BuyPublicationServiceUseCase,
+)
+from src.application.use_cases.service_difinition.get_all import (
+    GetAllServicesRequest,
+    GetAllServicesUseCase,
+)
+from src.application.use_cases.service_difinition.get_by_id import (
+    GetByIdServiceDefinitionRequest,
+    GetByIdServiceDefinitionUseCase,
+)
 from src.application.use_cases.publication_service.priority_publish_publication import (
     PriorityPublishPublicationRequest,
     PriorityPublishPublicationUseCase,
@@ -80,42 +179,95 @@ from src.application.use_cases.publication_service.unpin_message import (
     UnpinMessageRequest,
     UnpinMessageUseCase,
 )
-from src.application.use_cases.region.create import CreateRegionCommand, CreateRegionUseCase
+from src.application.use_cases.region.create import (
+    CreateRegionCommand,
+    CreateRegionUseCase,
+)
 from src.application.use_cases.region.get_all import (
     GetAllRegionsUseCase,
     GetRegionsRequest,
 )
-from src.application.use_cases.region.get_by_id import GegByIdRegionUseCase, IdRegionRequest
-from src.application.use_cases.seeds.service_definitions import SeedServiceDefinitionsRequest, SeedServiceDefinitionsUseCase
-from src.application.use_cases.slots.check_hold import CheckHoldRequest, CheckHoldUseCase
+from src.application.use_cases.region.get_by_id import (
+    GegByIdRegionUseCase,
+    IdRegionRequest,
+)
+from src.application.use_cases.seeds.service_definitions import (
+    SeedServiceDefinitionsRequest,
+    SeedServiceDefinitionsUseCase,
+)
+from src.application.use_cases.slots.check_hold import (
+    CheckHoldRequest,
+    CheckHoldUseCase,
+)
 from src.application.use_cases.slots.get_calendar import (
     GetCalendarRequest,
     GetCalendarUseCase,
 )
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest, HoldSlotUseCase
-from src.application.use_cases.slots.release_hold import ReleaseHoldRequest, ReleaseHoldUseCase
-from src.application.use_cases.stats.payment import GetPaymentStatsRequest, GetPaymentStatsUseCase, GetRegionBreakdownRequest, GetRegionBreakdownUseCase
-from src.application.use_cases.stats.publication import GetPublicationStatsRequest, GetPublicationStatsUseCase
-from src.application.use_cases.stats.region_schedule import GetRegionScheduleRequest, GetRegionScheduleUseCase
-from src.application.use_cases.store.add_items import AddStoreItemsRequest, AddStoreItemsUseCase
-from src.application.use_cases.store.create import CreateStoreRequest, CreateStoreUseCase
-from src.application.use_cases.store.delete_items import DeleteStoreItemRequest, DeleteStoreItemUseCase
-from src.application.use_cases.store.get_by_user import GetUserStoreRequest, GetUserStoreUseCase
-from src.application.use_cases.store.update_items import UpdateStoreItemRequest, UpdateStoreItemUseCase
-from src.application.use_cases.store.update_store import UpdateStoreRequest, UpdateStoreUseCase
-from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceCommand, AdminAdjustBalanceUseCase
+from src.application.use_cases.slots.release_hold import (
+    ReleaseHoldRequest,
+    ReleaseHoldUseCase,
+)
+from src.application.use_cases.stats.payment import (
+    GetPaymentStatsRequest,
+    GetPaymentStatsUseCase,
+    GetRegionBreakdownRequest,
+    GetRegionBreakdownUseCase,
+)
+from src.application.use_cases.stats.publication import (
+    GetPublicationStatsRequest,
+    GetPublicationStatsUseCase,
+)
+from src.application.use_cases.stats.region_schedule import (
+    GetRegionScheduleRequest,
+    GetRegionScheduleUseCase,
+)
+from src.application.use_cases.store.add_items import (
+    AddStoreItemsRequest,
+    AddStoreItemsUseCase,
+)
+from src.application.use_cases.store.create import (
+    CreateStoreRequest,
+    CreateStoreUseCase,
+)
+from src.application.use_cases.store.delete_items import (
+    DeleteStoreItemRequest,
+    DeleteStoreItemUseCase,
+)
+from src.application.use_cases.store.get_by_user import (
+    GetUserStoreRequest,
+    GetUserStoreUseCase,
+)
+from src.application.use_cases.store.update_items import (
+    UpdateStoreItemRequest,
+    UpdateStoreItemUseCase,
+)
+from src.application.use_cases.store.update_store import (
+    UpdateStoreRequest,
+    UpdateStoreUseCase,
+)
+from src.application.use_cases.user.admin_adjust_balance import (
+    AdminAdjustBalanceCommand,
+    AdminAdjustBalanceUseCase,
+)
 from src.application.use_cases.user.get_admin import GetAdminsCommand, GetAdminsUseCase
 from src.application.use_cases.user.get_by_id import GetByIdRequest, GetByIdUserUseCase
 from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
     GetTgIdRequest,
 )
-from src.application.use_cases.user.manage_admin import ManageAdminCommand, ManageAdminUseCase
+from src.application.use_cases.user.manage_admin import (
+    ManageAdminCommand,
+    ManageAdminUseCase,
+)
 from src.application.use_cases.user.register import (
     UserRegisterRequest,
     RegisterUserUseCase,
 )
-from src.application.use_cases.user.set_block import SetUserBlockCommand, SetUserBlockUseCase
+from src.application.use_cases.user.set_block import (
+    SetUserBlockCommand,
+    SetUserBlockUseCase,
+)
 from src.application.use_cases.user.update import UpdateUserRequest, UpdateUserUseCase
 
 
@@ -217,8 +369,10 @@ class MediatorProvider(Provider):
         mediator.register(
             SelectSlotForPublicationRequest, select_slot_for_publication_use_case
         )
-        mediator.register(ConfirmPaidSlotFromBalanceRequest, confirm_paid_slot_from_balance_use_case)
-        mediator.register(ReleaseHoldRequest,release_hold_use_case)
+        mediator.register(
+            ConfirmPaidSlotFromBalanceRequest, confirm_paid_slot_from_balance_use_case
+        )
+        mediator.register(ReleaseHoldRequest, release_hold_use_case)
         mediator.register(
             AddServiceToPublicationRequest, add_service_to_publication_use_case
         )
@@ -228,8 +382,12 @@ class MediatorProvider(Provider):
         mediator.register(PublishPublicationRequest, publish_publication_use_case)
         mediator.register(GetUserPublicationsRequest, get_user_publications_use_case)
         mediator.register(EditPublishedAdRequest, edit_published_ad_use_case)
-        mediator.register(BuyPublicationServiceRequest, buy_publication_service_use_case)
-        mediator.register(BuyPrePublicationServiceRequest, buy_pre_publication_service_use_case)
+        mediator.register(
+            BuyPublicationServiceRequest, buy_publication_service_use_case
+        )
+        mediator.register(
+            BuyPrePublicationServiceRequest, buy_pre_publication_service_use_case
+        )
         mediator.register(GetPublicationByIdRequest, get_publication_by_id_use_case)
         mediator.register(GetAllServicesRequest, get_all_services_use_case)
         mediator.register(UnpinMessageRequest, unpin_message_use_case)
@@ -244,7 +402,9 @@ class MediatorProvider(Provider):
         mediator.register(
             CreatePublicationFromAdRequest, create_publication_from_ad_use_case
         )
-        mediator.register(CheckPublicationLimitRequest, check_publication_limit_use_case)
+        mediator.register(
+            CheckPublicationLimitRequest, check_publication_limit_use_case
+        )
         mediator.register(CreateAndScheduleAdRequest, create_and_schedule_use_case)
         mediator.register(
             FinalizeAndScheduleExistingAdRequest,
@@ -254,16 +414,29 @@ class MediatorProvider(Provider):
         mediator.register(ReuseAdAndScheduleRequest, reuse_ad_and_schedule_use_case)
         mediator.register(CreatePaymentRequest, create_payment_use_case)
         mediator.register(ConfirmPaymentRequest, confirm_payment_use_case)
-        mediator.register(GetPaymentByExternalIdRequest, get_payment_by_external_id_use_case)
+        mediator.register(
+            GetPaymentByExternalIdRequest, get_payment_by_external_id_use_case
+        )
         mediator.register(MarkPaymentFailedRequest, mark_payment_failed_use_case)
-        mediator.register(GetByIdServiceDefinitionRequest, get_by_id_service_definition_use_case)
-        mediator.register(SeedServiceDefinitionsRequest, seed_service_definitons_use_case)
-        mediator.register(ApplyServiceToPublishedRequest, apply_service_to_published_use_case)
+        mediator.register(
+            GetByIdServiceDefinitionRequest, get_by_id_service_definition_use_case
+        )
+        mediator.register(
+            SeedServiceDefinitionsRequest, seed_service_definitons_use_case
+        )
+        mediator.register(
+            ApplyServiceToPublishedRequest, apply_service_to_published_use_case
+        )
         mediator.register(NotifyAdminsAboutUrgentRequest, notify_admins_urgent_use_case)
-        mediator.register(NotifyPrePublicationUsersRequest, notify_pre_publication_users_use_case)
+        mediator.register(
+            NotifyPrePublicationUsersRequest, notify_pre_publication_users_use_case
+        )
         mediator.register(ApproveUrgentBuyoutRequest, approve_urgent_buyout_use_case)
         mediator.register(RejectUrgentBuyoutRequest, reject_urgnet_buyout_use_case)
-        mediator.register(GetCatalogDeferredPublicationsRequest, get_catalog_deferred_publications_use_case)
+        mediator.register(
+            GetCatalogDeferredPublicationsRequest,
+            get_catalog_deferred_publications_use_case,
+        )
         mediator.register(GetUserStoreRequest, get_user_store_use_case)
         mediator.register(CreateStoreRequest, create_store_use_case)
         mediator.register(AddStoreItemsRequest, add_store_items_use_case)
@@ -285,7 +458,11 @@ class MediatorProvider(Provider):
         mediator.register(GetRegionBreakdownRequest, get_region_breakdown_use_case)
         mediator.register(GetPublicationStatsRequest, get_publication_stats_use_case)
         mediator.register(GetRegionScheduleRequest, get_region_schedule_use_case)
-        mediator.register(CancelPublicationByAdminRequest, cancel_publication_by_admin_use_case)
-        mediator.register(GetAdminScheduledCatalogRequest, get_admin_scheduled_catalog_use_case)
+        mediator.register(
+            CancelPublicationByAdminRequest, cancel_publication_by_admin_use_case
+        )
+        mediator.register(
+            GetAdminScheduledCatalogRequest, get_admin_scheduled_catalog_use_case
+        )
 
         return mediator

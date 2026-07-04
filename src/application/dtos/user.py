@@ -17,9 +17,9 @@ class UserDTO:
     region_id: int
     balance: Decimal
     is_blocked: bool
-    is_payment_blocked: bool 
+    is_payment_blocked: bool
     pre_publication_expires_at: datetime | None
-    
+
     @property
     def balance_display(self) -> str:
         return f"{self.balance:,.0f} руб.".replace(",", " ")

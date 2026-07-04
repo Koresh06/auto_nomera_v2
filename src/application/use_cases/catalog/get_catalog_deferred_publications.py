@@ -51,12 +51,12 @@ class GetCatalogDeferredPublicationsUseCase(
             region_id=command.region_id
         )
 
-        pre_publications: list[Publication] = (
-            await self.publication_repo.list_pre_publication(
-                region_id=command.region_id,
-                now_utc=now_utc,
-                before_utc=before_utc,
-            )
+        pre_publications: list[
+            Publication
+        ] = await self.publication_repo.list_pre_publication(
+            region_id=command.region_id,
+            now_utc=now_utc,
+            before_utc=before_utc,
         )
         print(pre_publications)
 

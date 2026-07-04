@@ -18,16 +18,22 @@ from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.cache.block import RedisBlockCache
 from src.infrastructure.repositories.ad.sqlalchemy import SQLAlchemyAdRepo
 from src.infrastructure.repositories.payment.sqlalchemy import SQLAlchemyPaymentRepo
-from src.infrastructure.repositories.publication.sqlalchemy import SQLAlchemyPublicationRepo
+from src.infrastructure.repositories.publication.sqlalchemy import (
+    SQLAlchemyPublicationRepo,
+)
 from src.infrastructure.repositories.region.sqlalchemy import SQLAlchemyRegionRepository
-from src.infrastructure.repositories.service_def.sqlalchemy import SQLAlchemyServiceDefinitionRepo
-from src.infrastructure.repositories.slot.sqlalchemy import SQLAlchemySlotBookingRepo, SQLAlchemySlotConvertedRepo
+from src.infrastructure.repositories.service_def.sqlalchemy import (
+    SQLAlchemyServiceDefinitionRepo,
+)
+from src.infrastructure.repositories.slot.sqlalchemy import (
+    SQLAlchemySlotBookingRepo,
+    SQLAlchemySlotConvertedRepo,
+)
 from src.infrastructure.repositories.user.sqlalchemy import SQLAlchemyUserRepo
 from src.infrastructure.slots.holt_store.redis import RedisSlotHoldStore
 
 
 class RepositoriesProvider(Provider):
-
     @provide(scope=Scope.APP)
     def get_slot_hold_store(self, redis: Redis) -> SlotHoldStore:
         return RedisSlotHoldStore(redis)
@@ -45,21 +51,29 @@ class RepositoriesProvider(Provider):
         return SQLAlchemyAdRepo(session)
 
     @provide(scope=Scope.REQUEST)
-    def get_publication_repository(self, session: AsyncSession) -> PublicationRepository:
+    def get_publication_repository(
+        self, session: AsyncSession
+    ) -> PublicationRepository:
         return SQLAlchemyPublicationRepo(session)
 
     @provide(scope=Scope.REQUEST)
-    def get_slot_booking_repository(self, session: AsyncSession) -> SlotBookingRepository:
+    def get_slot_booking_repository(
+        self, session: AsyncSession
+    ) -> SlotBookingRepository:
         return SQLAlchemySlotBookingRepo(session)
 
     @provide(scope=Scope.REQUEST)
-    def get_slot_converted_repository(self, session: AsyncSession) -> SlotConvertedRepository:
+    def get_slot_converted_repository(
+        self, session: AsyncSession
+    ) -> SlotConvertedRepository:
         return SQLAlchemySlotConvertedRepo(session)
 
     @provide(scope=Scope.REQUEST)
-    def get_service_definition_repository(self, session: AsyncSession) -> ServiceDefinitionRepository:
+    def get_service_definition_repository(
+        self, session: AsyncSession
+    ) -> ServiceDefinitionRepository:
         return SQLAlchemyServiceDefinitionRepo(session)
-    
+
     @provide(scope=Scope.REQUEST)
     def get_payment_repository(self, session: AsyncSession) -> PaymentRepository:
         return SQLAlchemyPaymentRepo(session)

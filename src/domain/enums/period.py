@@ -10,10 +10,14 @@ class StatsPeriod(str, Enum):
 
     def label(self) -> str:
         match self:
-            case StatsPeriod.TODAY: return "Сегодня"
-            case StatsPeriod.WEEK: return "Неделя"
-            case StatsPeriod.MONTH: return "Месяц"
-            case StatsPeriod.ALL: return "Всё время"
+            case StatsPeriod.TODAY:
+                return "Сегодня"
+            case StatsPeriod.WEEK:
+                return "Неделя"
+            case StatsPeriod.MONTH:
+                return "Месяц"
+            case StatsPeriod.ALL:
+                return "Всё время"
 
     def since_utc(self) -> datetime | None:
         now = datetime.now(timezone.utc)

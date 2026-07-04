@@ -18,23 +18,23 @@ class ServiceDefinitionDTO:
     @property
     def price_display(self) -> str:
         return f"{self.price:,.0f} руб.".replace(",", " ")
-    
+
     @property
     def duration_display(self) -> str:
         return f"{self.duration_days} дн." if self.duration_days else "—"
-    
+
     @property
     def description_display(self) -> str:
         return self.description or "— не задано"
-    
+
     @property
     def has_duration(self) -> bool:
         return self.duration_days is not None
-    
+
     @property
     def toggle_label(self) -> str:
         return "🔴 Снять с продажи" if self.is_active else "🟢 Вернуть в продаж"
-    
+
     @property
     def status_label(self) -> str:
         return "🟢 Доступна для покупки" if self.is_active else "🔴 Недоступна"

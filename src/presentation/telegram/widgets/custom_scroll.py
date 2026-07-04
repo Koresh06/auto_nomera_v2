@@ -38,13 +38,13 @@ class CatalogScroll(BaseScroll, Keyboard):
     ) -> RawKeyboard:
         if not self.is_(data, manager):
             return []
-    
+
         pages = await self.get_page_count(data, manager)
         if pages <= 1:
             return []
-    
+
         current_page = await self.get_page(manager)
-    
+
         return [
             [
                 InlineKeyboardButton(
@@ -61,7 +61,7 @@ class CatalogScroll(BaseScroll, Keyboard):
                 ),
             ]
         ]
-    
+
     async def _process_item_callback(
         self,
         callback: CallbackQuery,

@@ -67,5 +67,7 @@ async def on_mailing_confirm(
         )
     )
 
-    await callback.answer("🚀 Рассылка запущена! Отчёт придёт по завершении.", show_alert=True)
+    await callback.answer(
+        "🚀 Рассылка запущена! Отчёт придёт по завершении.", show_alert=True
+    )
     await dialog_manager.done()

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class DialogTeleporter(ABC):
     @abstractmethod
     async def start(

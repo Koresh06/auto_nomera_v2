@@ -9,18 +9,17 @@ from src.domain.enums.publication_service import PublicationServiceType
 class ServiceDefinition(Entity):
     title: str
     type: PublicationServiceType
-    price: int                          # в рублях
-    duration_days: int | None = None    # для PIN и AUTOPUBLISH — сколько дней
+    price: int  # в рублях
+    duration_days: int | None = None  # для PIN и AUTOPUBLISH — сколько дней
     description: str | None = None
     is_active: bool = True
-    params_schema: dict | None = None   # схема для валидации params при покупке
-
+    params_schema: dict | None = None  # схема для валидации params при покупке
 
     @staticmethod
     def format_price(kopecks: int) -> str:
         rubles = Decimal(kopecks)
         return f"{rubles:,.0f} руб.".replace(",", " ")
-    
+
     def activate(self) -> None:
         self.is_active = True
         self.touch()

@@ -21,7 +21,8 @@ class CountAdsByUserUseCase(UseCase[CountAdsByUserRequest, int]):
     async def __call__(self, command: CountAdsByUserRequest) -> int:
         logger.info(
             "[CountAdsByUser] user_id=%s region_id=%s",
-            command.user_id, command.region_id,
+            command.user_id,
+            command.region_id,
         )
         count = await self.ad_repo.count_ads_by_user(
             user_id=command.user_id,

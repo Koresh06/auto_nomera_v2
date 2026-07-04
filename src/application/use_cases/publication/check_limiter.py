@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -10,7 +9,11 @@ from src.application.ports.region.region_repo import RegionRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.entities.region import Region
 from src.domain.enums.ad import AdType
-from src.domain.services.publication.limiter import FREE_LIMITS, INTERVAL, LimitCheckResult
+from src.domain.services.publication.limiter import (
+    FREE_LIMITS,
+    INTERVAL,
+    LimitCheckResult,
+)
 from src.domain.services.region.region_guard import RegionGuard
 
 
@@ -25,7 +28,9 @@ class CheckPublicationLimitRequest(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class CheckPublicationLimitUseCase(UseCase[CheckPublicationLimitRequest, LimitCheckResult]):
+class CheckPublicationLimitUseCase(
+    UseCase[CheckPublicationLimitRequest, LimitCheckResult]
+):
     region_guard: RegionGuard
     publication_repo: PublicationRepository
     ad_repo: AdRepository
@@ -36,7 +41,7 @@ class CheckPublicationLimitUseCase(UseCase[CheckPublicationLimitRequest, LimitCh
         region: Region | None = await self.region_repo.get_by_id(command.region_id)
         if region is None:
             raise RegionNotFoundException(command.region_id)
-        
+
         if region.settings and not region.settings.publication_limit_enabled:
             return LimitCheckResult.ok()
 

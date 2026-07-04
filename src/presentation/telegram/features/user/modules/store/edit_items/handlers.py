@@ -2,7 +2,7 @@ from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd.select import OnItemClick
-from aiogram_dialog.widgets.kbd import  Select, Button
+from aiogram_dialog.widgets.kbd import Select, Button
 from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.application.dtos.ad import AdDTO
@@ -12,7 +12,9 @@ from src.application.use_cases.store.delete_items import DeleteStoreItemRequest
 from src.application.use_cases.store.update_items import UpdateStoreItemRequest
 from src.domain.services.ad.plate_validator import validate_plate
 from src.presentation.telegram.utils.price_validators import validate_price
-from src.presentation.telegram.features.user.modules.store.edit_items.states import StoreEditItemsSG
+from src.presentation.telegram.features.user.modules.store.edit_items.states import (
+    StoreEditItemsSG,
+)
 
 
 @inject
@@ -88,9 +90,7 @@ async def on_delete_item(
     ad_id: int = data["ad_id"]
     plate: str = data["selected_plate"]
 
-    await mediator.handle(
-        DeleteStoreItemRequest(ad_id=ad_id, plate=plate)
-    )
+    await mediator.handle(DeleteStoreItemRequest(ad_id=ad_id, plate=plate))
 
     await callback.answer("✅ Номер удалён.", show_alert=True)
     await dialog_manager.switch_to(StoreEditItemsSG.all_list)

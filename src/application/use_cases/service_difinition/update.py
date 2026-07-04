@@ -2,10 +2,15 @@ from dataclasses import dataclass
 
 from src.application.common.unsent import _Unset, UNSET
 from src.application.dtos.service_definition import ServiceDefinitionDTO
-from src.application.exceptions.service_definition import ServiceDefinitionNotFoundException
-from src.application.ports.publication_service.service_definition_repo import ServiceDefinitionRepository
+from src.application.exceptions.service_definition import (
+    ServiceDefinitionNotFoundException,
+)
+from src.application.ports.publication_service.service_definition_repo import (
+    ServiceDefinitionRepository,
+)
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.infrastructure.database.transaction_manager.base import TransactionManager
+
 
 @dataclass(frozen=True, eq=False)
 class UpdateServiceCommand(UseCaseRequest):

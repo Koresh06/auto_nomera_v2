@@ -3,7 +3,9 @@ from decimal import Decimal
 
 from src.application.exceptions.service_definition import ServiceNotAvailableException
 from src.application.exceptions.user import UserNotFoundException
-from src.application.ports.publication_service.service_definition_repo import ServiceDefinitionRepository
+from src.application.ports.publication_service.service_definition_repo import (
+    ServiceDefinitionRepository,
+)
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.publication_service import PublicationServiceType

@@ -35,7 +35,9 @@ async def getter_finish_store(
 ) -> dict:
     name = dialog_manager.find("name").get_value()
     city = dialog_manager.find("city").get_value()
-    phone = dialog_manager.dialog_data.get("phone") or dialog_manager.dialog_data.get("current_phone")
+    phone = dialog_manager.dialog_data.get("phone") or dialog_manager.dialog_data.get(
+        "current_phone"
+    )
     username = dialog_manager.dialog_data.get("username")
 
     dialog_manager.dialog_data["shop_name"] = name

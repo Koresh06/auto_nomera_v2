@@ -24,9 +24,7 @@ class UpdateRegionSettingsCommand(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class UpdateRegionSettingsUseCase(
-    UseCase[UpdateRegionSettingsCommand, RegionDTO]
-):
+class UpdateRegionSettingsUseCase(UseCase[UpdateRegionSettingsCommand, RegionDTO]):
     region_repo: RegionRepository
     transaction_manager: TransactionManager
 

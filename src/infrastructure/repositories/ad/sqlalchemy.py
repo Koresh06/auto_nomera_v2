@@ -8,26 +8,23 @@ from src.domain.enums.ad import AdStatus, AdType
 from src.infrastructure.database.models import AdModel
 
 
-
 class SQLAlchemyAdRepo(AdRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
- 
+
     async def get_by_id(self, ad_id: int) -> Ad | None:
         query = select(AdModel).where(AdModel.id == ad_id)
         result = await self._session.execute(query)
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
-        
- 
+
     async def create(self, ad: Ad) -> Ad:
         model = AdModel.from_entity(ad)
         self._session.add(model)
         await self._session.flush()
         await self._session.refresh(model)
         return model.to_entity()
-        
- 
+
     async def save(self, ad: Ad) -> None:
         query = select(AdModel).where(AdModel.id == ad.id)
         result = await self._session.execute(query)
@@ -57,8 +54,7 @@ class SQLAlchemyAdRepo(AdRepository):
         result = await self._session.execute(query)
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
-    
-    
+
     async def find_store_by_user(
         self,
         user_id: int,
@@ -77,8 +73,7 @@ class SQLAlchemyAdRepo(AdRepository):
         result = await self._session.execute(query)
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
-    
-    
+
     async def list_urgent_published(self, region_id: int) -> list[Ad]:
         query = (
             select(AdModel)
@@ -91,19 +86,15 @@ class SQLAlchemyAdRepo(AdRepository):
         )
         result = await self._session.execute(query)
         return [m.to_entity() for m in result.scalars().all()]
-    
-    
+
     async def count_ads_by_user(
         self,
         user_id: int,
         region_id: int,
     ) -> int:
-        query = (
-            select(func.count(AdModel.id))
-            .where(
-                AdModel.user_id == user_id,
-                AdModel.region_id == region_id,
-            )
+        query = select(func.count(AdModel.id)).where(
+            AdModel.user_id == user_id,
+            AdModel.region_id == region_id,
         )
         result = await self._session.execute(query)
         return result.scalar_one()

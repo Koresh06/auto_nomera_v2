@@ -42,29 +42,32 @@ class PublicationDTO:
             published_at_utc=publication.published_at_utc,
             scheduler_job_id=publication.scheduler_job_id,
             is_child=publication.is_child,
-            services=[PublicationServiceDTO.from_entity(s) for s in publication.services],
+            services=[
+                PublicationServiceDTO.from_entity(s) for s in publication.services
+            ],
             plate_number=plate_number,
             shop_name=shop_name,
         )
-    
+
     @property
     def slot_display(self) -> str:
         if self.slot is None:
             return "—"
         return self.slot.to_display
-    
+
     @property
     def display_title(self) -> str:
         if self.shop_name:
             return f"🏦 {self.shop_name}"
         return f"🚘 {self.plate_number or '—'}"
-    
 
     @property
     def services_display(self) -> str:
         active = [
-            s for s in self.services
-            if s.status in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
+            s
+            for s in self.services
+            if s.status
+            in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
         ]
         if not active:
             return "—"

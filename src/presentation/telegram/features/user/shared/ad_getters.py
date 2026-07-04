@@ -15,7 +15,10 @@ from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdType
-from src.domain.enums.publication_service import PublicationServiceStatus, PublicationServiceType
+from src.domain.enums.publication_service import (
+    PublicationServiceStatus,
+    PublicationServiceType,
+)
 from src.presentation.telegram.utils.build_media import build_media_attachment
 
 
@@ -48,7 +51,9 @@ async def getter_publication_service(
         GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
     )
     start_data = dialog_manager.start_data or {}
-    pub_id: int = dialog_manager.dialog_data.get("publication_id") or start_data.get("publication_id")
+    pub_id: int = dialog_manager.dialog_data.get("publication_id") or start_data.get(
+        "publication_id"
+    )
 
     services: list[ServiceDefinitionDTO] = await mediator.handle(
         GetAllServicesRequest(is_active=True)
@@ -140,9 +145,13 @@ async def getter_finish(
     else:
         selected_services = "Нет"
 
-    is_auto_pub = any(s.type == PublicationServiceType.PRIORITY_PUBLISH for s in active_services)
+    is_auto_pub = any(
+        s.type == PublicationServiceType.PRIORITY_PUBLISH for s in active_services
+    )
 
-    media_file_id = data.get("media_file_id") or (ad.content.image_file_id if ad.content else None)
+    media_file_id = data.get("media_file_id") or (
+        ad.content.image_file_id if ad.content else None
+    )
 
     return {
         "is_auto_pub": is_auto_pub,

@@ -15,6 +15,7 @@ from src.domain.value_objects.hold_owner import HoldOwner
 from src.domain.value_objects.slot_key import SlotKey
 from src.utils.get_datetime_utc_now import get_datetime_utc_now
 
+
 @dataclass(slots=True)
 class HoldResult:
     slot: SlotKey
@@ -51,13 +52,12 @@ class SlotReservationService:
 
         converted_info = await self.converted_repo.get_converted_owner_and_ad(slot)
         is_converted = converted_info is not None
-        
+
         is_own_pending_payment = False
         if converted_info is not None:
             converted_user_id, converted_ad_id = converted_info
             is_own_pending_payment = (
-                converted_user_id == user_id
-                and converted_ad_id is None
+                converted_user_id == user_id and converted_ad_id is None
             )
 
         hold_until = now + self.hold_ttl

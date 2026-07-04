@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True, eq=False)
 class AdminAdjustBalanceCommand(UseCaseRequest):
-    user_id: int        
-    amount: Decimal      
+    user_id: int
+    amount: Decimal
 
 
 @dataclass(kw_only=True)
@@ -33,7 +33,7 @@ class AdminAdjustBalanceUseCase(UseCase[AdminAdjustBalanceCommand, UserDTO]):
         if command.amount > 0:
             user.top_up(command.amount)
         else:
-            user.charge(-command.amount) 
+            user.charge(-command.amount)
 
         await self.user_repo.save(user)
         await self.transaction_manager.commit()

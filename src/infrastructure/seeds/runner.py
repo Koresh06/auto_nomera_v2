@@ -1,7 +1,9 @@
 import logging
 
 from src.application.mediator import Mediator
-from src.application.use_cases.seeds.service_definitions import SeedServiceDefinitionsRequest
+from src.application.use_cases.seeds.service_definitions import (
+    SeedServiceDefinitionsRequest,
+)
 
 
 logger = logging.getLogger(__name__)

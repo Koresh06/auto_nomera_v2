@@ -36,9 +36,7 @@ async def on_confirm_publish(
         local_time=time.fromisoformat(slot_time),
     )
 
-    user: UserDTO = await mediator.handle(
-        GetTgIdRequest(tg_id=callback.from_user.id)
-    )
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=callback.from_user.id))
 
     hold_valid: bool = await mediator.handle(
         CheckHoldRequest(

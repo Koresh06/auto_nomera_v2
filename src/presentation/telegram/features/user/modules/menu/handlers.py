@@ -33,7 +33,9 @@ async def register_user_or_change_region(
                 full_name=callback.from_user.full_name,
             )
         )
-        logger.info(f"Регистрация пользователя tg_id: {callback.from_user.id} успешно завершена!")
+        logger.info(
+            f"Регистрация пользователя tg_id: {callback.from_user.id} успешно завершена!"
+        )
     except UserAlreadyExistsException:
         await mediator.handle(
             UpdateUserRequest(
@@ -41,7 +43,9 @@ async def register_user_or_change_region(
                 data=UpdateUserDTO(region_id=int(item_id)),
             )
         )
-        logger.info(f"Смена региона пользователя tg_id: {callback.from_user.id} на region_id={item_id}")
+        logger.info(
+            f"Смена региона пользователя tg_id: {callback.from_user.id} на region_id={item_id}"
+        )
 
     await dialog_manager.start(
         UserMenuSG.menu,

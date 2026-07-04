@@ -3,7 +3,9 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Start
 from aiogram_dialog.widgets.text import Const
 
-from src.presentation.telegram.features.admin.modules.admin_management.states import AdminManagementSG
+from src.presentation.telegram.features.admin.modules.admin_management.states import (
+    AdminManagementSG,
+)
 from src.presentation.telegram.features.admin.modules.balance.states import (
     UserBalanceAdminSG,
 )
@@ -15,9 +17,15 @@ from src.presentation.telegram.features.admin.modules.paid_services.states impor
 from src.presentation.telegram.features.admin.modules.region.main.states import (
     MainRegionSG,
 )
-from src.presentation.telegram.features.admin.modules.stats.globals.states import GlobalStatsSG
-from src.presentation.telegram.features.admin.modules.stats.publications.states import PublishStatsSG
-from src.presentation.telegram.features.admin.modules.stats.replenishment.states import StatsReplenishmentSG
+from src.presentation.telegram.features.admin.modules.stats.globals.states import (
+    GlobalStatsSG,
+)
+from src.presentation.telegram.features.admin.modules.stats.publications.states import (
+    PublishStatsSG,
+)
+from src.presentation.telegram.features.admin.modules.stats.replenishment.states import (
+    StatsReplenishmentSG,
+)
 
 from .getters import getter_admin_menu
 from .states import AdminMenuSG

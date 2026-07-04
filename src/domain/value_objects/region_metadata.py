@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class RegionMetadata:
-    tg_group_url: str | None = None 
+    tg_group_url: str | None = None
     vk_group_url: str | None = None
     max_channel_url: str | None = None
 

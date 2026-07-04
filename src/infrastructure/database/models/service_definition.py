@@ -38,7 +38,7 @@ class ServiceDefinitionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
 
     def __repr__(self) -> str:
         return f"ServiceDefinitionModel(type={self.type}, price={self.price}, active={self.is_active})"
-    
+
     @classmethod
     def from_entity(cls, service: "ServiceDefinition") -> "ServiceDefinitionModel":
         return cls(
@@ -50,7 +50,7 @@ class ServiceDefinitionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             is_active=service.is_active,
             params_schema=service.params_schema,
         )
-    
+
     def to_entity(self) -> "ServiceDefinition":
         return ServiceDefinition(
             id=self.id,
@@ -62,7 +62,7 @@ class ServiceDefinitionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             is_active=self.is_active,
             params_schema=self.params_schema,
         )
-    
+
     def _update_model(self, service: "ServiceDefinition") -> None:
         self.title = service.title
         self.type = service.type

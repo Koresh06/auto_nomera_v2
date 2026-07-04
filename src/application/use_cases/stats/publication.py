@@ -18,7 +18,9 @@ class GetPublicationStatsUseCase(
 ):
     publication_repo: PublicationRepository
 
-    async def __call__(self, command: GetPublicationStatsRequest) -> PublicationStatsDTO:
+    async def __call__(
+        self, command: GetPublicationStatsRequest
+    ) -> PublicationStatsDTO:
         return await self.publication_repo.get_stats(
             since_utc=command.period.since_utc(),
             region_id=command.region_id,

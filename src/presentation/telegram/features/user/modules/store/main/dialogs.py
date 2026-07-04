@@ -3,15 +3,22 @@ from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Column, Start
 
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
-from src.presentation.telegram.features.user.modules.store.add_item.states import StoreAddItemsSG
-from src.presentation.telegram.features.user.modules.store.edit_items.states import StoreEditItemsSG
-from src.presentation.telegram.features.user.modules.store.edit_store.states import StoreEditSG
+from src.presentation.telegram.features.user.modules.store.add_item.states import (
+    StoreAddItemsSG,
+)
+from src.presentation.telegram.features.user.modules.store.edit_items.states import (
+    StoreEditItemsSG,
+)
+from src.presentation.telegram.features.user.modules.store.edit_store.states import (
+    StoreEditSG,
+)
 from src.presentation.telegram.features.user.modules.store.main.getters import (
     getter_store_main,
 )
-from src.presentation.telegram.features.user.modules.store.view_publish.states import StoreViewPublishSG
+from src.presentation.telegram.features.user.modules.store.view_publish.states import (
+    StoreViewPublishSG,
+)
 from .states import StoreMainSG
-
 
 
 store_main_dialog = Dialog(

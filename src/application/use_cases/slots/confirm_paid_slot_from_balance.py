@@ -21,7 +21,9 @@ class ConfirmPaidSlotFromBalanceRequest(UseCaseRequest):
 
 
 @dataclass(kw_only=True)
-class ConfirmPaidSlotFromBalanceUseCase(UseCase[ConfirmPaidSlotFromBalanceRequest, None]):
+class ConfirmPaidSlotFromBalanceUseCase(
+    UseCase[ConfirmPaidSlotFromBalanceRequest, None]
+):
     user_repo: UserRepository
     converted_repo: SlotConvertedRepository
     transaction_manager: TransactionManager

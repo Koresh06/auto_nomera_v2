@@ -20,7 +20,7 @@ class AutopublishStrategy:
         if service.params is None:
             service.mark_used()
             return
-        
+
         days = service.params.get("days", 7)
         for i in range(1, days):
             next_slot = SlotKey(
@@ -37,7 +37,7 @@ class AutopublishStrategy:
             new_pub = Publication(
                 ad_id=publication.ad_id,
                 region_id=publication.region_id,
-                is_child=True, 
+                is_child=True,
             )
             new_pub.schedule(slot=next_slot, publish_at_utc=publish_at_utc)
             created = await context.publication_repo.create(new_pub)

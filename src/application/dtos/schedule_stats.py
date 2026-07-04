@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from src.domain.enums.ad import AdType
 from src.domain.enums.publication import PublicationStatus
 
+
 @dataclass(frozen=True, slots=True)
 class ScheduleSlotDTO:
     publication_id: int
@@ -29,7 +30,7 @@ class ScheduleSlotDTO:
             PublicationStatus.SCHEDULED: "🕓",
             PublicationStatus.PUBLISHING: "📤",
         }.get(self.status, "▫️")
-    
+
     @property
     def owner_link(self) -> str:
         if self.owner_username:

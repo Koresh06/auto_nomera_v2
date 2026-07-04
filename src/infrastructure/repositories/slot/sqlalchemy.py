@@ -137,7 +137,9 @@ class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
             if (slot.region_id, slot.local_day, slot.local_time) in converted
         }
 
-    async def get_converted_owner_and_ad(self, slot: SlotKey) -> tuple[int, int | None] | None:
+    async def get_converted_owner_and_ad(
+        self, slot: SlotKey
+    ) -> tuple[int, int | None] | None:
         result = await self._session.execute(
             select(SlotConvertedModel.user_id, SlotConvertedModel.ad_id).where(
                 SlotConvertedModel.region_id == slot.region_id,

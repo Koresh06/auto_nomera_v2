@@ -30,8 +30,10 @@ class ReleaseHoldUseCase(UseCase[ReleaseHoldRequest, None]):
             user_id=command.user_id,
         )
 
-        converted_info = await self.reservation_service.converted_repo.get_converted_owner_and_ad(
-            command.slot
+        converted_info = (
+            await self.reservation_service.converted_repo.get_converted_owner_and_ad(
+                command.slot
+            )
         )
         if converted_info is not None:
             converted_user_id, converted_ad_id = converted_info

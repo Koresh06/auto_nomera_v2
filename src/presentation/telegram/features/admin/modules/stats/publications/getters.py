@@ -4,13 +4,16 @@ from aiogram_dialog import DialogManager
 from src.application.dtos.user import UserDTO
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_id import GetByIdRequest
-from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.core.config import settings
 from src.application.dtos.catalog_card import CatalogCardDTO
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.schedule_stats import RegionScheduleDTO
-from src.application.use_cases.catalog.get_catalog_deferred_publications import CatalogItem
-from src.application.use_cases.publication.get_admin_scheduled_catalog import GetAdminScheduledCatalogRequest
+from src.application.use_cases.catalog.get_catalog_deferred_publications import (
+    CatalogItem,
+)
+from src.application.use_cases.publication.get_admin_scheduled_catalog import (
+    GetAdminScheduledCatalogRequest,
+)
 from src.application.use_cases.region.get_all import GetRegionsRequest
 from src.application.use_cases.stats.region_schedule import GetRegionScheduleRequest
 from src.domain.enums.ad import AdType
@@ -118,6 +121,7 @@ async def getter_region_schedule(
         "has_any": has_any,
     }
 
+
 @inject
 async def getter_admin_catalog(
     dialog_manager: DialogManager,
@@ -214,8 +218,6 @@ async def getter_admin_catalog(
             )
             current_media = build_media_attachment(c.image_file_id)
 
-            
-
     return {
         "has_ads": has_ads,
         "count_page": len(items),
@@ -223,6 +225,7 @@ async def getter_admin_catalog(
         "current_media": current_media,
         "card": card,
     }
+
 
 @inject
 async def getter_admin_catalog_list(
@@ -243,9 +246,19 @@ async def getter_admin_catalog_list(
         ad = item.ad
         prefix = "👉 " if idx == current_page else ""
         if ad.ad_type == AdType.STORE and ad.store_content:
-            buttons.append((f"{prefix}🏦 {ad.store_content.shop_name} • {len(ad.store_content.items)} шт.", str(idx)))
+            buttons.append(
+                (
+                    f"{prefix}🏦 {ad.store_content.shop_name} • {len(ad.store_content.items)} шт.",
+                    str(idx),
+                )
+            )
         elif ad.content:
             c = ad.content
-            buttons.append((f"{prefix}🕐 {c.plate_number} • {ad.ad_type.display} • {c.price.display}", str(idx)))
+            buttons.append(
+                (
+                    f"{prefix}🕐 {c.plate_number} • {ad.ad_type.display} • {c.price.display}",
+                    str(idx),
+                )
+            )
 
     return {"catalog_buttons": buttons, "has_ads": len(buttons) > 0}

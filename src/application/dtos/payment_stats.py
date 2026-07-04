@@ -21,7 +21,7 @@ class MethodStatDTO:
     @property
     def label(self) -> str:
         return _METHOD_LABELS.get(self.method, self.method.value)
-    
+
     @property
     def amount_display(self) -> str:
         return f"{self.amount:.0f}"
@@ -51,7 +51,7 @@ class PaymentStatsDTO:
         if not self.by_method:
             return None
         return max(self.by_method, key=lambda m: m.count)
-    
+
     @property
     def total_amount_display(self) -> str:
         return f"{self.total_amount:.0f}"

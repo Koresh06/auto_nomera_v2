@@ -24,15 +24,15 @@ class BaseModel(AsyncAttrs, DeclarativeBase):
 
 class CreatedAtMixin:
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
+        DateTime(timezone=True),
         default=get_datetime_utc_now,
         server_default=func.now(),
     )
- 
- 
+
+
 class UpdatedAtMixin:
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),   
+        DateTime(timezone=True),
         default=get_datetime_utc_now,
         onupdate=get_datetime_utc_now,
         server_default=func.now(),

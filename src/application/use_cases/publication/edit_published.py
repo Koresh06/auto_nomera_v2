@@ -81,7 +81,7 @@ class EditPublishedAdUseCase(UseCase[EditPublishedAdRequest, None]):
             return
         ad.fill_content(
             AdContent(
-                plate_number=cur.plate_number, 
+                plate_number=cur.plate_number,
                 city=command.city if command.city is not None else cur.city,
                 price=command.price if command.price is not None else cur.price,
                 contacts=(

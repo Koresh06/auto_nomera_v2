@@ -5,7 +5,10 @@ from aiogram_dialog.widgets.kbd import Button
 
 from src.application.mediator import Mediator
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusCommand
-from src.presentation.telegram.features.admin.modules.region.edit.states import EditRegionMetadataSG, EditRegionSettingsSG
+from src.presentation.telegram.features.admin.modules.region.edit.states import (
+    EditRegionMetadataSG,
+    EditRegionSettingsSG,
+)
 
 
 async def on_region_selected(

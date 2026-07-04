@@ -1,5 +1,6 @@
 from src.domain.exceptions.base import ApplicationException
 
+
 class UserNotFoundException(ApplicationException):
     message = "Пользователь не найден"
 

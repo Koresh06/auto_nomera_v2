@@ -64,6 +64,8 @@ async def on_payment_method_selected(
         dialog_manager.dialog_data["card_number"] = payment.meta.get("card")
         dialog_manager.dialog_data["reference"] = payment.meta.get("reference")
     elif method == PaymentMethod.YOOKASSA:
-        dialog_manager.dialog_data["confirmation_url"] = payment.meta.get("confirmation_url")
+        dialog_manager.dialog_data["confirmation_url"] = payment.meta.get(
+            "confirmation_url"
+        )
 
     await dialog_manager.next()

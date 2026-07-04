@@ -2,7 +2,10 @@ import uuid
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from src.application.exceptions.user import PaymentBlockedException, UserNotFoundException
+from src.application.exceptions.user import (
+    PaymentBlockedException,
+    UserNotFoundException,
+)
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.user.user_repo import UserRepository
 from src.application.services.payment.provider_registry import PaymentProviderRegistry
@@ -37,7 +40,7 @@ class CreatePaymentUseCase(UseCase[CreatePaymentRequest, Payment]):
         user = await self.user_repo.get_by_id(command.user_id)
         if user is None:
             raise UserNotFoundException(command.user_id)
-        
+
         if user.is_payment_blocked:
             raise PaymentBlockedException(command.user_id)
 

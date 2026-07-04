@@ -8,6 +8,7 @@ from src.application.dtos.ad import AdDTO
 from src.domain.value_objects.store_content import StoreContent, StoreItem
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
+
 @dataclass(frozen=True, eq=False)
 class AddStoreItemsRequest(UseCaseRequest):
     ad_id: int
@@ -27,7 +28,9 @@ class AddStoreItemsUseCase(UseCase[AddStoreItemsRequest, "AddStoreItemsResult"])
         existing = ad.store_content
         existing_plates = {item.plate for item in existing.items}
 
-        duplicates = [item.plate for item in command.items if item.plate in existing_plates]
+        duplicates = [
+            item.plate for item in command.items if item.plate in existing_plates
+        ]
         if duplicates:
             raise StoreItemsAlreadyExistException(duplicates)
 

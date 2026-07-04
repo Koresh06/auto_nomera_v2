@@ -110,6 +110,8 @@ class AiogramTelegramPublisher(TelegramPublisher):
                 ),
             )
         except TelegramBadRequest as e:
-            if "message is not modified" in str(e) or "message to edit not found" in str(e):
+            if "message is not modified" in str(
+                e
+            ) or "message to edit not found" in str(e):
                 return
             raise

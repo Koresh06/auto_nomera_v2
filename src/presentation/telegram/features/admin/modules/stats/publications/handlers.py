@@ -7,9 +7,6 @@ from src.application.mediator import Mediator
 from src.application.use_cases.publication.cancel_by_admin import (
     CancelPublicationByAdminRequest,
 )
-from src.presentation.telegram.features.user.modules.catalog_deferred_publication.states import (
-    CatalogDeferredPublishSG,
-)
 
 
 async def on_period_selected(

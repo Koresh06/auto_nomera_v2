@@ -11,8 +11,9 @@ from src.application.dtos.user import UserDTO
 from src.application.exceptions.user import UserNotFoundException
 from src.application.mediator import Mediator
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
-from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceCommand
-from src.presentation.telegram.features.admin.modules.balance.states import UserBalanceAdminSG
+from src.application.use_cases.user.admin_adjust_balance import (
+    AdminAdjustBalanceCommand,
+)
 
 
 @inject
@@ -67,9 +68,7 @@ async def on_balance_confirm(
     amount = Decimal(data["amount_raw"])
 
     try:
-        await mediator.handle(
-            AdminAdjustBalanceCommand(user_id=user_id, amount=amount)
-        )
+        await mediator.handle(AdminAdjustBalanceCommand(user_id=user_id, amount=amount))
     except InsufficientBalance:
         await callback.answer(
             "⚠️ Недостаточно средств для списания такой суммы",

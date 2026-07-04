@@ -41,6 +41,5 @@ class TopUpBalanceUseCase(UseCase[TopUpBalanceRequest, None]):
         await self.transaction_manager.commit()
 
         logger.info(
-            f"[TopUpBalance:done] user_id={command.user_id} "
-            f"new_balance={user.balance}"
+            f"[TopUpBalance:done] user_id={command.user_id} new_balance={user.balance}"
         )

@@ -3,7 +3,9 @@ from typing import Any
 from dataclasses import dataclass
 from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
-from src.application.services.notification.notification_service import NotificationService
+from src.application.services.notification.notification_service import (
+    NotificationService,
+)
 from src.application.use_cases.base import UseCase, UseCaseRequest
 
 

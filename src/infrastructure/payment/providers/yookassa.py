@@ -61,10 +61,8 @@ class YooKassaProvider(PaymentProvider):
 
         return {
             "yookassa_payment_id": response.id,
-            "confirmation_url": response.confirmation.confirmation_url
+            "confirmation_url": response.confirmation.confirmation_url,
         }
-
-
 
     async def get_payment_instructions(self, payment: Payment) -> dict:
         return {

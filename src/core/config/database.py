@@ -14,7 +14,7 @@ class PostgresSettings(BaseSettings):
     @property
     def url(self) -> str:
         return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
-    
+
 
 class RedisSettings(BaseSettings):
     host: str = "0.0.0.0"
@@ -29,6 +29,7 @@ class RedisSettings(BaseSettings):
     @property
     def taskiq_url(self) -> str:
         return f"redis://{self.host}:{self.port}/{self.taskiq_db}"
+
 
 class DatabaseSettings(BaseSettings):
     postgres: PostgresSettings = PostgresSettings()

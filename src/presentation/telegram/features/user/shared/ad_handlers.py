@@ -308,7 +308,6 @@ async def on_back_to_calendar(
         data.pop("slot_time", None)
 
 
-
 @inject
 async def on_service_paid_selected(
     callback: CallbackQuery,

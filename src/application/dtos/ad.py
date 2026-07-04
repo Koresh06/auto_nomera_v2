@@ -14,11 +14,10 @@ class AdDTO:
     region_id: int
     ad_type: AdType
     status: AdStatus
-    created_at: datetime 
+    created_at: datetime
 
     content: AdContent | None = None
     store_content: StoreContent | None = None
-
 
     @classmethod
     def from_entity(cls, entity: Ad) -> "AdDTO":
@@ -30,9 +29,9 @@ class AdDTO:
             status=entity.status,
             content=entity.content,
             store_content=entity.store_content,
-            created_at=entity.created_at
+            created_at=entity.created_at,
         )
-    
+
     def to_entity(self) -> Ad:
         return Ad(
             id=self.id,
@@ -42,5 +41,5 @@ class AdDTO:
             status=self.status,
             content=self.content,
             store_content=self.store_content,
-            created_at=self.created_at
+            created_at=self.created_at,
         )

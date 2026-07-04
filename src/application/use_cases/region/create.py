@@ -15,7 +15,6 @@ class CreateRegionCommand(UseCaseRequest):
     channel_id: int
     channel_username: str
     metadata: RegionMetadata
-    
 
 
 @dataclass(kw_only=True)
@@ -31,7 +30,6 @@ class CreateRegionUseCase(UseCase[CreateRegionCommand, RegionDTO]):
                 channel_id=command.channel_id,
                 channel_username=command.channel_username,
                 metadata=command.metadata,
-                
             )
         )
         await self.transaction_manager.commit()

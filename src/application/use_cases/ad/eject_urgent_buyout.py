@@ -1,7 +1,10 @@
 import logging
 from dataclasses import dataclass
 
-from src.application.exceptions.ad import AdAlreadyProcessedException, AdNotFoundException
+from src.application.exceptions.ad import (
+    AdAlreadyProcessedException,
+    AdNotFoundException,
+)
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.ad import AdStatus

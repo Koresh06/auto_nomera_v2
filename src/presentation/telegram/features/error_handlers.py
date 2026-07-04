@@ -2,7 +2,7 @@ import logging
 from aiogram import Bot, Router
 from aiogram.types import ErrorEvent
 from aiogram.types import Message
-from aiogram_dialog import DialogManager, ShowMode
+from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.domain.exceptions.region import RegionDisabledError
@@ -15,7 +15,6 @@ async def on_input_error(
     error: ValueError,
 ) -> None:
     await message.answer(f"❌ {error}")
-
 
 
 logger = logging.getLogger(__name__)
@@ -51,10 +50,11 @@ async def on_region_disabled_error(
 
     return True
 
+
 @router.errors()
 async def handle_error(event: ErrorEvent) -> None:
     logger.error(f"Error: {event.exception}", exc_info=event.exception)
-    
+
     update = event.update
     if update.message:
         await update.message.answer(
@@ -65,4 +65,3 @@ async def handle_error(event: ErrorEvent) -> None:
             "⚠️ Произошла ошибка. Попробуйте ещё раз.",
             show_alert=True,
         )
-    

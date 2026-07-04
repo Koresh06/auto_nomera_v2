@@ -2,7 +2,6 @@ import logging
 from dataclasses import dataclass
 
 from src.application.exceptions.publication import PublicationNotFoundException
-from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.tasks.task_queue import TaskQueue
 from src.application.services.notification.notification_service import (
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 class CancelPublicationByAdminRequest(UseCaseRequest):
     publication_id: int
     owner_tg_id: int
-    label: str 
+    label: str
 
 
 @dataclass(kw_only=True)

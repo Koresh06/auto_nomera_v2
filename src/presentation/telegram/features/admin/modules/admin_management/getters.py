@@ -50,8 +50,5 @@ async def getter_add_confirm(
         "user": user,
         "username": user.username or "—",
         "is_admin": is_admin,
-        "role_label": (
-            "🛡 Администратор" if is_admin
-            else "👤 Пользователь"
-        ),
+        "role_label": ("🛡 Администратор" if is_admin else "👤 Пользователь"),
     }

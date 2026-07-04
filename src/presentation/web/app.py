@@ -27,4 +27,5 @@ def create_app() -> FastAPI:
     setup_dishka(container=container, app=app)
     return app
 
+
 # uvicorn src.presentation.web.app:create_app --host 0.0.0.0 --port 8080 --factory

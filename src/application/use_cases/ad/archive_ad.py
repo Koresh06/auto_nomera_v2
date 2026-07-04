@@ -30,7 +30,8 @@ class ArchiveAdUseCase(UseCase[ArchiveAdRequest, None]):
     async def __call__(self, command: ArchiveAdRequest) -> None:
         logger.info(
             "[ArchiveAd] ad_id=%s publication_id=%s",
-            command.ad_id, command.publication_id,
+            command.ad_id,
+            command.publication_id,
         )
 
         ad = await self.ad_repo.get_by_id(command.ad_id)

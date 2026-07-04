@@ -16,13 +16,15 @@ class TaskiqProvider(Provider):
     @provide(scope=Scope.APP)
     def taskiq_broker(self) -> RedisStreamBroker:
         return shared_broker
-    
+
     @provide(scope=Scope.APP)
     def schedule_source(self, settings: AppSettings) -> RedisScheduleSource:
         return RedisScheduleSource(settings.db.redis.taskiq_url)
-    
+
     @provide(scope=Scope.REQUEST)
-    def task_queue(self, taskiq_broker: RedisStreamBroker, schedule_source: RedisScheduleSource) -> TaskQueue:
+    def task_queue(
+        self, taskiq_broker: RedisStreamBroker, schedule_source: RedisScheduleSource
+    ) -> TaskQueue:
         return TaskiqTaskQueue(taskiq_broker, schedule_source)
 
     @provide(scope=Scope.REQUEST)
@@ -35,5 +37,5 @@ class TaskiqProvider(Provider):
         return TaskQueueScheduler(
             queue=task_queue,
             publication_repo=publication_repo,
-            transaction_manager=transaction_manager
+            transaction_manager=transaction_manager,
         )

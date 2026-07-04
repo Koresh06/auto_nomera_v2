@@ -12,7 +12,7 @@ class PublicationService(Entity):
     type: PublicationServiceType
     status: PublicationServiceStatus = PublicationServiceStatus.ACTIVE
     price_paid: int | None = None
-    params: dict | None = None 
+    params: dict | None = None
 
     def __post_init__(self) -> None:
         if self.params is None:

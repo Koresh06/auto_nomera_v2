@@ -29,6 +29,7 @@ class EnsureAdImageRefUseCase(
 ):
     bot: Bot
     message_manager: CustomMessageManager
+
     async def __call__(
         self, command: EnsureAdImageRefRequest
     ) -> MediaAttachment | None:

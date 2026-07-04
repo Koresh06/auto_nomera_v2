@@ -135,10 +135,14 @@ async def on_edit_plate(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
 ):
-    ad_id: int = dialog_manager.dialog_data.get("selected_ad_id") or dialog_manager.dialog_data.get("ad_id")
+    ad_id: int = dialog_manager.dialog_data.get(
+        "selected_ad_id"
+    ) or dialog_manager.dialog_data.get("ad_id")
     ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
 
-    pub_id: int | None = dialog_manager.dialog_data.get("selected_pub_id") or dialog_manager.dialog_data.get("pub_id")
+    pub_id: int | None = dialog_manager.dialog_data.get(
+        "selected_pub_id"
+    ) or dialog_manager.dialog_data.get("pub_id")
     if pub_id:
         pub: PublicationDTO = await mediator.handle(
             GetPublicationByIdRequest(publication_id=pub_id)
@@ -171,9 +175,7 @@ async def on_field_input(
     ad_id: int = data["selected_ad_id"] or data["ad_id"]
 
     ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
-    user: UserDTO = await mediator.handle(
-        GetTgIdRequest(tg_id=message.from_user.id)
-    )
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=message.from_user.id))
 
     c = ad.content
 
@@ -191,9 +193,7 @@ async def on_field_input(
     try:
         if field == "plate":
             value = validate_plate(value, allow_mask=False)
-            region: RegionDTO = await mediator.handle(
-                IdRegionRequest(user.region_id)
-            )
+            region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
             new_media: MediaAttachment = await mediator.handle(
                 EnsureAdImageRefRequest(
                     plate=value,
@@ -201,8 +201,10 @@ async def on_field_input(
                     chat_id=message.from_user.id,
                 )
             )
-            data["pending_media_file_id"] = new_media.file_id.file_id if new_media.file_id else None
-            
+            data["pending_media_file_id"] = (
+                new_media.file_id.file_id if new_media.file_id else None
+            )
+
         elif field == "price":
             validate_price(value)
         elif field == "phone":
@@ -249,7 +251,7 @@ async def on_apply_edit(
         pub: PublicationDTO = await mediator.handle(
             GetPublicationByIdRequest(publication_id=pub_id)
         )
-    
+
         if pub.status == PublicationStatus.PUBLISHED:
             await mediator.handle(
                 EditPublishedAdRequest(
@@ -257,7 +259,7 @@ async def on_apply_edit(
                     publication_id=pub.id,
                     city=city,
                     price=price,
-                    contacts=contacts, 
+                    contacts=contacts,
                 )
             )
         else:

@@ -11,7 +11,6 @@ from src.domain.value_objects.slot_key import SlotKey
 
 @dataclass(frozen=True, slots=True)
 class CalendarBuilder:
-
     def build(
         self,
         *,

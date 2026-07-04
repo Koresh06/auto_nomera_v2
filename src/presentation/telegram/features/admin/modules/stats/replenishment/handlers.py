@@ -3,7 +3,9 @@ from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.widgets.kbd import Button, Select
 
 from src.domain.enums.period import StatsPeriod
-from src.presentation.telegram.features.admin.modules.stats.replenishment.states import StatsReplenishmentSG
+from src.presentation.telegram.features.admin.modules.stats.replenishment.states import (
+    StatsReplenishmentSG,
+)
 
 
 async def on_period_selected(
