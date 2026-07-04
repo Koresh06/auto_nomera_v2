@@ -62,3 +62,11 @@ class PublicationRepository(Protocol):
     async def list_scheduled_for_catalog(
         self, region_id: int
     ) -> list[tuple[Publication, "Ad", int]]: ...
+
+    async def count_scheduled(self, region_id: int | None = None) -> int: ...
+
+    async def count_services(
+        self,
+        since_utc: datetime | None = None,
+        region_id: int | None = None,
+    ) -> tuple[int, list[tuple]]: ...

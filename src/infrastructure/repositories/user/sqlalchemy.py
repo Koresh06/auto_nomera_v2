@@ -1,15 +1,17 @@
 from dataclasses import fields
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.dtos.user import UpdateUserDTO
 from src.application.exceptions.user import UserNotFoundException
 from src.domain.entities.user import User
 from src.application.ports.user.user_repo import UserRepository
+from src.domain.enums.ad import AdType
 from src.domain.enums.role import UserRole
 from src.infrastructure.database.models import UserModel
+from src.infrastructure.database.models.ad import AdModel
 
 
 class SQLAlchemyUserRepo(UserRepository):
@@ -90,3 +92,17 @@ class SQLAlchemyUserRepo(UserRepository):
             select(UserModel).where(UserModel.region_id == region_id)
         )
         return [m.to_entity() for m in result.scalars().all()]
+
+    async def count_users(self, region_id=None) -> int:
+        q = select(func.count(UserModel.id))
+        if region_id is not None:
+            q = q.where(UserModel.region_id == region_id)
+        return (await self._session.execute(q)).scalar() or 0
+
+    async def count_users_with_store(self, region_id=None) -> int:
+        q = select(func.count(func.distinct(AdModel.user_id))).where(
+            AdModel.ad_type == AdType.STORE
+        )
+        if region_id is not None:
+            q = q.where(AdModel.region_id == region_id)
+        return (await self._session.execute(q)).scalar() or 0

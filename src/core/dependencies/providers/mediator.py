@@ -208,6 +208,10 @@ from src.application.use_cases.slots.release_hold import (
     ReleaseHoldRequest,
     ReleaseHoldUseCase,
 )
+from src.application.use_cases.stats.globals import (
+    GetGlobalStatsRequest,
+    GetGlobalStatsUseCase,
+)
 from src.application.use_cases.stats.payment import (
     GetPaymentStatsRequest,
     GetPaymentStatsUseCase,
@@ -349,6 +353,7 @@ class MediatorProvider(Provider):
         get_region_schedule_use_case: GetRegionScheduleUseCase,
         cancel_publication_by_admin_use_case: CancelPublicationByAdminUseCase,
         get_admin_scheduled_catalog_use_case: GetAdminScheduledCatalogUseCase,
+        get_global_stats_use_case: GetGlobalStatsUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -464,5 +469,6 @@ class MediatorProvider(Provider):
         mediator.register(
             GetAdminScheduledCatalogRequest, get_admin_scheduled_catalog_use_case
         )
+        mediator.register(GetGlobalStatsRequest, get_global_stats_use_case)
 
         return mediator

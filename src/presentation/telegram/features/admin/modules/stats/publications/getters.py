@@ -1,10 +1,10 @@
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram_dialog import DialogManager
 
+from src.core.config import settings
 from src.application.dtos.user import UserDTO
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_id import GetByIdRequest
-from src.core.config import settings
 from src.application.dtos.catalog_card import CatalogCardDTO
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.schedule_stats import RegionScheduleDTO
@@ -17,17 +17,16 @@ from src.application.use_cases.publication.get_admin_scheduled_catalog import (
 from src.application.use_cases.region.get_all import GetRegionsRequest
 from src.application.use_cases.stats.region_schedule import GetRegionScheduleRequest
 from src.domain.enums.ad import AdType
-from src.domain.enums.period import StatsPeriod
 from src.application.dtos.publication_stats import PublicationStatsDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.stats.publication import GetPublicationStatsRequest
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
-from src.presentation.telegram.features.admin.modules.stats.helper import period_flags
+from src.presentation.telegram.features.admin.modules.stats.helper import (
+    ScopePrivate,
+    _current_period,
+    period_flags,
+)
 from src.presentation.telegram.utils.build_media import build_media_attachment
-
-
-def _current_period(dm: DialogManager) -> StatsPeriod:
-    return StatsPeriod(dm.dialog_data.get("period", StatsPeriod.MONTH.value))
 
 
 @inject
@@ -36,7 +35,7 @@ async def getter_pub_stats(
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    period = _current_period(dialog_manager)
+    period = _current_period(dialog_manager, ScopePrivate.GENERAL)
     stats: PublicationStatsDTO = await mediator.handle(
         GetPublicationStatsRequest(period=period)
     )

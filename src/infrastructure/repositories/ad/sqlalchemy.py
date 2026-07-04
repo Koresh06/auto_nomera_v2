@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select
 
 from src.application.dtos.ad import Ad
 from src.application.exceptions.ad import AdNotFoundException
@@ -98,3 +98,27 @@ class SQLAlchemyAdRepo(AdRepository):
         )
         result = await self._session.execute(query)
         return result.scalar_one()
+
+    async def count_ads(self, since_utc=None, region_id=None) -> int:
+        q = select(func.count(AdModel.id))
+        conds = []
+        if since_utc is not None:
+            conds.append(AdModel.created_at >= since_utc)
+        if region_id is not None:
+            conds.append(AdModel.region_id == region_id)
+        if conds:
+            q = q.where(and_(*conds))
+        return (await self._session.execute(q)).scalar() or 0
+
+    async def count_by_type(self, since_utc=None, region_id=None):
+        conds = []
+        if since_utc is not None:
+            conds.append(AdModel.created_at >= since_utc)
+        if region_id is not None:
+            conds.append(AdModel.region_id == region_id)
+        q = select(AdModel.ad_type, func.count().label("cnt"))
+        if conds:
+            q = q.where(and_(*conds))
+        q = q.group_by(AdModel.ad_type)
+        rows = (await self._session.execute(q)).all()
+        return [(r.ad_type, r.cnt) for r in rows]

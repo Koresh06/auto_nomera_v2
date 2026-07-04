@@ -90,6 +90,9 @@ from src.presentation.telegram.features.admin.modules.stats.replenishment.dialog
 from src.presentation.telegram.features.admin.modules.stats.publications.dialogs import (
     publish_stats_dialog,
 )
+from src.presentation.telegram.features.admin.modules.stats.globals.dialogs import (
+    global_stats_dialog,
+)
 
 
 def get_all_routers() -> list[Router]:
@@ -133,4 +136,5 @@ def get_all_dialogs() -> list[Dialog]:
         mailing_dialog,
         stats_replenishment_dialog,
         publish_stats_dialog,
+        global_stats_dialog,
     ]

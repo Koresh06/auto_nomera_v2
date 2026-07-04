@@ -2,7 +2,6 @@ from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Button,
-    Row,
     SwitchTo,
     Cancel,
     Select,
@@ -13,6 +12,7 @@ from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.media import DynamicMedia
 
 from src.presentation.telegram.widgets.custom_scroll import CatalogScroll
+from src.presentation.telegram.features.admin.modules.stats.helper import period_row
 
 
 from .states import PublishStatsSG
@@ -32,15 +32,6 @@ from .handlers import (
 )
 
 
-def _period_row():
-    return Row(
-        Button(Format("{lbl_today}"), id="today", on_click=on_period_selected),
-        Button(Format("{lbl_week}"), id="week", on_click=on_period_selected),
-        Button(Format("{lbl_month}"), id="month", on_click=on_period_selected),
-        Button(Format("{lbl_all}"), id="all", on_click=on_period_selected),
-    )
-
-
 publish_stats_dialog = Dialog(
     Window(
         Format(
@@ -51,7 +42,7 @@ publish_stats_dialog = Dialog(
             "<b>По статусам:</b>\n{status_lines}\n\n"
             "<b>По типам:</b>\n{type_lines}"
         ),
-        _period_row(),
+        period_row(on_period_selected),
         SwitchTo(
             Const("🗓 Расписание по регионам"),
             id="to_schedule",

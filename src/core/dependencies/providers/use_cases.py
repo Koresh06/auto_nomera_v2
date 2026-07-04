@@ -126,6 +126,7 @@ from src.application.use_cases.slots.check_hold import CheckHoldUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
+from src.application.use_cases.stats.globals import GetGlobalStatsUseCase
 from src.application.use_cases.stats.payment import (
     GetPaymentStatsUseCase,
     GetRegionBreakdownUseCase,
@@ -1026,4 +1027,21 @@ class UseCasesProvider(Provider):
         return GetAdminScheduledCatalogUseCase(
             publication_repo=publication_repo,
             ad_repo=ad_repo,
+        )
+
+    @provide
+    def get_global_stats_use_case(
+        self,
+        user_repo: UserRepository,
+        ad_repo: AdRepository,
+        publication_repo: PublicationRepository,
+        region_repo: RegionRepository,
+        payment_repo: PaymentRepository,
+    ) -> GetGlobalStatsUseCase:
+        return GetGlobalStatsUseCase(
+            user_repo=user_repo,
+            ad_repo=ad_repo,
+            publication_repo=publication_repo,
+            region_repo=region_repo,
+            payment_repo=payment_repo,
         )

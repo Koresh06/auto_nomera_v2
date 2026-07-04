@@ -44,6 +44,8 @@ services:
     depends_on:
       - redis
     restart: always
+    volumes:
+      - .:/app
 
   sheduler:
     build: .
@@ -54,6 +56,8 @@ services:
     depends_on:
       - redis
     restart: always
+    volumes:
+      - .:/app
 
 
 volumes:

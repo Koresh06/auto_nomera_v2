@@ -1,5 +1,6 @@
 from typing import Protocol
 from src.domain.entities.ad import Ad
+from src.domain.enums.ad import AdType
 
 
 class AdRepository(Protocol):
@@ -29,3 +30,9 @@ class AdRepository(Protocol):
         user_id: int,
         region_id: int,
     ) -> int: ...
+
+    async def count_ads(self, since_utc=None, region_id=None) -> int: ...
+
+    async def count_by_type(
+        self, since_utc=None, region_id=None
+    ) -> list[tuple[AdType, int]]: ...

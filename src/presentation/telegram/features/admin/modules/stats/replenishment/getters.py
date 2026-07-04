@@ -1,19 +1,17 @@
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram_dialog import DialogManager
 
-from src.domain.enums.period import StatsPeriod
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.payment_stats import PaymentStatsDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.region.get_all import GetRegionsRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.stats.payment import GetPaymentStatsRequest
-from src.presentation.telegram.features.admin.modules.stats.helper import period_flags
-
-
-def _current_period(dialog_manager: DialogManager, scope: str) -> StatsPeriod:
-    raw = dialog_manager.dialog_data.get(f"period_{scope}", StatsPeriod.MONTH.value)
-    return StatsPeriod(raw)
+from src.presentation.telegram.features.admin.modules.stats.helper import (
+    ScopePrivate,
+    _current_period,
+    period_flags,
+)
 
 
 @inject
@@ -22,7 +20,7 @@ async def getter_general_stats(
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    period = _current_period(dialog_manager, "general")
+    period = _current_period(dialog_manager, ScopePrivate.GENERAL)
     stats: PaymentStatsDTO = await mediator.handle(
         GetPaymentStatsRequest(period=period)
     )
@@ -70,7 +68,7 @@ async def getter_region_stats(
     **kwargs,
 ) -> dict:
     region_id = dialog_manager.dialog_data["region_id"]
-    period = _current_period(dialog_manager, "region")
+    period = _current_period(dialog_manager, ScopePrivate.REGION)
 
     region: RegionDTO = await mediator.handle(IdRegionRequest(region_id=region_id))
     stats: PaymentStatsDTO = await mediator.handle(

@@ -1,14 +1,14 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
-    Button,
     Select,
-    Row,
     ScrollingGroup,
-    SwitchTo,
+    Next,
     Cancel,
     Back,
 )
 from aiogram_dialog.widgets.text import Const, Format
+
+from src.presentation.telegram.features.admin.modules.stats.helper import period_row
 
 from .states import (
     StatsReplenishmentSG,
@@ -19,19 +19,9 @@ from .getters import (
     getter_region_stats,
 )
 from .handlers import (
-    on_period_selected,
     on_region_selected,
+    on_period_selected,
 )
-
-
-def _period_row():
-    return Row(
-        Button(Format("{lbl_today}"), id="today", on_click=on_period_selected),
-        Button(Format("{lbl_week}"), id="week", on_click=on_period_selected),
-        Button(Format("{lbl_month}"), id="month", on_click=on_period_selected),
-        Button(Format("{lbl_all}"), id="all", on_click=on_period_selected),
-    )
-
 
 stats_replenishment_dialog = Dialog(
     Window(
@@ -44,12 +34,8 @@ stats_replenishment_dialog = Dialog(
             "📍 Топ регион: <b>{top_region}</b>\n\n"
             "📊 По методам:\n{method_lines}"
         ),
-        _period_row(),
-        SwitchTo(
-            Const("📍 По регионам"),
-            id="to_regions",
-            state=StatsReplenishmentSG.regions_list,
-        ),
+        period_row(on_period_selected),
+        Next(Const("📍 По регионам")),
         Cancel(Const("⬅️ Назад")),
         state=StatsReplenishmentSG.general,
         getter=getter_general_stats,
@@ -81,7 +67,7 @@ stats_replenishment_dialog = Dialog(
             "💵 Сумма: <b>{total_amount} руб.</b>\n\n"
             "📊 По методам:\n{method_lines}"
         ),
-        _period_row(),
+        period_row(on_period_selected),
         Back(Const("⬅️ Назад")),
         state=StatsReplenishmentSG.region_detail,
         getter=getter_region_stats,

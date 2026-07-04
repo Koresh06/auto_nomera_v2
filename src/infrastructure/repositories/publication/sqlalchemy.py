@@ -14,8 +14,12 @@ from src.application.ports.publication.publication_repo import PublicationReposi
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.domain.enums.ad import AdType
 from src.domain.enums.publication import PublicationStatus
+from src.domain.enums.publication_service import PublicationServiceStatus
 from src.infrastructure.database.models import PublicationModel
 from src.infrastructure.database.models.ad import AdModel
+from src.infrastructure.database.models.publication_service import (
+    PublicationServiceModel,
+)
 from src.infrastructure.database.models.region import RegionModel
 from src.infrastructure.database.models.user import UserModel
 
@@ -155,7 +159,6 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
             .order_by(PublicationModel.publish_at_utc.asc())
         )
         result = await self._session.execute(query)
-        print(f"[pre_pub] now={now_utc} before={before_utc} region={region_id}")
         return [m.to_entity() for m in result.scalars().all()]
 
     async def get_stats(
@@ -322,3 +325,43 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
             (r.PublicationModel.to_entity(), r.AdModel.to_entity(), r.tg_id)
             for r in rows
         ]
+
+    async def count_scheduled(self, region_id: int | None = None) -> int:
+        q = select(func.count(PublicationModel.id)).where(
+            PublicationModel.status == PublicationStatus.SCHEDULED,
+            PublicationModel.is_child.is_(False),
+        )
+        if region_id is not None:
+            q = q.where(PublicationModel.region_id == region_id)
+        return (await self._session.execute(q)).scalar() or 0
+
+    async def count_services(
+        self, since_utc: datetime | None = None, region_id: int | None = None
+    ):
+        conds = [
+            PublicationServiceModel.status.in_(
+                [
+                    PublicationServiceStatus.ACTIVE,
+                    PublicationServiceStatus.USED,
+                ]
+            )
+        ]
+        if since_utc is not None:
+            conds.append(PublicationServiceModel.created_at >= since_utc)
+        if region_id is not None:
+            conds.append(PublicationModel.region_id == region_id)
+
+        q = (
+            select(PublicationServiceModel.type, func.count().label("cnt"))
+            .select_from(PublicationServiceModel)
+            .join(
+                PublicationModel,
+                PublicationServiceModel.publication_id == PublicationModel.id,
+            )
+            .where(and_(*conds))
+            .group_by(PublicationServiceModel.type)
+        )
+        rows = (await self._session.execute(q)).all()
+        by_type = [(r.type, r.cnt) for r in rows]
+        total = sum(c for _, c in by_type)
+        return total, by_type

@@ -3,9 +3,8 @@ from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.widgets.kbd import Button, Select
 
 from src.domain.enums.period import StatsPeriod
-from src.presentation.telegram.features.admin.modules.stats.replenishment.states import (
-    StatsReplenishmentSG,
-)
+
+from .states import GlobalStatsSG
 
 
 async def on_period_selected(
@@ -14,7 +13,7 @@ async def on_period_selected(
     dialog_manager: DialogManager,
 ) -> None:
     state = dialog_manager.current_context().state
-    if state == StatsReplenishmentSG.general:
+    if state == GlobalStatsSG.start:
         dialog_manager.dialog_data["period_general"] = button.widget_id
     else:
         dialog_manager.dialog_data["period_region"] = button.widget_id
@@ -23,7 +22,7 @@ async def on_period_selected(
 
 async def on_region_selected(
     callback: CallbackQuery,
-    widget: Select,
+    button: Select,
     dialog_manager: DialogManager,
     item_id: str,
 ) -> None:

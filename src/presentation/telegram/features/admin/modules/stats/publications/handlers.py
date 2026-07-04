@@ -14,7 +14,7 @@ async def on_period_selected(
     button: Button,
     dialog_manager: DialogManager,
 ) -> None:
-    dialog_manager.dialog_data["period"] = button.widget_id
+    dialog_manager.dialog_data["period_general"] = button.widget_id
     await dialog_manager.show(show_mode=ShowMode.EDIT)
 
 

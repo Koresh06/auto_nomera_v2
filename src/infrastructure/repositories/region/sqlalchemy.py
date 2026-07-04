@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.exceptions.region import RegionNotFoundException
@@ -39,3 +39,8 @@ class SQLAlchemyRegionRepository(RegionRepository):
         await self._session.flush()
         await self._session.refresh(model)
         return model.to_entity()
+
+    async def count_regions(self) -> int:
+        return (
+            await self._session.execute(select(func.count(RegionModel.id)))
+        ).scalar() or 0
