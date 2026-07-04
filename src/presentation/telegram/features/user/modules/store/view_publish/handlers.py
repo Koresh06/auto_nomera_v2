@@ -25,12 +25,15 @@ async def on_confirm_publish(
     mediator: FromDishka[Mediator],
 ) -> None:
     data = dialog_manager.dialog_data
-    ad_id: int = data["ad_id"]
+    ad_id: int = data.get("ad_id") or dialog_manager.start_data.get("ad_id")
+    region_id: int = data.get("region_id") or dialog_manager.start_data.get("region_id")
+    slot_day = data.get("slot_day") or dialog_manager.start_data.get("slot_day")
+    slot_time = data.get("slot_time") or dialog_manager.start_data.get("slot_time")
 
     slot: SlotKey = SlotKey(
-        region_id=data["region_id"],
-        local_day=date.fromisoformat(data["slot_day"]),
-        local_time=time.fromisoformat(data["slot_time"]),
+        region_id=region_id,
+        local_day=date.fromisoformat(slot_day),
+        local_time=time.fromisoformat(slot_time),
     )
 
     user: UserDTO = await mediator.handle(

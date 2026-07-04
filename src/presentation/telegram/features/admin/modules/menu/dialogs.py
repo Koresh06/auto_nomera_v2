@@ -73,7 +73,7 @@ admin_menu_dialog = Dialog(
         Start(
             Const("🔢 Статистика публикаций"),
             id="ads_stats",
-            state=PublishStatsSG.start,
+            state=PublishStatsSG.stats,
         ),
         Start(
             Const("📈 Общая статистика"),

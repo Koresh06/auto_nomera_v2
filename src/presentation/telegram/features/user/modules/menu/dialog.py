@@ -30,7 +30,7 @@ from src.presentation.telegram.features.user.modules.paid_services.states import
 from src.presentation.telegram.features.user.modules.profile.states import ProfileSG
 from src.presentation.telegram.features.user.modules.store.create.states import StoreCreateSG
 from src.presentation.telegram.features.user.modules.store.main.states import StoreMainSG
-from src.presentation.telegram.features.user.modules.urgent_buyout.states import UrgentBououtSG
+from src.presentation.telegram.features.user.modules.catalog_deferred_publication.states import CatalogDeferredPublishSG
 
 
 user_menu_dialog = Dialog(
@@ -39,7 +39,7 @@ user_menu_dialog = Dialog(
         Start(
             Const("💎 Каталог объявлений до публикации"),
             id="early_ads_catalog",
-            state=UrgentBououtSG.start,
+            state=CatalogDeferredPublishSG.start,
             when="has_pre_publication",
         ),
         Row(

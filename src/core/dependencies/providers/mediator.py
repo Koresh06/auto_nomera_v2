@@ -3,6 +3,8 @@ from dishka import Provider, provide, Scope
 from src.application.mediator import Mediator
 from src.application.use_cases.miling.enqueue import EnqueueMailingRequest, EnqueueMailingUseCase
 from src.application.use_cases.miling.execute import ExecuteMailingRequest, ExecuteMailingUseCase
+from src.application.use_cases.publication.cancel_by_admin import CancelPublicationByAdminRequest, CancelPublicationByAdminUseCase
+from src.application.use_cases.publication.get_admin_scheduled_catalog import GetAdminScheduledCatalogRequest, GetAdminScheduledCatalogUseCase
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusCommand, ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataCommand, UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsCommand, UpdateRegionSettingsUseCase
@@ -93,6 +95,8 @@ from src.application.use_cases.slots.get_calendar import (
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest, HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldRequest, ReleaseHoldUseCase
 from src.application.use_cases.stats.payment import GetPaymentStatsRequest, GetPaymentStatsUseCase, GetRegionBreakdownRequest, GetRegionBreakdownUseCase
+from src.application.use_cases.stats.publication import GetPublicationStatsRequest, GetPublicationStatsUseCase
+from src.application.use_cases.stats.region_schedule import GetRegionScheduleRequest, GetRegionScheduleUseCase
 from src.application.use_cases.store.add_items import AddStoreItemsRequest, AddStoreItemsUseCase
 from src.application.use_cases.store.create import CreateStoreRequest, CreateStoreUseCase
 from src.application.use_cases.store.delete_items import DeleteStoreItemRequest, DeleteStoreItemUseCase
@@ -101,6 +105,7 @@ from src.application.use_cases.store.update_items import UpdateStoreItemRequest,
 from src.application.use_cases.store.update_store import UpdateStoreRequest, UpdateStoreUseCase
 from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceCommand, AdminAdjustBalanceUseCase
 from src.application.use_cases.user.get_admin import GetAdminsCommand, GetAdminsUseCase
+from src.application.use_cases.user.get_by_id import GetByIdRequest, GetByIdUserUseCase
 from src.application.use_cases.user.get_by_tg_id import (
     GetByTgIdUserUseCase,
     GetTgIdRequest,
@@ -122,6 +127,7 @@ class MediatorProvider(Provider):
         self,
         user_register_use_case: RegisterUserUseCase,
         get_by_tg_id_user_use_case: GetByTgIdUserUseCase,
+        get_by_id_user_use_case: GetByIdUserUseCase,
         update_user_use_case: UpdateUserUseCase,
         get_all_regions_use_case: GetAllRegionsUseCase,
         get_by_id_region_use_case: GegByIdRegionUseCase,
@@ -186,12 +192,17 @@ class MediatorProvider(Provider):
         execute_mailing_use_case: ExecuteMailingUseCase,
         enqueue_mailing_use_case: EnqueueMailingUseCase,
         get_payment_stats_use_case: GetPaymentStatsUseCase,
-        get_region_breakdown_use_case: GetRegionBreakdownUseCase
+        get_region_breakdown_use_case: GetRegionBreakdownUseCase,
+        get_publication_stats_use_case: GetPublicationStatsUseCase,
+        get_region_schedule_use_case: GetRegionScheduleUseCase,
+        cancel_publication_by_admin_use_case: CancelPublicationByAdminUseCase,
+        get_admin_scheduled_catalog_use_case: GetAdminScheduledCatalogUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
         mediator.register(UserRegisterRequest, user_register_use_case)
         mediator.register(GetTgIdRequest, get_by_tg_id_user_use_case)
+        mediator.register(GetByIdRequest, get_by_id_user_use_case)
         mediator.register(UpdateUserRequest, update_user_use_case)
         mediator.register(GetRegionsRequest, get_all_regions_use_case)
         mediator.register(IdRegionRequest, get_by_id_region_use_case)
@@ -272,5 +283,9 @@ class MediatorProvider(Provider):
         mediator.register(EnqueueMailingRequest, enqueue_mailing_use_case)
         mediator.register(GetPaymentStatsRequest, get_payment_stats_use_case)
         mediator.register(GetRegionBreakdownRequest, get_region_breakdown_use_case)
+        mediator.register(GetPublicationStatsRequest, get_publication_stats_use_case)
+        mediator.register(GetRegionScheduleRequest, get_region_schedule_use_case)
+        mediator.register(CancelPublicationByAdminRequest, cancel_publication_by_admin_use_case)
+        mediator.register(GetAdminScheduledCatalogRequest, get_admin_scheduled_catalog_use_case)
 
         return mediator

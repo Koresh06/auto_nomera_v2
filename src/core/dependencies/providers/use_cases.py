@@ -7,10 +7,14 @@ from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.use_cases.miling.enqueue import EnqueueMailingUseCase
 from src.application.use_cases.miling.execute import ExecuteMailingUseCase
+from src.application.use_cases.publication.cancel_by_admin import CancelPublicationByAdminUseCase
+from src.application.use_cases.publication.get_admin_scheduled_catalog import GetAdminScheduledCatalogUseCase
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsUseCase
-from src.application.use_cases.service_difinition.toggle_status import ToggleServiceStatusUseCase
+from src.application.use_cases.service_difinition.toggle_status import (
+    ToggleServiceStatusUseCase,
+)
 from src.application.use_cases.service_difinition.update import UpdateServiceUseCase
 from src.application.use_cases.slots.confirm_paid_slot_from_balance import (
     ConfirmPaidSlotFromBalanceUseCase,
@@ -118,15 +122,23 @@ from src.application.use_cases.slots.check_hold import CheckHoldUseCase
 from src.application.use_cases.slots.get_calendar import GetCalendarUseCase
 from src.application.use_cases.slots.hold_slot import HoldSlotUseCase
 from src.application.use_cases.slots.release_hold import ReleaseHoldUseCase
-from src.application.use_cases.stats.payment import GetPaymentStatsUseCase, GetRegionBreakdownUseCase
+from src.application.use_cases.stats.payment import (
+    GetPaymentStatsUseCase,
+    GetRegionBreakdownUseCase,
+)
+from src.application.use_cases.stats.publication import GetPublicationStatsUseCase
+from src.application.use_cases.stats.region_schedule import GetRegionScheduleUseCase
 from src.application.use_cases.store.add_items import AddStoreItemsUseCase
 from src.application.use_cases.store.create import CreateStoreUseCase
 from src.application.use_cases.store.delete_items import DeleteStoreItemUseCase
 from src.application.use_cases.store.get_by_user import GetUserStoreUseCase
 from src.application.use_cases.store.update_items import UpdateStoreItemUseCase
 from src.application.use_cases.store.update_store import UpdateStoreUseCase
-from src.application.use_cases.user.admin_adjust_balance import AdminAdjustBalanceUseCase
+from src.application.use_cases.user.admin_adjust_balance import (
+    AdminAdjustBalanceUseCase,
+)
 from src.application.use_cases.user.get_admin import GetAdminsUseCase
+from src.application.use_cases.user.get_by_id import GetByIdUserUseCase
 from src.application.use_cases.user.get_by_tg_id import GetByTgIdUserUseCase
 from src.application.use_cases.user.manage_admin import ManageAdminUseCase
 from src.application.use_cases.user.register import RegisterUserUseCase
@@ -165,6 +177,15 @@ class UseCasesProvider(Provider):
         user_repo: UserRepository,
     ) -> GetByTgIdUserUseCase:
         return GetByTgIdUserUseCase(
+            user_repo=user_repo,
+        )
+    
+    @provide
+    def get_by_id_user_use_case(
+        self,
+        user_repo: UserRepository,
+    ) -> GetByIdUserUseCase:
+        return GetByIdUserUseCase(
             user_repo=user_repo,
         )
 
@@ -861,7 +882,7 @@ class UseCasesProvider(Provider):
             service_repo=service_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def toggle_service_status_use_case(
         self,
@@ -872,7 +893,7 @@ class UseCasesProvider(Provider):
             service_repo=service_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def admin_adjust_balance_use_case(
         self,
@@ -883,7 +904,7 @@ class UseCasesProvider(Provider):
             user_repo=user_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def set_user_block_use_case(
         self,
@@ -896,7 +917,7 @@ class UseCasesProvider(Provider):
             block_cache=block_cache,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def get_admins_use_case(
         self,
@@ -905,7 +926,7 @@ class UseCasesProvider(Provider):
         return GetAdminsUseCase(
             user_repo=user_repo,
         )
-    
+
     @provide
     def manage_admin_use_case(
         self,
@@ -916,20 +937,20 @@ class UseCasesProvider(Provider):
             user_repo=user_repo,
             transaction_manager=transaction_manager,
         )
-    
+
     @provide
     def execute_mailing_use_case(
         self,
         user_repo: UserRepository,
         region_repo: RegionRepository,
-       notification_service: NotificationService,
+        notification_service: NotificationService,
     ) -> ExecuteMailingUseCase:
         return ExecuteMailingUseCase(
             user_repo=user_repo,
             region_repo=region_repo,
             notification_service=notification_service,
         )
-    
+
     @provide
     def enqueue_mailing_use_case(
         self,
@@ -938,7 +959,7 @@ class UseCasesProvider(Provider):
         return EnqueueMailingUseCase(
             task_queue=task_queue,
         )
-    
+
     @provide
     def get_payment_stats_use_case(
         self,
@@ -947,7 +968,7 @@ class UseCasesProvider(Provider):
         return GetPaymentStatsUseCase(
             payment_repo=payment_repo,
         )
-    
+
     @provide
     def get_region_breakdown_use_case(
         self,
@@ -955,4 +976,50 @@ class UseCasesProvider(Provider):
     ) -> GetRegionBreakdownUseCase:
         return GetRegionBreakdownUseCase(
             payment_repo=payment_repo,
+        )
+
+    @provide
+    def get_publication_stats_use_case(
+        self,
+        publication_repo: PublicationRepository,
+    ) -> GetPublicationStatsUseCase:
+        return GetPublicationStatsUseCase(
+            publication_repo=publication_repo,
+        )
+
+    @provide
+    def get_region_schedule_use_case(
+        self,
+        publication_repo: PublicationRepository,
+        region_repo: RegionRepository,
+    ) -> GetRegionScheduleUseCase:
+        return GetRegionScheduleUseCase(
+            publication_repo=publication_repo,
+            region_repo=region_repo,
+        )
+    
+    @provide
+    def cancel_publication_by_admin_use_case(
+        self,
+        publication_repo: PublicationRepository,
+        task_queue: TaskQueue,
+        notification_service: NotificationService,
+        transaction_manager: TransactionManager,
+    ) -> CancelPublicationByAdminUseCase:
+        return CancelPublicationByAdminUseCase(
+            publication_repo=publication_repo,
+            task_queue=task_queue,
+            notification_service=notification_service,
+            transaction_manager=transaction_manager,
+    )
+
+    @provide
+    def get_admin_scheduled_catalog_use_case(
+        self,
+        publication_repo: PublicationRepository,
+        ad_repo: AdRepository,
+    ) -> GetAdminScheduledCatalogUseCase:
+        return GetAdminScheduledCatalogUseCase(
+            publication_repo=publication_repo,
+            ad_repo=ad_repo,
         )

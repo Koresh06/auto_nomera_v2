@@ -12,3 +12,6 @@ class CatalogCardDTO:
     pub_time: str | None  # для pre-publication
     ad_type_display: str
     ad_text: str
+    owner_tg_id: int | None = None
+    owner_link: str | None = None
+    services_line: str | None = None

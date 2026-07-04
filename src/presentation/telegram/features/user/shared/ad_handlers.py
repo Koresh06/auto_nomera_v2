@@ -283,11 +283,15 @@ async def on_back_to_calendar(
         GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
     )
 
+    region_id: int = data.get("region_id") or dialog_manager.start_data.get("region_id")
+    slot_day = data.get("slot_day") or dialog_manager.start_data.get("slot_day")
+    slot_time = data.get("slot_time") or dialog_manager.start_data.get("slot_time")
+
     if "region_id" in data:
         slot: SlotKey = SlotKey(
-            region_id=data["region_id"],
-            local_day=date.fromisoformat(data["slot_day"]),
-            local_time=time.fromisoformat(data["slot_time"]),
+            region_id=region_id,
+            local_day=date.fromisoformat(slot_day),
+            local_time=time.fromisoformat(slot_time),
         )
         try:
             await mediator.handle(

@@ -66,8 +66,8 @@ async def getter_confirm(
     slot_raw = start_data.get("slot")
     if slot_raw:
         data["slot_region_id"] = slot_raw["region_id"]
-        data["slot_day"] = slot_raw["local_day"]
-        data["slot_time"] = slot_raw["local_time"]
+        data["slot_day"] = slot_raw["slot_day"]
+        data["slot_time"] = slot_raw["slot_time"]
         data["is_paid"] = start_data.get("is_paid", True)
 
     slot = None

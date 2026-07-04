@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from src.domain.entities.ad import Ad
 from src.domain.enums.ad import AdStatus, AdType
@@ -13,9 +14,11 @@ class AdDTO:
     region_id: int
     ad_type: AdType
     status: AdStatus
+    created_at: datetime 
 
     content: AdContent | None = None
     store_content: StoreContent | None = None
+
 
     @classmethod
     def from_entity(cls, entity: Ad) -> "AdDTO":
@@ -27,6 +30,17 @@ class AdDTO:
             status=entity.status,
             content=entity.content,
             store_content=entity.store_content,
+            created_at=entity.created_at
         )
     
-    
+    def to_entity(self) -> Ad:
+        return Ad(
+            id=self.id,
+            user_id=self.user_id,
+            region_id=self.region_id,
+            ad_type=self.ad_type,
+            status=self.status,
+            content=self.content,
+            store_content=self.store_content,
+            created_at=self.created_at
+        )
