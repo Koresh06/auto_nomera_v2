@@ -132,42 +132,21 @@ async def getter_user_ads_for_service(
         GetUserPublicationsRequest(user_id=user.id, region_id=region.id)
     )
 
-    sorted_pubs = sorted(publications, key=lambda x: x.id)
-
-    autopublish_ad_ids = {
-        p.ad_id
-        for p in sorted_pubs
-        if any(
-            s.type == PublicationServiceType.AUTOPUBLISH
-            and s.status in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
-            for s in p.services
-        )
-    }
-
-    seen_autopublish_ad_ids: set[int] = set()
     eligible: list[PublicationDTO] = []
-    for p in sorted_pubs:
+    for p in publications:      
         if p.status not in (PublicationStatus.PUBLISHED, PublicationStatus.SCHEDULED):
             continue
-
-        if p.ad_id in autopublish_ad_ids:
-            if p.ad_id in seen_autopublish_ad_ids:
-                continue
-            seen_autopublish_ad_ids.add(p.ad_id)
-
         if any(
             s.type == service_type
             and s.status in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
             for s in p.services
         ):
             continue
-
         if (
             service_type == PublicationServiceType.PRIORITY_PUBLISH
             and p.status != PublicationStatus.SCHEDULED
         ):
             continue
-
         eligible.append(p)
 
     ads = [
