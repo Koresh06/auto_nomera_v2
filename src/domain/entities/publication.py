@@ -18,28 +18,15 @@ from src.domain.value_objects.slot_key import SlotKey
 
 @dataclass(kw_only=True)
 class Publication(Entity):
-    """
-    Публикация = то, что стоит в очереди/планировщике и будет отправлено в канал.
-    Услуги покупаются именно к публикации.
-    """
-
     ad_id: int
     region_id: int
-
     status: PublicationStatus = PublicationStatus.DRAFT
-
-    # выбранный слот (локальная дата/время региона)
     slot: SlotKey | None = None
-
-    # вычисленное время исполнения (в UTC) — будет нужно scheduler'у
     publish_at_utc: datetime | None = None
-
-    # результат публикации
     channel_message_id: int | None = None
     published_at_utc: datetime | None = None
-
     scheduler_job_id: str | None = None
-
+    is_child: bool = False
     services: list[PublicationService] = field(default_factory=list)
 
     def schedule(self, *, slot: SlotKey, publish_at_utc: datetime) -> None:

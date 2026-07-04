@@ -3,6 +3,7 @@ from datetime import datetime, date, time
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import (
+    Boolean,
     Integer,
     BigInteger,
     Enum as SaEnum,
@@ -73,6 +74,9 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
         DateTime(timezone=True),
         nullable=True,
     )
+    is_child: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
 
     ad: Mapped["AdModel"] = relationship(
         "AdModel",
@@ -96,7 +100,7 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
         )
         cls._update_model(model, pub)
         return model
-    
+
     def to_entity(self) -> Publication:
         slot = None
         if self.slot_day is not None and self.slot_time is not None:
@@ -105,7 +109,7 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
                 local_day=self.slot_day,
                 local_time=self.slot_time,
             )
-    
+
         services = [
             PublicationService(
                 id=s.id,
@@ -117,7 +121,7 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             )
             for s in (self.services or [])
         ]
-    
+
         return Publication(
             id=self.id,
             ad_id=self.ad_id,
@@ -128,19 +132,23 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             channel_message_id=self.channel_message_id,
             published_at_utc=self.published_at_utc,
             scheduler_job_id=self.scheduler_job_id,
+            is_child=self.is_child,
             services=services,
         )
 
     @staticmethod
     def _update_model(model: "PublicationModel", pub: "Publication") -> None:
-        from src.infrastructure.database.models.publication_service import PublicationServiceModel
-        
+        from src.infrastructure.database.models.publication_service import (
+            PublicationServiceModel,
+        )
+
         model.status = pub.status
         model.slot_day = pub.slot.local_day if pub.slot else None
         model.slot_time = pub.slot.local_time if pub.slot else None
         model.publish_at_utc = pub.publish_at_utc
         model.scheduler_job_id = pub.scheduler_job_id
         model.channel_message_id = pub.channel_message_id
+        model.is_child = pub.is_child
         model.published_at_utc = pub.published_at_utc
 
         # синхронизируем services
