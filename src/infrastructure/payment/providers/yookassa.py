@@ -34,7 +34,9 @@ class YooKassaProvider(PaymentProvider):
         phone: str = kwargs.get("phone", "")
         chat_id: int = kwargs.get("chat_id", user_id)
 
-        return_url = self.settings.return_url
+        return_url = return_url = (
+            f"{self.settings.return_url}?external_id={external_id}"
+        )
 
         invoice_request = YooKassaInvoiceRequest(
             amount=amount,

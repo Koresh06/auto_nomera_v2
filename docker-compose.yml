@@ -24,6 +24,11 @@ services:
     ports:
       - "6379:6379"
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   bot:
     build: .
@@ -32,7 +37,25 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+
+  webhook:
+    build: .
+    container_name: auto_nomera_webhook
+    command: uvicorn src.presentation.api.app:app --host 0.0.0.0 --port 8080
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: always
 
   worker:
@@ -42,23 +65,40 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: always
-    volumes:
-      - .:/app
 
-  sheduler:
+  scheduler:
     build: .
     container_name: auto_nomera_scheduler
     command: taskiq scheduler src.scheduler:scheduler
     env_file:
       - .env
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: always
-    volumes:
-      - .:/app
 
+  cloudpub:
+    image: cloudpub/cloudpub:latest
+    container_name: cloudpub_tunnel
+    restart: unless-stopped
+    volumes:
+      - cloudpub-config:/home/cloudpub
+    network_mode: "host"
+    env_file:
+      - .env
+    environment:
+      - HTTP=8080
+    command: run
+    depends_on:
+      - webhook
 
 volumes:
   postgres_data:
+  cloudpub-config:

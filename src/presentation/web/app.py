@@ -9,6 +9,7 @@ from taskiq_redis import RedisStreamBroker
 from src.core.dependencies.providers import make_base_providers
 from src.infrastructure.broker.taskiq import register_taskiq_tasks
 from src.presentation.web.routers.yookassa import router as yookassa_router
+from src.presentation.web.routers.result import router as result_router
 
 
 container = make_async_container(*make_base_providers(), FastapiProvider())
@@ -24,6 +25,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
     app.include_router(yookassa_router)
+    app.include_router(result_router)
     setup_dishka(container=container, app=app)
     return app
 

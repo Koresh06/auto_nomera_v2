@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Оплата успешна</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%2322c55e'/><polyline points='6,12 10,16 18,8' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --accent: #22c55e;
+        --accent-2: #10b981;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #0b1120;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Фоновое свечение */
+      .glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .glow-1 {
+        width: 500px;
+        height: 500px;
+        background: var(--accent);
+        top: -150px;
+        left: -100px;
+        animation: float 12s ease-in-out infinite;
+      }
+
+      .glow-2 {
+        width: 450px;
+        height: 450px;
+        background: #0ea5e9;
+        bottom: -150px;
+        right: -100px;
+        animation: float 15s ease-in-out infinite reverse;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(40px, 40px);
+        }
+      }
+
+      .card {
+        position: relative;
+        z-index: 2;
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 32px;
+        padding: 3.5rem 3rem;
+        max-width: 460px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+        animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+
+      @keyframes cardIn {
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* Иконка-галочка с кольцом */
+      .icon-wrap {
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 1.75rem;
+        position: relative;
+      }
+
+      .icon-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(34, 197, 94, 0.25),
+          transparent 70%
+        );
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        50% {
+          transform: scale(1.15);
+          opacity: 0.4;
+        }
+      }
+
+      .icon-circle {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 12px 32px rgba(34, 197, 94, 0.4);
+      }
+
+      .checkmark {
+        width: 48px;
+        height: 48px;
+      }
+
+      .checkmark path {
+        stroke: #fff;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: draw 0.6s 0.4s ease forwards;
+      }
+
+      @keyframes draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      h1 {
+        font-size: 1.9rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.02em;
+      }
+
+      p {
+        font-size: 1.05rem;
+        color: rgba(255, 255, 255, 0.65);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.9rem 2rem;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(34, 197, 94, 0.45);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Конфетти */
+      .confetti {
+        position: absolute;
+        top: -20px;
+        border-radius: 2px;
+        z-index: 1;
+        animation: fall linear forwards;
+      }
+
+      @keyframes fall {
+        to {
+          transform: translateY(105vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
+    <div class="card">
+      <div class="icon-wrap">
+        <div class="icon-ring"></div>
+        <div class="icon-circle">
+          <svg class="checkmark" viewBox="0 0 24 24">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      </div>
+      <h1>Оплата прошла успешно</h1>
+      <p>Вернитесь в бота, чтобы продолжить.</p>
+      <a class="btn" id="botBtn" href="#">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"
+          />
+        </svg>
+        Открыть бота
+      </a>
+    </div>
+
+    <script>
+      document.getElementById("botBtn").href = "{{ bot_url }}";
+
+      // конфетти
+      const colors = ["#22c55e", "#10b981", "#0ea5e9", "#fbbf24", "#f472b6"];
+      for (let i = 0; i < 60; i++) {
+        const c = document.createElement("div");
+        c.classList.add("confetti");
+        const size = Math.random() * 8 + 5;
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.width = size + "px";
+        c.style.height = size * 0.4 + "px";
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.animationDuration = 2.5 + Math.random() * 2.5 + "s";
+        c.style.animationDelay = Math.random() * 0.5 + "s";
+        document.body.appendChild(c);
+      }
+    </script>
+  </body>
+</html>
