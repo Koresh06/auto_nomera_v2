@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from src.application.dtos.stats import PaymentStatsDTO, RegionStatDTO
+from src.application.dtos.payment_stats import PaymentStatsDTO, RegionStatDTO
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.period import StatsPeriod

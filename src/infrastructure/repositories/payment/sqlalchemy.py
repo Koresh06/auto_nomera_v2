@@ -4,7 +4,7 @@ from decimal import Decimal
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.application.dtos.stats import MethodStatDTO, PaymentStatsDTO, RegionStatDTO
+from src.application.dtos.payment_stats import MethodStatDTO, PaymentStatsDTO, RegionStatDTO
 from src.application.exceptions.payment import PaymentNotFoundByIdException
 from src.domain.entities.payment import Payment
 from src.application.ports.payment.payment_repo import PaymentRepository

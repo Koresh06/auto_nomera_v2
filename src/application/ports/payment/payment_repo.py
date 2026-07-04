@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Protocol
 
-from src.application.dtos.stats import PaymentStatsDTO, RegionStatDTO
+from src.application.dtos.payment_stats import PaymentStatsDTO, RegionStatDTO
 from src.domain.entities.payment import Payment
 
 
