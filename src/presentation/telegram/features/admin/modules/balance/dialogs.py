@@ -1,7 +1,9 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Button, Back, Cancel, Column, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.error_handlers import on_input_error
 
@@ -31,7 +33,10 @@ admin_balance_dialog = Dialog(
             id="tg_id_input",
             on_success=on_user_id_entered,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=UserBalanceAdminSG.start,
     ),
     Window(
@@ -46,7 +51,10 @@ admin_balance_dialog = Dialog(
             id="to_change",
             state=UserBalanceAdminSG.change_balance,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=UserBalanceAdminSG.show_balance,
         getter=getter_user_balance,
     ),
@@ -62,7 +70,10 @@ admin_balance_dialog = Dialog(
             on_success=on_amount_entered,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=UserBalanceAdminSG.change_balance,
     ),
     Window(

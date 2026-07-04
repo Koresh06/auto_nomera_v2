@@ -1,3 +1,4 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Select,
@@ -8,6 +9,7 @@ from aiogram_dialog.widgets.kbd import (
 )
 from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.admin.modules.region.edit.states import (
     EditRegionSettingsSG,
@@ -67,7 +69,10 @@ edit_region_settings_dialog = Dialog(
             id="reset_defaults",
             on_click=on_reset_defaults,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=EditRegionSettingsSG.menu,
         getter=getter_settings_menu,
     ),
@@ -91,6 +96,7 @@ edit_region_settings_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back_menu",
             state=EditRegionSettingsSG.menu,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=EditRegionSettingsSG.slot_times,
         getter=getter_slot_times,
@@ -108,6 +114,7 @@ edit_region_settings_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back_menu",
             state=EditRegionSettingsSG.menu,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=EditRegionSettingsSG.days_range,
         getter=getter_settings_menu,
@@ -125,6 +132,7 @@ edit_region_settings_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back_menu",
             state=EditRegionSettingsSG.menu,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=EditRegionSettingsSG.system_paid_slots_count,
         getter=getter_settings_menu,
@@ -142,6 +150,7 @@ edit_region_settings_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back_menu",
             state=EditRegionSettingsSG.menu,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=EditRegionSettingsSG.paid_slot_price,
         getter=getter_settings_menu,

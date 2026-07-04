@@ -1,3 +1,4 @@
+from aiogram.enums import ButtonStyle
 from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
@@ -12,6 +13,7 @@ from aiogram_dialog.widgets.kbd import (
     RequestContact,
 )
 from aiogram_dialog.widgets.markup.reply_keyboard import ReplyKeyboardFactory
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.error_handlers import on_input_error
 from src.presentation.telegram.features.user.modules.ad.create_ad.getters import (
@@ -61,7 +63,10 @@ create_store_dialog = Dialog(
             type_factory=validate_store,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StoreCreateSG.name,
     ),
     Window(
@@ -74,7 +79,10 @@ create_store_dialog = Dialog(
             type_factory=capitalize_word,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StoreCreateSG.city,
     ),
     Window(
@@ -94,7 +102,10 @@ create_store_dialog = Dialog(
             on_error=on_input_error,
         ),
         Next(Format("{phone}"), when="phone"),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         markup_factory=ReplyKeyboardFactory(
             one_time_keyboard=True,
             resize_keyboard=True,
@@ -115,7 +126,10 @@ create_store_dialog = Dialog(
             id="confirm_finish",
             on_click=on_finish,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StoreCreateSG.confirm_store,
         getter=getter_finish_store,
     ),

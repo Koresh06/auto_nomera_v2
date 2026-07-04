@@ -1,8 +1,10 @@
 from aiogram import F
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, StartMode, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Start, Button, Select, ScrollingGroup, Back
 from aiogram_dialog.widgets.media import DynamicMedia
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 from src.presentation.telegram.features.user.modules.catalog_deferred_publication.handlers import (
@@ -65,7 +67,10 @@ catalog_deferred_publication_dialog = Dialog(
             hide_on_single_page=True,
         ),
         Const("😔 Список пуст.", when=~F["has_ads"]),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CatalogDeferredPublishSG.list_view,
         getter=getter_catalog_list,
     ),

@@ -1,4 +1,5 @@
 from aiogram import F
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Button,
@@ -10,6 +11,7 @@ from aiogram_dialog.widgets.kbd import (
 )
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.media import DynamicMedia
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.widgets.custom_scroll import CatalogScroll
 from src.presentation.telegram.features.admin.modules.stats.helper import period_row
@@ -31,7 +33,6 @@ from .handlers import (
     on_catalog_item_selected,
 )
 
-
 publish_stats_dialog = Dialog(
     Window(
         Format(
@@ -48,7 +49,10 @@ publish_stats_dialog = Dialog(
             id="to_schedule",
             state=PublishStatsSG.regions_list,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PublishStatsSG.stats,
         getter=getter_pub_stats,
     ),
@@ -69,7 +73,10 @@ publish_stats_dialog = Dialog(
             hide_on_single_page=True,
             when="has_regions",
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PublishStatsSG.regions_list,
         getter=getter_schedule_regions,
     ),
@@ -80,7 +87,10 @@ publish_stats_dialog = Dialog(
             id="deferred_catalog",
             on_click=on_open_deferred_catalog,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PublishStatsSG.schedule,
         getter=getter_region_schedule,
         disable_web_page_preview=True,
@@ -106,7 +116,10 @@ publish_stats_dialog = Dialog(
             on_click=on_delete_deferred,
             when="has_ads",
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PublishStatsSG.catalog,
         getter=getter_admin_catalog,
         disable_web_page_preview=True,
@@ -127,7 +140,10 @@ publish_stats_dialog = Dialog(
             hide_on_single_page=True,
         ),
         Const("😔 Список пуст.", when=~F["has_ads"]),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PublishStatsSG.list,
         getter=getter_admin_catalog_list,
     ),

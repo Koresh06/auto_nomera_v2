@@ -1,4 +1,4 @@
-from aiogram.enums import ContentType
+from aiogram.enums import ButtonStyle, ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Button,
@@ -11,6 +11,7 @@ from aiogram_dialog.widgets.kbd import (
 )
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.input import MessageInput
+from aiogram_dialog.widgets.style import Style
 
 from .states import MailingSG
 from .getters import (
@@ -45,7 +46,10 @@ mailing_dialog = Dialog(
             ),
             width=1,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=MailingSG.choose_type,
     ),
     Window(
@@ -60,7 +64,10 @@ mailing_dialog = Dialog(
             ),
             width=1,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=MailingSG.choose_region,
         getter=regions_getter,
     ),
@@ -78,6 +85,7 @@ mailing_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back",
             state=MailingSG.choose_type,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=MailingSG.compose,
     ),

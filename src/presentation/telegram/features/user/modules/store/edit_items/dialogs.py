@@ -1,4 +1,5 @@
 from aiogram import F
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import (
@@ -11,6 +12,7 @@ from aiogram_dialog.widgets.kbd import (
     Back,
 )
 from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.error_handlers import on_input_error
 
@@ -46,7 +48,10 @@ store_edit_items_dialog = Dialog(
             hide_on_single_page=True,
             when="items",
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         getter=getter_store_items,
         state=StoreEditItemsSG.all_list,
     ),
@@ -71,7 +76,10 @@ store_edit_items_dialog = Dialog(
             id="delete_item",
             on_click=on_delete_item,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         getter=getter_item,
         state=StoreEditItemsSG.edit,
     ),
@@ -88,7 +96,12 @@ store_edit_items_dialog = Dialog(
             on_success=on_plate_input,
             on_error=on_input_error,
         ),
-        SwitchTo(Const("⬅️ Назад"), id="back_edit", state=StoreEditItemsSG.edit),
+        SwitchTo(
+            Const("⬅️ Назад"),
+            id="back_edit",
+            state=StoreEditItemsSG.edit,
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         getter=getter_item,
         state=StoreEditItemsSG.edit_plate,
     ),
@@ -107,7 +120,12 @@ store_edit_items_dialog = Dialog(
             on_success=on_price_input,
             on_error=on_input_error,
         ),
-        SwitchTo(Const("⬅️ Назад"), id="back_edit", state=StoreEditItemsSG.edit),
+        SwitchTo(
+            Const("⬅️ Назад"),
+            id="back_edit",
+            state=StoreEditItemsSG.edit,
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         getter=getter_item,
         state=StoreEditItemsSG.edit_price,
     ),
@@ -126,7 +144,12 @@ store_edit_items_dialog = Dialog(
             id="confirm_update",
             on_click=on_confirm_update,
         ),
-        SwitchTo(Const("⬅️ Назад"), id="back_edit", state=StoreEditItemsSG.edit),
+        SwitchTo(
+            Const("⬅️ Назад"),
+            id="back_edit",
+            state=StoreEditItemsSG.edit,
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         getter=getter_confirm_item,
         state=StoreEditItemsSG.confirm,
     ),

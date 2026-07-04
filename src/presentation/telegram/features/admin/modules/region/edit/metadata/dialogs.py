@@ -1,7 +1,9 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Cancel, Column, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.admin.modules.region.edit.states import (
     EditRegionMetadataSG,
@@ -37,7 +39,10 @@ edit_region_metadata_dialog = Dialog(
                 state=EditRegionMetadataSG.max_channel_url,
             ),
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=EditRegionMetadataSG.menu,
         getter=getter_metadata_menu,
         disable_web_page_preview=True,
@@ -58,6 +63,7 @@ edit_region_metadata_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back_menu",
             state=EditRegionMetadataSG.menu,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=EditRegionMetadataSG.tg_group_url,
         getter=getter_metadata_menu,
@@ -79,6 +85,7 @@ edit_region_metadata_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back_menu",
             state=EditRegionMetadataSG.menu,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=EditRegionMetadataSG.vk_group_url,
         getter=getter_metadata_menu,
@@ -100,6 +107,7 @@ edit_region_metadata_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back_menu",
             state=EditRegionMetadataSG.menu,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=EditRegionMetadataSG.max_channel_url,
         getter=getter_metadata_menu,

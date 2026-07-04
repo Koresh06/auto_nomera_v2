@@ -1,4 +1,5 @@
 from aiogram import F
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, StartMode, Window
 from aiogram_dialog.widgets.text import Const, Format, List
 from aiogram_dialog.widgets.kbd import (
@@ -14,6 +15,7 @@ from aiogram_dialog.widgets.kbd import (
     NextPage,
     Button,
 )
+from aiogram_dialog.widgets.style import Style
 
 from src.domain.enums.publication_service import PublicationServiceType
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
@@ -83,6 +85,7 @@ paid_service_dialog = Dialog(
             id="general_menu",
             state=UserMenuSG.menu,
             mode=StartMode.RESET_STACK,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=PaidServiceSG.start,
         getter=getter_current_services,
@@ -102,7 +105,10 @@ paid_service_dialog = Dialog(
             NextPage(scroll="scroll_cards", text=Const("➡️")),
             when=F["has_any"],
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PaidServiceSG.connected,
         getter=getter_connected_services_user,
     ),
@@ -129,7 +135,10 @@ buy_service_dialog = Dialog(
             hide_on_single_page=True,
             when="has_ads",
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=BuyServiceSG.select_ad,
         getter=getter_user_ads_for_service,
     ),
@@ -145,7 +154,10 @@ buy_service_dialog = Dialog(
             id="confirm_buy",
             on_click=on_confirm_buy_service,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=BuyServiceSG.confirm,
         getter=getter_buy_service_confirm,
     ),
@@ -173,7 +185,10 @@ pre_publication_dialog = Dialog(
             id="confirm_buy_pre_publication",
             on_click=on_confirm_buy_pre_publication,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PrePublicationSG.confirm,
         getter=getter_pre_publication_confirm,
     ),

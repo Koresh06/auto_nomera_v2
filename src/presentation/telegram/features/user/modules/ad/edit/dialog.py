@@ -1,4 +1,5 @@
 from aiogram import F
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.media import DynamicMedia
@@ -11,6 +12,7 @@ from aiogram_dialog.widgets.kbd import (
     Group,
     Button,
 )
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.error_handlers import on_input_error
 from src.presentation.telegram.features.user.modules.ad.edit.getters import (
@@ -96,10 +98,12 @@ edit_ad_dialog = Dialog(
         Back(
             Const("⬅️ Назад"),
             when=~F["start_data"]["back_to_finish"],
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         Cancel(
             Const("⬅️ Назад"),
             when=F["start_data"]["back_to_finish"],
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=EditAdSG.detail,
         getter=getter_detail,
@@ -112,7 +116,10 @@ edit_ad_dialog = Dialog(
             on_success=on_field_input,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=EditAdSG.edit_field,
         getter=getter_edit_field,
     ),

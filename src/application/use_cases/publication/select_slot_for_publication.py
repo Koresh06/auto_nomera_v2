@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
@@ -66,11 +66,11 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             now_utc=now,
         )
 
-        # publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
-        publish_at_utc = self.time_resolver.resolve_publish_at_utc(
-            tz=region.timezone,
-            slot=command.slot,
-        )
+        publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
+        # publish_at_utc = self.time_resolver.resolve_publish_at_utc(
+        #     tz=region.timezone,
+        #     slot=command.slot,
+        # )
 
         is_system_paid = self.pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots,

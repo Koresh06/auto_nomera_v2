@@ -1,8 +1,9 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import Back, Cancel, Next, Button
-
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.admin.modules.region.create.getters import (
     confirm_region_getter,
@@ -31,7 +32,10 @@ create_region_dialog = Dialog(
             type_factory=str,
             on_success=Next(),
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CreateRegionSG.title,
     ),
     Window(
@@ -53,7 +57,10 @@ create_region_dialog = Dialog(
             on_success=Next(),
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CreateRegionSG.timezone,
     ),
     Window(
@@ -68,7 +75,10 @@ create_region_dialog = Dialog(
             on_success=Next(),
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CreateRegionSG.channel_id,
     ),
     Window(
@@ -83,7 +93,10 @@ create_region_dialog = Dialog(
             on_success=Next(),
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CreateRegionSG.channel_username,
     ),
     Window(
@@ -98,7 +111,10 @@ create_region_dialog = Dialog(
             on_error=on_input_error,
         ),
         Next(Const("⏭️ Пропустить")),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CreateRegionSG.tg_group_url,
     ),
     Window(
@@ -113,7 +129,10 @@ create_region_dialog = Dialog(
             on_error=on_input_error,
         ),
         Next(Const("⏭️ Пропустить")),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CreateRegionSG.vk_group_url,
     ),
     Window(
@@ -128,7 +147,10 @@ create_region_dialog = Dialog(
             on_error=on_input_error,
         ),
         Next(Const("⏭️ Пропустить")),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CreateRegionSG.max_channel_url,
     ),
     Window(
@@ -148,7 +170,10 @@ create_region_dialog = Dialog(
             id="confirm",
             on_click=on_confirm_region,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=CreateRegionSG.confirm,
         getter=confirm_region_getter,
     ),

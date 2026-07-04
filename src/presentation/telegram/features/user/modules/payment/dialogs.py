@@ -1,7 +1,9 @@
 from aiogram import F
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Cancel, ScrollingGroup, Select, Url
+from aiogram_dialog.widgets.style import Style
 
 from src.domain.enums.payment import PaymentMethod
 
@@ -30,7 +32,10 @@ payment_dialog = Dialog(
             height=4,
             hide_on_single_page=True,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PaymentSG.select_method,
         getter=getter_select_payment_method,
     ),

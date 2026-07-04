@@ -1,3 +1,4 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Select,
@@ -10,6 +11,7 @@ from aiogram_dialog.widgets.kbd import (
 )
 from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.error_handlers import on_input_error
 
@@ -35,7 +37,10 @@ paid_service_admin_dialog = Dialog(
                 on_click=on_service_selected,
             ),
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PaidServiceAdminSG.list,
         getter=getter_service_list,
     ),
@@ -83,7 +88,10 @@ paid_service_admin_dialog = Dialog(
             id="reset_default",
             on_click=on_reset_default,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PaidServiceAdminSG.detail,
         getter=getter_service_detail,
     ),
@@ -98,7 +106,10 @@ paid_service_admin_dialog = Dialog(
             on_success=on_field_update,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PaidServiceAdminSG.edit_price,
         getter=getter_service_detail,
     ),
@@ -113,7 +124,10 @@ paid_service_admin_dialog = Dialog(
             on_success=on_field_update,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PaidServiceAdminSG.edit_duration,
         getter=getter_service_detail,
     ),
@@ -128,7 +142,10 @@ paid_service_admin_dialog = Dialog(
             on_success=on_field_update,
             on_error=on_input_error,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PaidServiceAdminSG.edit_description,
         getter=getter_service_detail,
     ),
@@ -139,7 +156,10 @@ paid_service_admin_dialog = Dialog(
             "Введите новое название:"
         ),
         TextInput(id="title_input", on_success=on_field_update),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=PaidServiceAdminSG.edit_title,
         getter=getter_service_detail,
     ),

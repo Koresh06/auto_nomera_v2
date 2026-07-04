@@ -1,5 +1,7 @@
 from aiogram import F
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.style import Style
 from aiogram_dialog.widgets.kbd import (
     Button,
     Select,
@@ -52,7 +54,10 @@ admin_management_dialog = Dialog(
             id="to_add",
             state=AdminManagementSG.add_input,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=AdminManagementSG.menu,
         getter=getter_admins_list,
     ),
@@ -69,7 +74,10 @@ admin_management_dialog = Dialog(
             id="revoke_admin",
             on_click=on_revoke_admin,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=AdminManagementSG.admin_detail,
         getter=getter_admin_detail,
     ),
@@ -88,6 +96,7 @@ admin_management_dialog = Dialog(
             Const("⬅️ Назад"),
             id="back_menu",
             state=AdminManagementSG.menu,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=AdminManagementSG.add_input,
     ),

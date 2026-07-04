@@ -1,6 +1,8 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.kbd import Start, Column, Select, Row, Button, Back, Cancel
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.admin.modules.region.create.states import (
     CreateRegionSG,
@@ -27,7 +29,10 @@ main_region_dialog = Dialog(
             id="region_create",
             state=CreateRegionSG.title,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=MainRegionSG.start,
     ),
     Window(
@@ -41,7 +46,10 @@ main_region_dialog = Dialog(
                 on_click=on_region_selected,
             ),
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=MainRegionSG.list,
         getter=getter_region_list,
     ),
@@ -80,7 +88,10 @@ main_region_dialog = Dialog(
                 on_click=on_open_edit_metadata,
             ),
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=MainRegionSG.detail,
         getter=getter_region_detail,
     ),

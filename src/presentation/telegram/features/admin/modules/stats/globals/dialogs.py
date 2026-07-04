@@ -1,3 +1,4 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Next,
@@ -7,6 +8,7 @@ from aiogram_dialog.widgets.kbd import (
     ScrollingGroup,
 )
 from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.admin.modules.stats.helper import period_row
 
@@ -38,7 +40,10 @@ global_stats_dialog = Dialog(
         ),
         period_row(on_period_selected),
         Next(Const("📍 По регионам")),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=GlobalStatsSG.start,
         getter=getter_global_stats,
     ),
@@ -57,7 +62,10 @@ global_stats_dialog = Dialog(
             height=10,
             hide_on_single_page=True,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=GlobalStatsSG.regions_list,
         getter=getter_regions_list,
     ),
@@ -82,7 +90,10 @@ global_stats_dialog = Dialog(
             "{services_lines}"
         ),
         period_row(on_period_selected),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=GlobalStatsSG.region_stats,
         getter=getter_region_global_stats,
     ),

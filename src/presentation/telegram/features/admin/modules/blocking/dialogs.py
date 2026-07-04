@@ -1,8 +1,10 @@
 from aiogram import F
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Button, Back, Cancel
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.style import Style
 
 from .states import UserBlockSG
 from .getters import (
@@ -20,7 +22,10 @@ blocked_user_dialog = Dialog(
             "📌 Пример: <code>123456789</code>"
         ),
         TextInput(id="tg_id_input", on_success=on_user_id_entered),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=UserBlockSG.start,
     ),
     Window(
@@ -57,7 +62,10 @@ blocked_user_dialog = Dialog(
             on_click=on_block_action,
             when="is_payment_blocked",
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=UserBlockSG.action,
         getter=getter_user,
     ),

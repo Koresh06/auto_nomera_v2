@@ -1,7 +1,9 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, Start, Column, Back
+from aiogram_dialog.widgets.style import Style
 
 from src.domain.services.ad.store_validator import parse_store_validator
 from src.presentation.telegram.features.error_handlers import on_input_error
@@ -37,7 +39,10 @@ store_add_items_dialog = Dialog(
             on_success=on_input_submit,
             on_error=on_input_error,
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         getter=add_items_getter,
         state=StoreAddItemsSG.enter,
     ),
@@ -55,7 +60,10 @@ store_add_items_dialog = Dialog(
             id="save_items",
             on_click=on_confirm_save,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         getter=add_items_getter,
         state=StoreAddItemsSG.preview,
     ),

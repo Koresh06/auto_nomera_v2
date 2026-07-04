@@ -1,3 +1,4 @@
+from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Select,
@@ -7,6 +8,7 @@ from aiogram_dialog.widgets.kbd import (
     Back,
 )
 from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.style import Style
 
 from src.presentation.telegram.features.admin.modules.stats.helper import period_row
 
@@ -36,7 +38,10 @@ stats_replenishment_dialog = Dialog(
         ),
         period_row(on_period_selected),
         Next(Const("📍 По регионам")),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StatsReplenishmentSG.general,
         getter=getter_general_stats,
     ),
@@ -55,7 +60,10 @@ stats_replenishment_dialog = Dialog(
             height=10,
             hide_on_single_page=True,
         ),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StatsReplenishmentSG.regions_list,
         getter=getter_regions_list,
     ),
@@ -68,7 +76,10 @@ stats_replenishment_dialog = Dialog(
             "📊 По методам:\n{method_lines}"
         ),
         period_row(on_period_selected),
-        Back(Const("⬅️ Назад")),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=StatsReplenishmentSG.region_detail,
         getter=getter_region_stats,
     ),
