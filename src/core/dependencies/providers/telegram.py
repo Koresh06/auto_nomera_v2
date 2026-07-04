@@ -2,6 +2,7 @@ import orjson
 from dishka import Provider, provide, Scope
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.fsm.storage.base import DefaultKeyBuilder
@@ -24,8 +25,10 @@ class TelegramProvider(Provider):
 
     @provide
     def bot(self) -> Bot:
+        session = AiohttpSession(proxy=settings.telegram.proxy)
         return Bot(
             token=settings.telegram.bot_token,
+            session=session,
             default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
 
