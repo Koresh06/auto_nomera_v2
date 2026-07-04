@@ -25,7 +25,7 @@ class TelegramProvider(Provider):
 
     @provide
     def bot(self) -> Bot:
-        session = AiohttpSession(proxy=settings.telegram.proxy)
+        session = AiohttpSession(proxy=settings.telegram.bot_proxy)
         return Bot(
             token=settings.telegram.bot_token,
             session=session,
