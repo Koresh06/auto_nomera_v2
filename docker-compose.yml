@@ -4,9 +4,9 @@ services:
     image: postgres:16
     container_name: auto_nomera_db
     environment:
-      POSTGRES_USER: ${APP_CONFIG__DB__USER}
-      POSTGRES_PASSWORD: ${APP_CONFIG__DB__PASSWORD}
-      POSTGRES_DB: ${APP_CONFIG__DB__NAME}
+      POSTGRES_USER: ${APP_CONFIG__DB__POSTGRES__USER}
+      POSTGRES_PASSWORD: ${APP_CONFIG__DB__POSTGRES__PASSWORD}
+      POSTGRES_DB: ${APP_CONFIG__DB__POSTGRES__NAME}
     env_file:
       - .env
     restart: always
@@ -21,8 +21,6 @@ services:
   redis:
     image: redis:7
     container_name: auto_nomera_redis
-    ports:
-      - "6379:6379"
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
