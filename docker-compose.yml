@@ -44,7 +44,7 @@ services:
   webhook:
     build: .
     container_name: auto_nomera_webhook
-    command: uvicorn src.presentation.api.app:app --host 0.0.0.0 --port 8080
+    command: uvicorn src.presentation.web.app:create_app --host 0.0.0.0 --port 8080 --factory
     ports:
       - "8080:8080"
     env_file:
