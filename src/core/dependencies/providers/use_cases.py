@@ -5,6 +5,7 @@ from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.cache.block import BlockCache
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
+from src.application.services.payment_notifier import PaymentNotifier
 from src.application.use_cases.miling.enqueue import EnqueueMailingUseCase
 from src.application.use_cases.miling.execute import ExecuteMailingUseCase
 from src.application.use_cases.publication.cancel_by_admin import (
@@ -633,6 +634,7 @@ class UseCasesProvider(Provider):
         priority_publish: PriorityPublishPublicationUseCase,
         reservation_service: SlotReservationService,
         notification_service: NotificationService,
+        payment_notifier: PaymentNotifier,
         teleporter: DialogTeleporter,
         transaction_manager: TransactionManager,
     ) -> ConfirmPaymentUseCase:
@@ -646,6 +648,7 @@ class UseCasesProvider(Provider):
             priority_publish=priority_publish,
             reservation_service=reservation_service,
             notification_service=notification_service,
+            payment_notifier=payment_notifier,
             teleporter=teleporter,
             transaction_manager=transaction_manager,
         )

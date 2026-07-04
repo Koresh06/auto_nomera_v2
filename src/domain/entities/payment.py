@@ -21,6 +21,15 @@ class Payment(Entity):
     expires_at: datetime | None = None
     paid_at: datetime | None = None
 
+    @property
+    def method_label(self) -> str:
+        return {
+            PaymentMethod.YOOKASSA: "🏦 ЮKassa",
+            PaymentMethod.TELEGRAM_STARS: "⭐ Telegram Stars",
+            PaymentMethod.CRYPTO: "🪙 Криптовалюта",
+            PaymentMethod.MANUAL_CARD: "💳 Карта (вручную)",
+        }.get(self.method, self.method.value)
+
     def mark_paid(self, now: datetime) -> None:
         self.status = PaymentStatus.PAID
         self.paid_at = now

@@ -11,6 +11,7 @@ from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.application.services.payment.provider_registry import PaymentProviderRegistry
+from src.application.services.payment_notifier import PaymentNotifier
 from src.core.config import AppSettings
 from src.domain.enums.payment import PaymentMethod
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
@@ -114,3 +115,11 @@ class ServicesProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def region_guard(self, region_repo: RegionRepository) -> RegionGuard:
         return RegionGuard(region_repo)
+
+    @provide(scope=Scope.REQUEST)
+    def payment_notifier(
+        self,
+        notification_service: NotificationService,
+        region_repo: RegionRepository,
+    ) -> PaymentNotifier:
+        return PaymentNotifier(notification_service, region_repo)

@@ -18,6 +18,7 @@ from src.application.ports.user.user_repo import UserRepository
 from src.application.services.notification.notification_service import (
     NotificationService,
 )
+from src.application.services.payment_notifier import PaymentNotifier
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.application.use_cases.publication.confirm_paid_slot_and_schedule_publication import (
     ConfirmPaidSlotAndSchedulePublicationRequest,
@@ -62,6 +63,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
     reservation_service: SlotReservationService
     teleporter: DialogTeleporter
     notification_service: NotificationService
+    payment_notifier: PaymentNotifier
     transaction_manager: TransactionManager
 
     async def __call__(self, command: ConfirmPaymentRequest) -> None:
@@ -141,7 +143,15 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                 )
 
             logger.info(f"[ConfirmPayment:before_notify] payment_id={payment.id}")
-            await self._notify_success(payment, extra={"title": definition.title})
+            await self.payment_notifier.notify_user(
+                payment, extra={"title": definition.title}
+            )
+
+            try:
+                await self.payment_notifier.notify_admins(payment, user)
+                logger.info(f"[ConfirmPayment:admin_notified] payment_id={payment.id}")
+            except Exception as e:
+                logger.warning(f"[ConfirmPayment] admin notify failed: {e}")
             logger.info(
                 f"[ConfirmPayment:before_teleport] payment_id={payment.id} meta={payment.meta}"
             )
@@ -202,7 +212,12 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
         logger.info(
             f"[ConfirmPayment:before_notify] payment_id={payment.id} extra={extra}"
         )
-        await self._notify_success(payment, extra=extra)
+        await self.payment_notifier.notify_user(payment, extra)
+        try:
+            await self.payment_notifier.notify_admins(payment, user)
+            logger.info(f"[ConfirmPayment:admin_notified] payment_id={payment.id}")
+        except Exception as e:
+            logger.warning(f"[ConfirmPayment] admin notify failed: {e}")
         logger.info(
             f"[ConfirmPayment:before_teleport] payment_id={payment.id} meta={payment.meta}"
         )
@@ -212,25 +227,6 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
         logger.info(
             f"[ConfirmPayment:done] external_id={command.external_id} purpose={payment.purpose}"
         )
-
-    async def _notify_success(
-        self, payment: Payment, extra: dict | None = None
-    ) -> None:
-        return_to = payment.meta.get("return_to")
-        if not return_to:
-            logger.warning(
-                f"[ConfirmPayment:notify_skip] no return_to, payment_id={payment.id}"
-            )
-            return
-        text = self._build_success_text(payment, extra)
-        try:
-            await self.notification_service.notify_user(
-                tg_id=return_to["user_id"],
-                text=text,
-            )
-            logger.info(f"[ConfirmPayment:notify_sent] tg_id={return_to['user_id']}")
-        except Exception as e:
-            logger.warning(f"[ConfirmPayment:notify_failed] {e}")
 
     async def _teleport_back(self, payment: Payment) -> None:
         return_to = payment.meta.get("return_to")
@@ -259,31 +255,3 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             logger.info(f"[ConfirmPayment:teleport_success] state_key={return_state}")
         except Exception as e:
             logger.warning(f"[ConfirmPayment:teleport_failed] {e}")
-
-    @staticmethod
-    def _build_success_text(payment: Payment, extra: dict | None = None) -> str:
-        extra = extra or {}
-        header = "🎉 <b>Оплата прошла успешно!</b>"
-
-        match payment.purpose:
-            case PaymentPurpose.BALANCE_TOPUP:
-                body = f"✨ Баланс пополнен на <b>{payment.amount} ₽</b>"
-
-            case PaymentPurpose.PUBLICATION_SERVICE:
-                title = extra.get("title", "Услуга")
-                body = f"<b>{title}</b>\nУслуга подключена и применена к объявлению"
-
-            case PaymentPurpose.PRE_PUBLICATION:
-                days = extra.get("days", 30)
-                action = "продлена" if extra.get("was_active") else "активирована"
-                body = f"💎 Подписка на ранний доступ <b>{action}</b>\nна {days} дн."
-
-            case PaymentPurpose.SLOT:
-                slot_text = extra.get("slot_text", "")
-                suffix = f"\n🕒 {slot_text}" if slot_text else ""
-                body = f"📅 Слот <b>оплачен и забронирован</b>!{suffix}"
-
-            case _:
-                body = "✅ Платёж подтверждён"
-
-        return f"{header}\n\n{body}"

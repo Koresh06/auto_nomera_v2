@@ -41,6 +41,7 @@ class AiogramNotificationService(NotificationService):
                         chat_id=admin_id,
                         text=text,
                         reply_markup=reply_markup,
+                        disable_web_page_preview=True,
                     )
             except TelegramBadRequest as e:
                 logger.warning(
@@ -62,6 +63,7 @@ class AiogramNotificationService(NotificationService):
                     chat_id=user_id,
                     text=text,
                     reply_markup=reply_markup,
+                    disable_web_page_preview=True,
                 )
             except TelegramBadRequest as e:
                 logger.warning(
@@ -82,6 +84,7 @@ class AiogramNotificationService(NotificationService):
                 chat_id=tg_id,
                 text=text,
                 reply_markup=reply_markup,
+                disable_web_page_preview=True,
             )
         except TelegramBadRequest as e:
             logger.warning(
