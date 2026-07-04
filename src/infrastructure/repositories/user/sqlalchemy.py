@@ -81,7 +81,7 @@ class SQLAlchemyUserRepo(UserRepository):
 
     async def get_all_active(self) -> list[User]:
         result = await self._session.execute(
-            select(UserModel).where(UserModel.is_blocked == False)
+            select(UserModel).where(UserModel.is_blocked.is_(False))
         )
         return [m.to_entity() for m in result.scalars().all()]
 

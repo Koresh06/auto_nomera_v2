@@ -94,7 +94,7 @@ from src.presentation.telegram.features.admin.modules.stats.publications.dialogs
 
 def get_all_routers() -> list[Router]:
     return [
-        # error_router,
+        error_router,
         user_router,
         admin_router,
         admin_urgent_buyout_router,

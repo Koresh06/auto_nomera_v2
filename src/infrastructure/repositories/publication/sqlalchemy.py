@@ -63,7 +63,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
             .where(
                 AdModel.user_id == user_id,
                 AdModel.region_id == region_id,
-                PublicationModel.is_child == False,
+                PublicationModel.is_child.is_(False),
                 PublicationModel.status.notin_(
                     [
                         PublicationStatus.CANCELED,
@@ -150,7 +150,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                 PublicationModel.status == PublicationStatus.SCHEDULED,
                 PublicationModel.publish_at_utc >= now_utc,
                 PublicationModel.publish_at_utc <= before_utc,
-                PublicationModel.is_child == False,
+                PublicationModel.is_child.is_(False),
             )
             .order_by(PublicationModel.publish_at_utc.asc())
         )
@@ -277,7 +277,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                     PublicationModel.region_id == region_id,
                     PublicationModel.publish_at_utc >= from_utc,
                     PublicationModel.publish_at_utc < to_utc,
-                    PublicationModel.is_child == False,
+                    PublicationModel.is_child.is_(False),
                     PublicationModel.status.in_(
                         [
                             PublicationStatus.SCHEDULED,
@@ -311,7 +311,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                 .where(
                     PublicationModel.region_id == region_id,
                     PublicationModel.status == PublicationStatus.SCHEDULED,
-                    PublicationModel.is_child == False,
+                    PublicationModel.is_child.is_(False),
                     AdModel.ad_type != AdType.URGENT_BUYOUT,
                 )
                 .options(selectinload(PublicationModel.services))

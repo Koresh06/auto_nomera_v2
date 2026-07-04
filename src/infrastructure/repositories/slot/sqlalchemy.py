@@ -101,7 +101,7 @@ class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
         await self._session.execute(stmt)
 
     async def unmark_converted(self, slot: SlotKey, user_id: int) -> None:
-        result = await self._session.execute(
+       await self._session.execute(
             delete(SlotConvertedModel).where(
                 SlotConvertedModel.region_id == slot.region_id,
                 SlotConvertedModel.slot_day == slot.local_day,

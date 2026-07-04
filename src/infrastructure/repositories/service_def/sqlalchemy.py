@@ -44,7 +44,7 @@ class SQLAlchemyServiceDefinitionRepo(ServiceDefinitionRepository):
     async def get_all_active(self) -> list[ServiceDefinition]:
         result = await self._session.execute(
             select(ServiceDefinitionModel).where(
-                ServiceDefinitionModel.is_active == True
+                ServiceDefinitionModel.is_active.is_(True)
             )
         )
         return [m.to_entity() for m in result.scalars().all()]

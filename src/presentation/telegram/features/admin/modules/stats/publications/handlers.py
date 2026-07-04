@@ -33,7 +33,6 @@ async def on_open_deferred_catalog(
     button: Button,
     dialog_manager: DialogManager,
 ) -> None:
-    region_id: int = dialog_manager.dialog_data["region_id"]
     await dialog_manager.next()
 
 
