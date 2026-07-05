@@ -82,21 +82,6 @@ services:
         condition: service_healthy
     restart: always
 
-  cloudpub:
-    image: cloudpub/cloudpub:latest
-    container_name: cloudpub_tunnel
-    restart: unless-stopped
-    volumes:
-      - cloudpub-config:/home/cloudpub
-    network_mode: "host"
-    env_file:
-      - .env
-    environment:
-      - HTTP=8080
-    command: run
-    depends_on:
-      - webhook
-
 volumes:
   postgres_data:
   cloudpub-config:
