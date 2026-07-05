@@ -84,4 +84,3 @@ services:
 
 volumes:
   postgres_data:
-  cloudpub-config:
