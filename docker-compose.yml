@@ -30,6 +30,7 @@ services:
 
   bot:
     build: .
+    image: auto_nomera:latest       
     container_name: auto_nomera_bot
     command: python -m src.presentation.telegram.app
     env_file:
@@ -42,7 +43,7 @@ services:
     restart: always
 
   webhook:
-    build: .
+    image: auto_nomera:latest       
     container_name: auto_nomera_webhook
     command: uvicorn src.presentation.web.app:create_app --host 0.0.0.0 --port 8080 --factory
     ports:
@@ -57,7 +58,7 @@ services:
     restart: always
 
   worker:
-    build: .
+    image: auto_nomera:latest        
     container_name: auto_nomera_worker
     command: taskiq worker src.worker:broker
     env_file:
@@ -70,7 +71,7 @@ services:
     restart: always
 
   scheduler:
-    build: .
+    image: auto_nomera:latest      
     container_name: auto_nomera_scheduler
     command: taskiq scheduler src.scheduler:scheduler
     env_file:
