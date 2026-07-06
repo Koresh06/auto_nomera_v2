@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from dataclasses import dataclass
@@ -62,10 +63,21 @@ class YooKassaProvider(PaymentProvider):
         idempotence_key = str(uuid.uuid4())
         logger.info("BEFORE YOOKASSA CREATE")
 
-        response: PaymentResponse = YooKassaPayment.create(
-            invoice_request.to_dict(),
-            idempotence_key,
-        )
+        try:
+            response: PaymentResponse = await asyncio.wait_for(
+                asyncio.to_thread(
+                    YooKassaPayment.create,
+                    invoice_request.to_dict(),
+                    idempotence_key,
+                ),
+                timeout=15,
+            )
+        except asyncio.TimeoutError:
+            logger.exception("YOOKASSA TIMEOUT")
+            raise
+        except Exception:
+            logger.exception("YOOKASSA ERROR")
+            raise
 
         logger.info("AFTER YOOKASSA CREATE: %s", response.id)
 
