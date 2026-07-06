@@ -1,7 +1,8 @@
+import logging
+import uuid
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
-import uuid
 from yookassa import Configuration, Payment as YooKassaPayment
 from yookassa.domain.response import PaymentResponse
 
@@ -9,6 +10,9 @@ from src.application.dtos.yookassa import YooKassaInvoiceRequest, YooKassaReceip
 from src.application.ports.payment.provider import PaymentProvider
 from src.core.config.payment import YooKassaSettings
 from src.domain.entities.payment import Payment
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -56,10 +60,14 @@ class YooKassaProvider(PaymentProvider):
         )
 
         idempotence_key = str(uuid.uuid4())
+        logger.info("BEFORE YOOKASSA CREATE")
+
         response: PaymentResponse = YooKassaPayment.create(
             invoice_request.to_dict(),
             idempotence_key,
         )
+
+        logger.info("AFTER YOOKASSA CREATE: %s", response.id)
 
         return {
             "yookassa_payment_id": response.id,
