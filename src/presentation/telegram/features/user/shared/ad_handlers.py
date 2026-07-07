@@ -187,7 +187,7 @@ async def on_pick_slot(
     dialog_manager.dialog_data["region_id"] = slot.region_id
     dialog_manager.dialog_data["slot_day"] = slot.local_day.isoformat()
     dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime("%H:%M")
-    dialog_manager.dialog_data["is_paid"] = result.pricing_changed_to_converted
+    dialog_manager.dialog_data["is_paid"] = is_paid_slot
 
     await dialog_manager.next()
 
@@ -329,6 +329,7 @@ async def on_back_to_calendar(
             data.pop("region_id", None)
             data.pop("slot_day", None)
             data.pop("slot_time", None)
+            await dialog_manager.back()
 
     else:
         dialog_manager.dialog_data["back_warning"] = tg_id
