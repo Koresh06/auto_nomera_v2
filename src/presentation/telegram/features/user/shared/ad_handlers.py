@@ -304,7 +304,7 @@ async def on_back_to_calendar(
         data["back_warning"] = tg_id
 
         await callback.answer(
-            "Внимание! При возврате в календарь вы потеряете доступ "
+            "Внимание! При отмене вы потеряете доступ "
             "к платному слоту. Для подтверждения возврата нажмите кнопку снова.",
             show_alert=True,
         )
@@ -345,7 +345,7 @@ async def on_back_to_calendar(
     data.pop("slot_time", None)
     data.pop("is_paid", None)
 
-    await dialog_manager.back()
+    # await dialog_manager.back()
 
 
 @inject
