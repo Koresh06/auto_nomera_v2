@@ -88,21 +88,6 @@ async def on_pick_slot(
     publish_at_utc = PublishTimeResolver().resolve_publish_at_utc(
         tz=region.timezone, slot=slot
     )
-
-    limit_result: LimitCheckResult = await mediator.handle(
-        CheckPublicationLimitRequest(
-            user_id=user.id,
-            region_id=user.region_id,
-            ad_type=ad_type,
-            plate=plate,
-            publish_at_utc=publish_at_utc,
-            region_timezone=region.timezone.value,
-        )
-    )
-    if not limit_result.allowed:
-        await callback.answer(limit_result.reason, show_alert=True)
-        return
-
     try:
         result: HoldResult = await mediator.handle(
             HoldSlotRequest(
@@ -129,7 +114,25 @@ async def on_pick_slot(
             )
         return
 
-    if result.pricing_changed_to_converted:
+    is_paid_slot = result.pricing_changed_to_converted
+
+    if not is_paid_slot:
+        limit_result: LimitCheckResult = await mediator.handle(
+            CheckPublicationLimitRequest(
+                user_id=user.id,
+                region_id=user.region_id,
+                ad_type=ad_type,
+                plate=plate,
+                publish_at_utc=publish_at_utc,
+                region_timezone=region.timezone.value,
+            )
+        )
+
+        if not limit_result.allowed:
+            await callback.answer(limit_result.reason, show_alert=True)
+            return
+
+    if is_paid_slot:
         amount = region.settings.paid_slot_price
 
         if dialog_manager.dialog_data.get("paid_slot_confirm") == item_id:
@@ -278,34 +281,48 @@ async def on_back_to_calendar(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
 ) -> None:
+    tg_id = callback.from_user.id
     data = dialog_manager.dialog_data
-    user: UserDTO = await mediator.handle(
-        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
-    )
+    is_slot_paid = data.get("is_paid") or dialog_manager.start_data.get("is_paid")
+    if dialog_manager.dialog_data.get("back_warning") == tg_id and is_slot_paid:
+        dialog_manager.dialog_data.pop("back_warning", None)
 
-    region_id: int = data.get("region_id") or dialog_manager.start_data.get("region_id")
-    slot_day = data.get("slot_day") or dialog_manager.start_data.get("slot_day")
-    slot_time = data.get("slot_time") or dialog_manager.start_data.get("slot_time")
-
-    if "region_id" in data:
-        slot: SlotKey = SlotKey(
-            region_id=region_id,
-            local_day=date.fromisoformat(slot_day),
-            local_time=time.fromisoformat(slot_time),
+        user: UserDTO = await mediator.handle(
+            GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
         )
-        try:
-            await mediator.handle(
-                ReleaseHoldRequest(
-                    slot=slot,
-                    user_id=user.id,
-                )
+
+        region_id: int = data.get("region_id") or dialog_manager.start_data.get(
+            "region_id"
+        )
+        slot_day = data.get("slot_day") or dialog_manager.start_data.get("slot_day")
+        slot_time = data.get("slot_time") or dialog_manager.start_data.get("slot_time")
+
+        if "region_id" in data:
+            slot: SlotKey = SlotKey(
+                region_id=region_id,
+                local_day=date.fromisoformat(slot_day),
+                local_time=time.fromisoformat(slot_time),
             )
-            logger.info("[ReleaseHold:done] slot released")
-        except (SlotHoldNotFound, SlotHoldOwnerMismatch) as e:
-            logger.info(str(e))
-        data.pop("region_id", None)
-        data.pop("slot_day", None)
-        data.pop("slot_time", None)
+            try:
+                await mediator.handle(
+                    ReleaseHoldRequest(
+                        slot=slot,
+                        user_id=user.id,
+                    )
+                )
+                logger.info("[ReleaseHold:done] slot released")
+            except (SlotHoldNotFound, SlotHoldOwnerMismatch) as e:
+                logger.info(str(e))
+            data.pop("region_id", None)
+            data.pop("slot_day", None)
+            data.pop("slot_time", None)
+
+    else:
+        dialog_manager.dialog_data["back_warning"] = tg_id
+        await callback.answer(
+            "Внимание! При возврате в календарь, вы потеряете доступ к платному слоту. Для подтверждения возврата нажмите кнопку снова.",
+            show_alert=True,
+        )
 
 
 @inject
