@@ -295,48 +295,57 @@ async def on_back_to_calendar(
 ) -> None:
     tg_id = callback.from_user.id
     data = dialog_manager.dialog_data
+
     is_slot_paid = data.get("is_paid") or dialog_manager.start_data.get("is_paid")
-    back_warning = dialog_manager.dialog_data.get("back_warning")
-    if back_warning == tg_id and is_slot_paid:
-        dialog_manager.dialog_data.pop("back_warning", None)
 
-        user: UserDTO = await mediator.handle(
-            GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
-        )
+    back_warning = data.get("back_warning")
 
-        region_id: int = data.get("region_id") or dialog_manager.start_data.get(
-            "region_id"
-        )
-        slot_day = data.get("slot_day") or dialog_manager.start_data.get("slot_day")
-        slot_time = data.get("slot_time") or dialog_manager.start_data.get("slot_time")
+    if is_slot_paid and back_warning != tg_id:
+        data["back_warning"] = tg_id
 
-        if "region_id" in data:
-            slot: SlotKey = SlotKey(
-                region_id=region_id,
-                local_day=date.fromisoformat(slot_day),
-                local_time=time.fromisoformat(slot_time),
-            )
-            try:
-                await mediator.handle(
-                    ReleaseHoldRequest(
-                        slot=slot,
-                        user_id=user.id,
-                    )
-                )
-                logger.info("[ReleaseHold:done] slot released")
-            except (SlotHoldNotFound, SlotHoldOwnerMismatch) as e:
-                logger.info(str(e))
-            data.pop("region_id", None)
-            data.pop("slot_day", None)
-            data.pop("slot_time", None)
-            await dialog_manager.back()
-
-    else:
-        dialog_manager.dialog_data["back_warning"] = tg_id
         await callback.answer(
-            "Внимание! При возврате в календарь, вы потеряете доступ к платному слоту. Для подтверждения возврата нажмите кнопку снова.",
+            "Внимание! При возврате в календарь вы потеряете доступ "
+            "к платному слоту. Для подтверждения возврата нажмите кнопку снова.",
             show_alert=True,
         )
+        return
+
+    data.pop("back_warning", None)
+
+    user: UserDTO = await mediator.handle(
+        GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
+    )
+
+    region_id = data.get("region_id") or dialog_manager.start_data.get("region_id")
+    slot_day = data.get("slot_day") or dialog_manager.start_data.get("slot_day")
+    slot_time = data.get("slot_time") or dialog_manager.start_data.get("slot_time")
+
+    if region_id and slot_day and slot_time:
+        slot = SlotKey(
+            region_id=region_id,
+            local_day=date.fromisoformat(slot_day),
+            local_time=time.fromisoformat(slot_time),
+        )
+
+        try:
+            await mediator.handle(
+                ReleaseHoldRequest(
+                    slot=slot,
+                    user_id=user.id,
+                )
+            )
+
+            logger.info("[ReleaseHold:done] slot released")
+
+        except (SlotHoldNotFound, SlotHoldOwnerMismatch) as e:
+            logger.info(str(e))
+
+    data.pop("region_id", None)
+    data.pop("slot_day", None)
+    data.pop("slot_time", None)
+    data.pop("is_paid", None)
+
+    await dialog_manager.back()
 
 
 @inject
