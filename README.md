@@ -204,5 +204,12 @@ src/
 ## Docker
 
 ```bash
-docker compose up -d postgres redis
+
+docker compose pull # скачать образ из ghcr.io
+
+docker compose run --rm bot alembic upgrade head # миграции (создаст схему в пустой БД)
+
+docker compose up -d # запустить всё
+
+docker compose logs -f # смотреть логи
 ```
