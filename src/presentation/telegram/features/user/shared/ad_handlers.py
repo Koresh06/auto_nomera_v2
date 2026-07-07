@@ -284,7 +284,8 @@ async def on_back_to_calendar(
     tg_id = callback.from_user.id
     data = dialog_manager.dialog_data
     is_slot_paid = data.get("is_paid") or dialog_manager.start_data.get("is_paid")
-    if dialog_manager.dialog_data.get("back_warning") == tg_id and is_slot_paid:
+    back_warning = dialog_manager.dialog_data.get("back_warning")
+    if back_warning == tg_id and is_slot_paid:
         dialog_manager.dialog_data.pop("back_warning", None)
 
         user: UserDTO = await mediator.handle(

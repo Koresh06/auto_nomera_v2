@@ -7,10 +7,10 @@ from aiogram_dialog.widgets.kbd import (
     Next,
     Cancel,
     Back,
-    Button,
     Group,
     Select,
     Start,
+    Button,
 )
 from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.style import Style
@@ -91,8 +91,9 @@ store_view_publish_dialog = Dialog(
             id="confirm_publish",
             on_click=on_confirm_publish,
         ),
-        Back(
+        Button(
             Const("⬅️ Назад"),
+            id="back_to_calendar",
             on_click=on_back_to_calendar,
             style=Style(style=ButtonStyle.PRIMARY),
         ),

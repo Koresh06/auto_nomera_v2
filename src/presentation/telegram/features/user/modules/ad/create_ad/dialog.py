@@ -279,8 +279,9 @@ create_ad_dialog = Dialog(
             id="confirm",
             on_click=on_confirm_ad,
         ),
-        Back(
+        Button(
             Const("⬅️ Назад"),
+            id="back_to_calendar",
             on_click=on_back_to_calendar,
             style=Style(style=ButtonStyle.PRIMARY),
         ),
