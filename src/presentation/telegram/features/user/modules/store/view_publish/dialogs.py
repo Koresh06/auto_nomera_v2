@@ -91,15 +91,11 @@ store_view_publish_dialog = Dialog(
             id="confirm_publish",
             on_click=on_confirm_publish,
         ),
-        # Button(
-        #     Const("⬅️ Назад"),
-        #     id="back_to_calendar",
-        #     on_click=on_back_to_calendar,
-        #     style=Style(style=ButtonStyle.PRIMARY),
-        # ),
-        Cancel(
+        Button(
             Const("❌ Отмена"),
+            id="back_to_calendar",
             on_click=on_back_to_calendar,
+            style=Style(style=ButtonStyle.DANGER),
         ),
         state=StoreViewPublishSG.confirm,
         getter=getter_confirm,

@@ -345,7 +345,7 @@ async def on_back_to_calendar(
     data.pop("slot_time", None)
     data.pop("is_paid", None)
 
-    # await dialog_manager.back()
+    await dialog_manager.done()
 
 
 @inject
