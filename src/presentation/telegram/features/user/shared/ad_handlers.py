@@ -3,7 +3,7 @@ from decimal import Decimal
 import logging
 
 from aiogram.types import CallbackQuery
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.widgets.kbd import Select
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 from aiogram_dialog.api.entities import MediaAttachment
@@ -61,6 +61,7 @@ from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
 from src.application.use_cases.slots.hold_slot import HoldSlotRequest
+from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 from src.presentation.telegram.features.user.modules.payment.helpers import (
     PaymentStartParams,
     start_payment,
@@ -345,7 +346,7 @@ async def on_back_to_calendar(
     data.pop("slot_time", None)
     data.pop("is_paid", None)
 
-    await dialog_manager.done()
+    await dialog_manager.start(state=UserMenuSG.menu, mode=StartMode.RESET_STACK)
 
 
 @inject
