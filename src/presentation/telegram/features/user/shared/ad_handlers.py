@@ -96,8 +96,12 @@ async def on_pick_slot(
                 user_id=user.id,
             )
         )
+
+        is_paid_slot = result.is_system_paid or result.is_converted
         logger.info(
-            f"[on_pick_slot] pricing_changed_to_converted={result.pricing_changed_to_converted}"
+            "[on_pick_slot] is_paid_slot=%s, is_converted=%s",
+            result.is_system_paid,
+            result.is_converted,
         )
     except (SlotAlreadyHeld, SlotAlreadyConverted):
         if dialog_manager.dialog_data.get("held_warning") == item_id:
@@ -114,8 +118,6 @@ async def on_pick_slot(
             )
         return
 
-    is_paid_slot = result.pricing_changed_to_converted
-
     if not is_paid_slot:
         limit_result: LimitCheckResult = await mediator.handle(
             CheckPublicationLimitRequest(
@@ -129,7 +131,17 @@ async def on_pick_slot(
         )
 
         if not limit_result.allowed:
-            await callback.answer(limit_result.reason, show_alert=True)
+            await mediator.handle(
+                ReleaseHoldRequest(
+                    slot=slot,
+                    user_id=user.id,
+                )
+            )
+
+            await callback.answer(
+                limit_result.reason,
+                show_alert=True,
+            )
             return
 
     if is_paid_slot:

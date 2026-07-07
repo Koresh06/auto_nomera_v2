@@ -20,7 +20,8 @@ from src.utils.get_datetime_utc_now import get_datetime_utc_now
 class HoldResult:
     slot: SlotKey
     hold_until_utc: datetime
-    pricing_changed_to_converted: bool
+    is_system_paid: bool
+    is_converted: bool
 
 
 @dataclass(slots=True)
@@ -66,12 +67,13 @@ class SlotReservationService:
         is_system_paid = self.pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots, slot=slot
         )
-        is_paid = (is_system_paid or is_converted) and not is_own_pending_payment
+        # is_paid = (is_system_paid or is_converted) and not is_own_pending_payment
 
         return HoldResult(
             slot=slot,
             hold_until_utc=hold_until,
-            pricing_changed_to_converted=is_paid,
+            is_system_paid=is_system_paid,
+            is_converted=is_converted and not is_own_pending_payment,
         )
 
     async def release_hold(
