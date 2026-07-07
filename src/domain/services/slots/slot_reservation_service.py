@@ -54,26 +54,19 @@ class SlotReservationService:
         converted_info = await self.converted_repo.get_converted_owner_and_ad(slot)
         is_converted = converted_info is not None
 
-        is_own_pending_payment = False
-        if converted_info is not None:
-            converted_user_id, converted_ad_id = converted_info
-            is_own_pending_payment = (
-                converted_user_id == user_id and converted_ad_id is None
-            )
-
         hold_until = now + self.hold_ttl
         await self.hold_store.set(slot, owner, self.hold_ttl)
 
         is_system_paid = self.pricing_policy.is_system_paid(
-            ordered_future_slots=ordered_future_slots, slot=slot
+            ordered_future_slots=ordered_future_slots,
+            slot=slot,
         )
-        # is_paid = (is_system_paid or is_converted) and not is_own_pending_payment
 
         return HoldResult(
             slot=slot,
             hold_until_utc=hold_until,
             is_system_paid=is_system_paid,
-            is_converted=is_converted and not is_own_pending_payment,
+            is_converted=is_converted,
         )
 
     async def release_hold(

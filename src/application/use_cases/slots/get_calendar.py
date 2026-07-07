@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -10,6 +11,9 @@ from src.application.ports.slots.slot_converted_repo import SlotConvertedReposit
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.services.slots.calendar_builder import CalendarBuilder
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, eq=False)
@@ -38,6 +42,7 @@ class GetCalendarUseCase(UseCase[GetCalendarRequest, CalendarDTO]):
 
         booked = await self.booking_repo.get_booked_set(future_slots)
         converted = await self.converted_repo.get_converted_set(future_slots)
+        logger.info(f"[GetCalendar] converted={converted}")
         held = await self.hold_store.get_held_set(future_slots)
 
         views = self.calendar_builder.build(
