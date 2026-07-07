@@ -29,7 +29,6 @@ from src.presentation.telegram.features.user.shared.ad_getters import (
     getter_publication_service,
 )
 from src.presentation.telegram.features.user.shared.ad_handlers import (
-    on_back_to_calendar,
     on_pick_slot,
     on_service_paid_selected,
 )
@@ -279,12 +278,13 @@ create_ad_dialog = Dialog(
             id="confirm",
             on_click=on_confirm_ad,
         ),
-        Button(
-            Const("⬅️ Назад"),
-            id="back_to_calendar",
-            on_click=on_back_to_calendar,
-            style=Style(style=ButtonStyle.PRIMARY),
-        ),
+        # Button(
+        #     Const("⬅️ Назад"),
+        #     id="back_to_calendar",
+        #     on_click=on_back_to_calendar,
+        #     style=Style(style=ButtonStyle.PRIMARY),
+        # ),
+        Cancel(Const("❌ Отмена")),
         state=CreateAdSG.confirm,
         getter=getter_confirm,
     ),
