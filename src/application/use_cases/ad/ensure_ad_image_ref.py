@@ -47,5 +47,5 @@ class EnsureAdImageRefUseCase(
             self.bot,
         )
 
-        logger.info(f"[EnsureAdImageRef] plate={command.plate} image={media.url}")
+        logger.info(f"[EnsureAdImageRef] plate={command.plate} file_id={media.file_id}")
         return media

@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
 from PIL import Image, ImageDraw
@@ -11,41 +13,28 @@ class PillowImageProcessor(ImageProcessor):
         self.bot = bot
 
     async def add_red_frame(self, chat_id: int, file_id: str) -> str:
-        # 1. Скачать файл из Telegram
         file = await self.bot.get_file(file_id)
         file_bytes = await self.bot.download_file(file.file_path)
         image_bytes = file_bytes.read()
 
-        # 2. Обработать через Pillow
+        out = await asyncio.to_thread(self._process_image, image_bytes)
+
+        input_file = BufferedInputFile(out.read(), filename="highlight.png")
+        temp_msg = await self.bot.send_photo(chat_id=chat_id, photo=input_file)
+        new_file_id = temp_msg.photo[-1].file_id
+
+        await self.bot.delete_message(chat_id=chat_id, message_id=temp_msg.message_id)
+        return new_file_id
+
+    def _process_image(self, image_bytes: bytes) -> BytesIO:
         img = Image.open(BytesIO(image_bytes))
         processed = self._darawing_red_border(
-            img,
-            border_width=20,
-            color=(255, 0, 0, 255),
-            mutate=False,
+            img, border_width=20, color=(255, 0, 0, 255)
         )
-
-        # 3. Сохранить в память
         out = BytesIO()
         processed.save(out, format="PNG")
         out.seek(0)
-
-        # 4. Отправить в Telegram, чтобы получить новый file_id
-        input_file = BufferedInputFile(out.read(), filename="highlight.png")
-        temp_msg = await self.bot.send_photo(
-            chat_id=chat_id,  # можно любой технический чат
-            photo=input_file,
-        )
-
-        new_file_id = temp_msg.photo[-1].file_id
-
-        # (по желанию) удалить временное сообщение
-        await self.bot.delete_message(
-            chat_id=chat_id,
-            message_id=temp_msg.message_id,
-        )
-
-        return new_file_id
+        return out
 
     def _darawing_red_border(
         self,

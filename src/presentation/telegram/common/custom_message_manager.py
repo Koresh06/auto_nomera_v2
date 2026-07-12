@@ -1,3 +1,4 @@
+import asyncio
 from io import BytesIO
 from typing import Union
 
@@ -64,7 +65,9 @@ class CustomMessageManager(MessageManager):
             return await super().get_media_source(media, bot)
 
         # 3) Генерация PNG
-        img = self._plate_generator.generate(plate_number, channel_username)
+        img = await asyncio.to_thread(
+            self._plate_generator.generate, plate_number, channel_username
+        )
         bio = BytesIO()
         img.save(bio, format="PNG")
         png_bytes = bio.getvalue()
