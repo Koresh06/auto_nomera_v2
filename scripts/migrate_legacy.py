@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import re
 import sys
@@ -49,7 +50,6 @@ from src.infrastructure.database.models import (
     SlotConvertedModel,
     UserModel,
 )
-
 
 # --------------------------------------------------------------------------
 # Справочники
@@ -548,14 +548,12 @@ class Migrator:
 
     async def migrate_services(self) -> None:
         """Активные user_paid_services → publication_services."""
-        rows = await self.src.fetch(
-            """
+        rows = await self.src.fetch("""
             SELECT ups.*, ps.service_type, ps.price
             FROM user_paid_services ups
             JOIN paid_services ps ON ps.id = ups.service_id
             ORDER BY ups.id
-            """
-        )
+            """)
         now = datetime.now(timezone.utc)
 
         for r in rows:
@@ -635,7 +633,11 @@ class Migrator:
                 purpose=PaymentPurpose.BALANCE_TOPUP,
                 purpose_id=None,
                 description=(r["description"] or None) and r["description"][:256],
-                meta=dict(r["meta"] or {}),
+                meta=(
+                    json.loads(r["meta"])
+                    if isinstance(r["meta"], str)
+                    else dict(r["meta"] or {})
+                ),
                 expires_at=r["expires_at"],
                 paid_at=r["paid_at"],
                 created_at=r["created_at"],
