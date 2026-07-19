@@ -25,7 +25,7 @@ class RegionModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(VARCHAR(64))
     timezone: Mapped[str] = mapped_column(VARCHAR(64))
-    channel_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    channel_id: Mapped[int] = mapped_column(BigInteger)
     channel_username: Mapped[str] = mapped_column(VARCHAR(64))
     status: Mapped[RegionStatus] = mapped_column(
         SaEnum(RegionStatus), default=RegionStatus.ACTIVE
