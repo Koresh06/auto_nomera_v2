@@ -612,15 +612,15 @@ class Migrator:
                 continue
 
             try:
-                method = PaymentMethod(r["method"])
-            except ValueError:
+                method = PaymentMethod[r["method"]]  # по ИМЕНИ, не по значению
+            except KeyError:
                 self.report.warn(f"payment {r['id']}: неизвестный метод {r['method']}")
                 self.report.add("payments_skipped")
                 continue
 
             try:
-                status = PaymentStatus(r["status"])
-            except ValueError:
+                status = PaymentStatus[r["status"]]  # по ИМЕНИ
+            except KeyError:
                 self.report.warn(f"payment {r['id']}: неизвестный статус {r['status']}")
                 self.report.add("payments_skipped")
                 continue
