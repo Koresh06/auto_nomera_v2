@@ -749,3 +749,16 @@ async def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
+
+
+# Сухой прогон — ничего не пишет, только отчёт
+# docker compose run --rm \
+#   -v ~/auto_nomera_v2/scripts:/app/scripts \
+#   -e LEGACY_DSN="postgresql://my_user:12345@legacy_db:5432/auto_db" \
+#   bot python -m scripts.migrate_legacy --dry-run
+
+# Рреальный перенос
+# docker compose run --rm \
+#   -v ~/auto_nomera_v2/scripts:/app/scripts \
+#   -e LEGACY_DSN="postgresql://my_user:12345@legacy_db:5432/auto_db" \
+#   bot python -m scripts.migrate_legacy
