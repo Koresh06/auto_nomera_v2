@@ -9,7 +9,6 @@ from aiogram_dialog.widgets.kbd.select import OnItemClick
 from src.application.dtos.user import UpdateUserDTO, UserDTO
 from src.application.exceptions.user import (
     PaymentBlockedException,
-    UserNotFoundException,
 )
 from src.application.mediator import Mediator
 from src.application.use_cases.payment.create import CreatePaymentRequest
