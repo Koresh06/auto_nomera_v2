@@ -105,19 +105,19 @@ async def on_pick_slot(
             result.is_converted,
         )
     except (SlotAlreadyHeld, SlotAlreadyConverted):
-        if dialog_manager.dialog_data.get("held_warning") == item_id:
-            dialog_manager.dialog_data.pop("held_warning", None)
-            await _start_slot_payment(
-                dialog_manager, callback, mediator, user, region, slot
-            )
-            return
-        else:
-            dialog_manager.dialog_data["held_warning"] = item_id
-            await callback.answer(
-                "💰 Этот слот платный. Нажмите ещё раз для продолжения к оплате.",
-                show_alert=True,
-            )
-        return
+        # if dialog_manager.dialog_data.get("held_warning") == item_id:
+        #     dialog_manager.dialog_data.pop("held_warning", None)
+        await _start_slot_payment(
+            dialog_manager, callback, mediator, user, region, slot
+        )
+            # return
+        # else:
+        #     dialog_manager.dialog_data["held_warning"] = item_id
+        #     await callback.answer(
+        #         "💰 Этот слот платный. Нажмите ещё раз для продолжения к оплате.",
+        #         show_alert=True,
+        #     )
+        # return
 
     if not is_paid_slot:
         limit_result: LimitCheckResult = await mediator.handle(
@@ -148,42 +148,42 @@ async def on_pick_slot(
     if is_paid_slot:
         amount = region.settings.paid_slot_price
 
-        if dialog_manager.dialog_data.get("paid_slot_confirm") == item_id:
-            dialog_manager.dialog_data.pop("paid_slot_confirm", None)
+        # if dialog_manager.dialog_data.get("paid_slot_confirm") == item_id:
+        #     dialog_manager.dialog_data.pop("paid_slot_confirm", None)
 
-            if user.balance >= amount:
-                await mediator.handle(
-                    ConfirmPaidSlotFromBalanceRequest(
-                        user_id=user.id,
-                        slot=slot,
-                        amount=amount,
-                    )
+        if user.balance >= amount:
+            await mediator.handle(
+                ConfirmPaidSlotFromBalanceRequest(
+                    user_id=user.id,
+                    slot=slot,
+                    amount=amount,
                 )
-                dialog_manager.dialog_data["region_id"] = slot.region_id
-                dialog_manager.dialog_data["slot_day"] = slot.local_day.isoformat()
-                dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime(
-                    "%H:%M"
-                )
-                dialog_manager.dialog_data["is_paid"] = True
+            )
+            dialog_manager.dialog_data["region_id"] = slot.region_id
+            dialog_manager.dialog_data["slot_day"] = slot.local_day.isoformat()
+            dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime(
+                "%H:%M"
+            )
+            dialog_manager.dialog_data["is_paid"] = True
 
-                await callback.answer(
-                    f"💰 Списано {amount} руб. с баланса.", show_alert=True
-                )
-                await dialog_manager.next()
-                return
-            else:
-                await _start_slot_payment(
-                    dialog_manager, callback, mediator, user, region, slot
-                )
-                return
-        else:
-            dialog_manager.dialog_data["paid_slot_confirm"] = item_id
             await callback.answer(
-                f"💰 Этот слот платный ({amount} руб.). "
-                "Нажмите ещё раз для подтверждения покупки.",
-                show_alert=True,
+                f"💰 Списано {amount} руб. с баланса.", show_alert=True
+            )
+            await dialog_manager.next()
+            return
+        else:
+            await _start_slot_payment(
+                dialog_manager, callback, mediator, user, region, slot
             )
             return
+        # else:
+        #     dialog_manager.dialog_data["paid_slot_confirm"] = item_id
+        #     await callback.answer(
+        #         f"💰 Этот слот платный ({amount} руб.). "
+        #         "Нажмите ещё раз для подтверждения покупки.",
+        #         show_alert=True,
+        #     )
+        #     return
 
     dialog_manager.dialog_data["region_id"] = slot.region_id
     dialog_manager.dialog_data["slot_day"] = slot.local_day.isoformat()
