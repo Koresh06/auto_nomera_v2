@@ -1,17 +1,24 @@
 from decimal import Decimal
 from dishka.integrations.aiogram_dialog import FromDishka, inject
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select
+from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 
-from src.application.dtos.user import UserDTO
-from src.application.exceptions.user import PaymentBlockedException
+from src.application.dtos.user import UpdateUserDTO, UserDTO
+from src.application.exceptions.user import (
+    PaymentBlockedException,
+    UserNotFoundException,
+)
 from src.application.mediator import Mediator
 from src.application.use_cases.payment.create import CreatePaymentRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
+from src.application.use_cases.user.update import UpdateUserRequest
 from src.domain.entities.payment import Payment
 from src.domain.enums.payment import PaymentMethod, PaymentPurpose
+from src.domain.exceptions.payment import PaymentPhoneRequiredException
+from src.presentation.telegram.features.user.modules.payment.states import PaymentSG
 
 
 @inject
@@ -22,8 +29,20 @@ async def on_payment_method_selected(
     item_id: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    start_data = dialog_manager.start_data
     method = PaymentMethod(item_id)
+    dialog_manager.dialog_data["payment_method"] = method.value
+
+    await _create_payment_and_route(callback, dialog_manager, mediator, method)
+
+
+async def _create_payment_and_route(
+    callback: CallbackQuery,
+    dialog_manager: DialogManager,
+    mediator: Mediator,
+    method: PaymentMethod,
+    phone: str | None = None,
+) -> None:
+    start_data = dialog_manager.start_data
     amount = Decimal(start_data["amount"])
     tg_id = callback.from_user.id
 
@@ -35,6 +54,8 @@ async def on_payment_method_selected(
         "return_state": start_data.get("return_state"),
         "return_data": start_data.get("return_data"),
     }
+    if phone:
+        meta["phone"] = phone
 
     try:
         payment: Payment = await mediator.handle(
@@ -54,8 +75,10 @@ async def on_payment_method_selected(
             show_alert=True,
         )
         return
+    except PaymentPhoneRequiredException:
+        await dialog_manager.switch_to(PaymentSG.waiting_phone)
+        return
 
-    dialog_manager.dialog_data["payment_method"] = method.value
     dialog_manager.dialog_data["amount"] = str(amount)
 
     if method == PaymentMethod.TELEGRAM_STARS:
@@ -68,4 +91,39 @@ async def on_payment_method_selected(
             "confirmation_url"
         )
 
-    await dialog_manager.next()
+    await dialog_manager.switch_to(PaymentSG.waiting_payment)
+
+
+@inject
+async def on_phone_received_contact(
+    message: Message,
+    widget: MessageInput,
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+):
+    value = message.contact.phone_number
+    await mediator.handle(
+        UpdateUserRequest(
+            tg_id=message.from_user.id,
+            data=UpdateUserDTO(phone=value),
+        )
+    )
+
+    await dialog_manager.switch_to(PaymentSG.select_method)
+
+@inject
+async def on_phone_input_success(
+    message: Message,
+    widget: ManagedTextInput[str],
+    dialog_manager: DialogManager,
+    value: str,
+    mediator: FromDishka[Mediator],
+):
+    await mediator.handle(
+        UpdateUserRequest(
+            tg_id=message.from_user.id,
+            data=UpdateUserDTO(phone=value),
+        )
+    )
+
+    await dialog_manager.switch_to(PaymentSG.select_method)

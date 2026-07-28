@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import uuid
 from dataclasses import dataclass
 from decimal import Decimal
@@ -11,6 +12,8 @@ from src.application.dtos.yookassa import YooKassaInvoiceRequest, YooKassaReceip
 from src.application.ports.payment.provider import PaymentProvider
 from src.core.config.payment import YooKassaSettings
 from src.domain.entities.payment import Payment
+from src.domain.enums.payment import PaymentMethod
+from src.domain.exceptions.payment import PaymentPhoneRequiredException
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +39,10 @@ class YooKassaProvider(PaymentProvider):
         external_id: str,
         **kwargs: Any,
     ) -> dict:
-        phone: str = kwargs.get("phone", "")
+        phone = re.sub(r"\D", "", kwargs.get("phone", "") or "")
+        if not phone:
+            raise PaymentPhoneRequiredException(PaymentMethod.YOOKASSA)
+        
         chat_id: int = kwargs.get("chat_id", user_id)
 
         return_url = return_url = (

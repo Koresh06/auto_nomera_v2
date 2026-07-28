@@ -1,15 +1,30 @@
 from aiogram import F
-from aiogram.enums import ButtonStyle
+from aiogram.enums import ButtonStyle, ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
-from aiogram_dialog.widgets.kbd import Cancel, ScrollingGroup, Select, Url
+from aiogram_dialog.widgets.input import TextInput, MessageInput
+from aiogram_dialog.widgets.kbd import (
+    Back,
+    Cancel,
+    RequestContact,
+    ScrollingGroup,
+    Select,
+    Url,
+)
 from aiogram_dialog.widgets.style import Style
+from aiogram_dialog.widgets.markup.reply_keyboard import ReplyKeyboardFactory
 
 from src.domain.enums.payment import PaymentMethod
+from src.presentation.telegram.features.error_handlers import on_input_error
+from src.presentation.telegram.utils.text_validators import validate_phone_number
 
 from .states import PaymentSG
 from .getters import getter_select_payment_method
-from .handlers import on_payment_method_selected
+from .handlers import (
+    on_payment_method_selected,
+    on_phone_input_success,
+    on_phone_received_contact,
+)
 
 payment_dialog = Dialog(
     Window(
@@ -69,5 +84,34 @@ payment_dialog = Dialog(
         ),
         Cancel(Const("❌ Отменить")),
         state=PaymentSG.waiting_payment,
+    ),
+    Window(
+        Const(
+            "📱 <b>Нужен номер телефона</b>\n\n"
+            "По закону (54-ФЗ) для формирования чека об оплате "
+            "требуется контакт покупателя. Введите номер телефона "
+            "в формате <b>+7XXXXXXXXXX</b> — на него придёт кассовый чек.\n\n"
+            "Мы используем его только для чека."
+        ),
+        RequestContact(Const("📞 Отправить номер")),
+        MessageInput(
+            func=on_phone_received_contact,
+            content_types=[ContentType.CONTACT],
+        ),
+        TextInput(
+            id="phone",
+            type_factory=validate_phone_number,
+            on_success=on_phone_input_success,
+            on_error=on_input_error,
+        ),
+        Back(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
+        markup_factory=ReplyKeyboardFactory(
+            one_time_keyboard=True,
+            resize_keyboard=True,
+        ),
+        state=PaymentSG.waiting_phone,
     ),
 )
