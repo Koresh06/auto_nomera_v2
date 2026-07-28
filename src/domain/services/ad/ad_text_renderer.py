@@ -86,9 +86,11 @@ class AdTextRenderer:
 
     def _render_links(self, region: Region) -> str:
         lines = [
-            f"<b><a href='{self.bot_url}'>⚠️ РАЗМЕСТИТЬ ОБЪЯВЛЕНИЕ</a></b>",
+            '<b><a href="https://snomerami.ru/go">⚠️ РАЗМЕСТИТЬ ОБЪЯВЛЕНИЕ</a></b>',
             "—————————————————",
-            f"<b><a href='{self.buyout_url}'>💸 ВЫКУП ВАШИХ НОМЕРОВ</a></b>",
+            '<b><a href="http://snomerami.ru">🌐 Наш сайт 👉🏻 snomerami.ru</a></b>',
+            "—————————————————",
+            f'<b><a href="{self.buyout_url}">💸 ВЫКУП ВАШИХ НОМЕРОВ</a></b>',
             "—————————————————",
         ]
 
