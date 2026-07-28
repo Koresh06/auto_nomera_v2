@@ -42,7 +42,7 @@ class YooKassaProvider(PaymentProvider):
         phone = re.sub(r"\D", "", kwargs.get("phone", "") or "")
         if not phone:
             raise PaymentPhoneRequiredException(PaymentMethod.YOOKASSA)
-        
+
         chat_id: int = kwargs.get("chat_id", user_id)
 
         return_url = return_url = (

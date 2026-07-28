@@ -110,7 +110,7 @@ async def on_pick_slot(
         await _start_slot_payment(
             dialog_manager, callback, mediator, user, region, slot
         )
-            # return
+        # return
         # else:
         #     dialog_manager.dialog_data["held_warning"] = item_id
         #     await callback.answer(
@@ -161,9 +161,7 @@ async def on_pick_slot(
             )
             dialog_manager.dialog_data["region_id"] = slot.region_id
             dialog_manager.dialog_data["slot_day"] = slot.local_day.isoformat()
-            dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime(
-                "%H:%M"
-            )
+            dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime("%H:%M")
             dialog_manager.dialog_data["is_paid"] = True
 
             await callback.answer(

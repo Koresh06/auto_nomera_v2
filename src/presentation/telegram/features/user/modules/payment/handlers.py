@@ -110,6 +110,7 @@ async def on_phone_received_contact(
 
     await dialog_manager.switch_to(PaymentSG.select_method)
 
+
 @inject
 async def on_phone_input_success(
     message: Message,

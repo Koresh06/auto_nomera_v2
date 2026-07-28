@@ -9,4 +9,6 @@ class PaymentProviderNotFoundException(ApplicationException):
 
 class PaymentPhoneRequiredException(ApplicationException):
     def __init__(self, method: "PaymentMethod") -> None:
-        super().__init__(f"Платёжный провайдер для метода {method} требует номера телефона")
+        super().__init__(
+            f"Платёжный провайдер для метода {method} требует номера телефона"
+        )
