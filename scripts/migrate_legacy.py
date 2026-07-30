@@ -30,6 +30,7 @@ from zoneinfo import ZoneInfo
 
 import asyncpg
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import text as sa_text
 
 from src.core.config import settings
 from src.domain.enums.ad import AdStatus, AdType
@@ -246,6 +247,7 @@ class Migrator:
         self.store_ad_map: dict[int, int] = {}  # old user_id → new ads.id (STORE)
         self.pub_by_old_ad: dict[int, int] = {}  # old ads.id → new publications.id
         self.region_tz: dict[int, str] = {}  # new region_id → tz
+        self.store_old_ad_map: dict[int, int] = {}  # old ads.id(STORE) -> new ads.id
 
         # слоты старых объявлений: old ad_id → (date, time)
         self.slots: dict[int, tuple[date, time]] = {}
@@ -416,11 +418,33 @@ class Migrator:
             )
             self.dst.add(model)
             await self.dst.flush()
+            await self.dst.execute(
+                sa_text("UPDATE ads SET legacy_id = :lid WHERE id = :nid"),
+                {"lid": s["id"], "nid": model.id},
+            )
 
             self.store_ad_map[s["user_id"]] = model.id
             self.report.add("stores")
             if not has_pubs:
                 self.report.add("stores_without_publications")
+
+            store_ads = await self.src.fetch(
+                "SELECT id, user_id FROM ads WHERE ad_type = 'STORE'"
+            )
+        for sa_row in store_ads:
+            new_id = self.store_ad_map.get(sa_row["user_id"])
+            if new_id is None:
+                continue
+            self.store_old_ad_map[sa_row["id"]] = new_id
+            # legacy_id на новом Ad(STORE): пишем один из старых id как якорь
+            await self.dst.execute(
+                sa_text(
+                    "UPDATE ads SET legacy_id = :lid WHERE id = :nid "
+                    "AND legacy_id IS NULL"
+                ),
+                {"lid": sa_row["id"], "nid": new_id},
+            )
+        await self.dst.flush()
 
     # -------------------------------------------------------------------- ads
 
@@ -475,6 +499,10 @@ class Migrator:
             )
             self.dst.add(model)
             await self.dst.flush()
+            await self.dst.execute(
+                sa_text("UPDATE ads SET legacy_id = :lid WHERE id = :nid"),
+                {"lid": r["id"], "nid": model.id},
+            )
 
             self.ad_map[r["id"]] = model.id
             self.report.add("ads")
