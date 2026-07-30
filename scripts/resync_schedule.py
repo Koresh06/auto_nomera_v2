@@ -42,7 +42,6 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from src.core.config import settings
 from src.infrastructure.database.models import PublicationModel
 
-
 APS_ZSET = "aps_run_times"
 
 # какие префиксы переносим
@@ -315,25 +314,31 @@ async def main() -> int:
 
     container = make_async_container(*make_base_providers())
 
+    from src.infrastructure.broker.instance import broker
+    from src.infrastructure.broker.taskiq import register_taskiq_tasks
+
+    register_taskiq_tasks(broker, container=container)
+
     print(f"{'СУХОЙ ПРОГОН' if args.dry_run else 'РЕСИНХРОНИЗАЦИЯ'} начата...")
 
     try:
         async with session_factory() as session:
-            queue = await container.get(TaskQueue)
-            r = Resyncer(src, redis_client, session, queue, args.dry_run)
-            try:
-                await r.run()
-                if args.dry_run:
+            async with container() as request_container:
+                queue = await request_container.get(TaskQueue)
+                r = Resyncer(src, redis_client, session, queue, args.dry_run)
+                try:
+                    await r.run()
+                    if args.dry_run:
+                        await session.rollback()
+                        print("\n[dry-run] откачено")
+                    else:
+                        await session.commit()
+                        print("\n[commit] сохранено")
+                except Exception:
                     await session.rollback()
-                    print("\n[dry-run] откачено")
-                else:
-                    await session.commit()
-                    print("\n[commit] сохранено")
-            except Exception:
-                await session.rollback()
+                    print(r.render())
+                    raise
                 print(r.render())
-                raise
-            print(r.render())
     finally:
         await src.close()
         await redis_client.aclose()
