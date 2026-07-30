@@ -610,7 +610,7 @@ class Migrator:
                 continue
 
             try:
-                method = PaymentMethod[r["method"]]  # по ИМЕНИ, не по значению
+                method = PaymentMethod[r["method"]]
             except KeyError:
                 self.report.warn(f"payment {r['id']}: неизвестный метод {r['method']}")
                 self.report.add("payments_skipped")
