@@ -99,7 +99,7 @@ class Resyncer:
         )
         # новые STORE-объявления по владельцу
         store_new = await self.dst.execute(
-            sa_text("SELECT id, user_id FROM ads WHERE ad_type = 'store'")
+            sa_text("SELECT id, user_id FROM ads WHERE ad_type = 'STORE'")
         )
         store_by_user: dict[int, int] = {}
         for new_id, user_id in store_new.all():
