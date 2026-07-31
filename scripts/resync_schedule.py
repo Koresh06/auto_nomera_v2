@@ -40,6 +40,7 @@ from sqlalchemy import text as sa_text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.core.config import settings
+from src.domain.enums.publication import PublicationStatus
 from src.infrastructure.database.models import PublicationModel
 
 APS_ZSET = "aps_run_times"
@@ -235,7 +236,7 @@ class Resyncer:
         model = PublicationModel(
             ad_id=new_ad_id,
             region_id=region_id,
-            status="scheduled",
+            status=PublicationStatus.SCHEDULED,
             slot_day=slot_day,
             slot_time=slot_time,
             publish_at_utc=run_at,
