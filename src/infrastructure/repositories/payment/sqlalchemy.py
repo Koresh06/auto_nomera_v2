@@ -47,7 +47,10 @@ class SQLAlchemyPaymentRepo(PaymentRepository):
     def _paid_filter(self, since_utc: datetime | None):
         conds = [PaymentModel.status == PaymentStatus.PAID]
         if since_utc is not None:
-            conds.append(PaymentModel.paid_at >= since_utc)
+            conds.append(
+                func.coalesce(PaymentModel.paid_at, PaymentModel.created_at)
+                >= since_utc
+            )
         return conds
 
     async def get_stats(

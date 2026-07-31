@@ -585,11 +585,6 @@ class Migrator:
         now = datetime.now(timezone.utc)
 
         for r in rows:
-            # истёкшие пропускаем
-            if r["end_at"] is not None and r["end_at"] <= now:
-                self.report.add("services_expired_skipped")
-                continue
-
             svc_type = SERVICE_TYPE_MAP.get(r["service_type"])
             if svc_type is None:
                 self.report.warn(
@@ -611,10 +606,15 @@ class Migrator:
                 self.report.add("services_skipped")
                 continue
 
+            if r["end_at"] is not None and r["end_at"] <= now:
+                svc_status = PublicationServiceStatus.EXPIRED
+            else:
+                svc_status = PublicationServiceStatus.ACTIVE
+
             model = PublicationServiceModel(
                 publication_id=pub_id,
                 type=svc_type,
-                status=PublicationServiceStatus.ACTIVE,
+                status=svc_status,
                 price_paid=int(r["price"] or 0),
                 params={},
                 created_at=r["start_at"],
