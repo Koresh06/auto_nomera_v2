@@ -101,10 +101,14 @@ docker run -d --name legacy_db --network "${COMPOSE_NETWORK}" \
     -e POSTGRES_DB="${OLD_DB_NAME}" \
     postgres:16 >/dev/null
 echo "  ждём готовности postgres..."
-for i in $(seq 1 30); do
-    if docker exec legacy_db pg_isready -U "${OLD_DB_USER}" >/dev/null 2>&1; then break; fi
+for i in $(seq 1 60); do
+    if docker exec legacy_db psql -U "${OLD_DB_USER}" -d "${OLD_DB_NAME}" -c "SELECT 1" >/dev/null 2>&1; then
+        break
+    fi
     sleep 1
 done
+docker exec legacy_db psql -U "${OLD_DB_USER}" -d "${OLD_DB_NAME}" -c "SELECT 1" >/dev/null 2>&1 \
+    || die "legacy_db не поднялся за 60 сек"
 gunzip -c legacy_full.sql.gz | docker exec -i legacy_db psql -U "${OLD_DB_USER}" -d "${OLD_DB_NAME}" >/dev/null
 LEGACY_USERS=$(docker exec legacy_db psql -U "${OLD_DB_USER}" -d "${OLD_DB_NAME}" -tAc "SELECT count(*) FROM users")
 ok "legacy_db поднят, юзеров в дампе: ${LEGACY_USERS}"
