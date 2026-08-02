@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from src.application.dtos.schedule_stats import (
     RegionScheduleDTO,
@@ -28,7 +29,9 @@ class GetRegionScheduleUseCase(UseCase[GetRegionScheduleRequest, RegionScheduleD
         if region is None:
             raise RegionNotFoundException(command.region_id)
 
+        tz = ZoneInfo(region.timezone.value)
         days_range = region.settings.days_range
+
         now = datetime.now(timezone.utc)
         today = now.replace(hour=0, minute=0, second=0, microsecond=0)
         to_utc = today + timedelta(days=days_range)
@@ -42,8 +45,9 @@ class GetRegionScheduleUseCase(UseCase[GetRegionScheduleRequest, RegionScheduleD
             display_plate = shop_name if ad_type == AdType.STORE else plate
             if pub.publish_at_utc is None:
                 continue
-            date_key = pub.publish_at_utc.strftime("%d.%m.%Y")
-            time_str = pub.publish_at_utc.strftime("%H:%M")
+            local_dt = pub.publish_at_utc.astimezone(tz)
+            date_key = local_dt.strftime("%d.%m.%Y")
+            time_str = local_dt.strftime("%H:%M")
             by_date.setdefault(date_key, []).append(
                 ScheduleSlotDTO(
                     publication_id=pub.id,
