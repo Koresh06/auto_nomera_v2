@@ -516,6 +516,9 @@ class Migrator:
         now = datetime.now(timezone.utc)
 
         for r in rows:
+            if r["published_at"] is None:
+                self.report.add("publications_future_skipped")
+                continue
             if r["ad_type"] == "STORE":
                 new_ad_id = self.store_ad_map.get(r["user_id"])
                 if new_ad_id is None:

@@ -193,13 +193,10 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         # разбивка по типу объявления (join на ads)
         type_rows = (
             await self._session.execute(
-                select(
-                    AdModel.ad_type,
-                    func.count().label("cnt"),
-                )
-                .select_from(PublicationModel)  # ← явный левый борт
+                select(AdModel.ad_type, func.count().label("cnt"))
+                .select_from(PublicationModel)
                 .join(AdModel, PublicationModel.ad_id == AdModel.id)
-                .where(where)
+                .where(and_(where, AdModel.ad_type != AdType.URGENT_BUYOUT))
                 .group_by(AdModel.ad_type)
             )
         ).all()
