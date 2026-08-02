@@ -58,7 +58,7 @@ class GetCatalogDeferredPublicationsUseCase(
             now_utc=now_utc,
             before_utc=before_utc,
         )
-        print(pre_publications)
+        # print(pre_publications)
 
         pre_pub_items: list[CatalogItem] = []
         for pub in pre_publications:
