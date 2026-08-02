@@ -1,4 +1,5 @@
 from datetime import date, time
+import logging
 
 from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
@@ -14,7 +15,13 @@ from src.application.use_cases.slots.check_hold import CheckHoldRequest
 from src.application.use_cases.publication.finalize_and_schedule_existing_ad import (
     FinalizeAndScheduleExistingAdRequest,
 )
+from src.application.use_cases.ad.cancel_ad_draft_reminder import (
+    CancelAdDraftReminderRequest,
+)
 from .states import StoreViewPublishSG
+
+
+logger = logging.getLogger(__name__)
 
 
 @inject
@@ -24,6 +31,7 @@ async def on_confirm_publish(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
 ) -> None:
+    tg_id = callback.from_user.id
     data = dialog_manager.dialog_data
     ad_id: int = data.get("ad_id") or dialog_manager.start_data.get("ad_id")
     region_id: int = data.get("region_id") or dialog_manager.start_data.get("region_id")
@@ -61,6 +69,14 @@ async def on_confirm_publish(
             payment_confirmed=data.get("is_paid", False),
         )
     )
+    logger.info(f"[FinalizeAndScheduleExistingAd:done] pub_id={pub.id}")
 
     data["publication_id"] = pub.id
+
+    try:
+        await mediator.handle(CancelAdDraftReminderRequest(user_id=user.id))
+        logger.info(f"🔔 Напоминание для user_id={user.id} (tg_id={tg_id}) отменено.")
+    except Exception:
+        logger.exception(f"❌ Ошибка при отмене напоминания (tg_id={tg_id})")
+
     await dialog_manager.next()

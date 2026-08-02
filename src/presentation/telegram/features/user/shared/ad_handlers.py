@@ -12,6 +12,12 @@ from dishka.integrations.aiogram_dialog import inject, FromDishka
 
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.service_definition import ServiceDefinitionDTO
+from src.application.use_cases.ad.cancel_ad_draft_reminder import (
+    CancelAdDraftReminderRequest,
+)
+from src.application.use_cases.ad.schedule_ad_draft_reminder import (
+    ScheduleAdDraftReminderRequest,
+)
 from src.application.use_cases.slots.confirm_paid_slot_from_balance import (
     ConfirmPaidSlotFromBalanceRequest,
 )
@@ -68,6 +74,44 @@ from src.presentation.telegram.features.user.modules.payment.helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@inject
+async def on_start_dialog(
+    start_data: dict,
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+) -> None:
+    tg_id = dialog_manager.event.from_user.id
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
+
+    try:
+        await mediator.handle(
+            ScheduleAdDraftReminderRequest(
+                user_id=user.id,
+                tg_id=tg_id,
+            )
+        )
+        logger.info(
+            f"🔔 Напоминание для user_id={user.id} (tg_id={tg_id}) запланировано."
+        )
+    except Exception:
+        logger.exception(f"❌ Ошибка при планировании напоминания (tg_id={tg_id})")
+
+
+@inject
+async def on_finish_dialog(
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+) -> None:
+    tg_id = dialog_manager.event.from_user.id
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
+
+    try:
+        await mediator.handle(CancelAdDraftReminderRequest(user_id=user.id))
+        logger.debug(f"🔕 Напоминание для user_id={user.id} (tg_id={tg_id}) отменено.")
+    except Exception:
+        logger.exception(f"❌ Ошибка при отмене напоминания (tg_id={tg_id})")
 
 
 @inject
@@ -399,26 +443,26 @@ async def on_service_paid_selected(
         await callback.answer("❌ Услуга не найдена.", show_alert=True)
         return
 
-    pending_key = "pending_service"
-    if dialog_manager.dialog_data.get(pending_key) != item_id:
-        dialog_manager.dialog_data[pending_key] = item_id
-        duration = f" на {service.duration_days} дн." if service.duration_days else ""
-        await callback.answer(
-            f"💳 {service.title}{duration}\n"
-            f"Стоимость: {service.price} руб.\n\n"
-            f"Нажмите ещё раз для подтверждения.",
-            show_alert=True,
-        )
-        logger.info(
-            f"[ServiceSelected:confirm] waiting second click for {service_type}"
-        )
-        return
-    logger.info(
-        f"[ServiceSelected:second_click] service={service_type} user_id={user.id}"
-    )
+    # pending_key = "pending_service"
+    # if dialog_manager.dialog_data.get(pending_key) != item_id:
+    #     dialog_manager.dialog_data[pending_key] = item_id
+    #     duration = f" на {service.duration_days} дн." if service.duration_days else ""
+    #     await callback.answer(
+    #         f"💳 {service.title}{duration}\n"
+    #         f"Стоимость: {service.price} руб.\n\n"
+    #         f"Нажмите ещё раз для подтверждения.",
+    #         show_alert=True,
+    #     )
+    #     logger.info(
+    #         f"[ServiceSelected:confirm] waiting second click for {service_type}"
+    #     )
+    #     return
+    # logger.info(
+    #     f"[ServiceSelected:second_click] service={service_type} user_id={user.id}"
+    # )
 
     price_decimal = Decimal(service.price)
-    dialog_manager.dialog_data.pop(pending_key, None)
+    # dialog_manager.dialog_data.pop(pending_key, None)
 
     if user.balance >= price_decimal:
         # хватает баланса — покупаем сразу как раньше

@@ -17,6 +17,9 @@ from src.application.use_cases.notification.notify_admins_urgent import (
 from src.application.use_cases.publication.finalize_and_schedule_existing_ad import (
     FinalizeAndScheduleExistingAdRequest,
 )
+from src.application.use_cases.ad.cancel_ad_draft_reminder import (
+    CancelAdDraftReminderRequest,
+)
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
 from src.domain.enums.ad import AdStatus, AdType
 from src.domain.services.ad.plate_validator import validate_plate
@@ -366,6 +369,13 @@ async def on_confirm_ad(
     data["publication_id"] = pub.id
 
     logger.info("[on_confirm:done] ad created/reused")
+
+    try:
+        await mediator.handle(CancelAdDraftReminderRequest(user_id=user.id))
+        logger.info(f"🔔 Напоминание для user_id={user.id} (tg_id={tg_id}) отменено.")
+    except Exception:
+        logger.exception(f"❌ Ошибка при отмене напоминания (tg_id={tg_id})")
+
     await dialog_manager.next()
 
 

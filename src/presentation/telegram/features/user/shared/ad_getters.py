@@ -31,6 +31,7 @@ async def calendar_getter(
     user: UserDTO = await mediator.handle(
         GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
     )
+    region: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
 
     cal: CalendarDTO = await mediator.handle(
         GetCalendarRequest(region_id=user.region_id)
@@ -38,7 +39,10 @@ async def calendar_getter(
 
     available = [s for s in cal.slots if not s.disabled]
 
-    return {"slots": available}
+    return {
+        "slots": available,
+        "paid_slot_price": region.settings.paid_slot_price,
+    }
 
 
 @inject

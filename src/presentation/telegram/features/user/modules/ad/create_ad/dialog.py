@@ -32,6 +32,7 @@ from src.presentation.telegram.features.user.shared.ad_handlers import (
     on_back_to_calendar,
     on_pick_slot,
     on_service_paid_selected,
+    on_start_dialog,
 )
 from src.presentation.telegram.utils.text_validators import (
     capitalize_word,
@@ -218,7 +219,10 @@ create_ad_dialog = Dialog(
         state=CreateAdSG.price,
     ),
     Window(
-        Const("Выбери слот публикации (DEV календарь)"),
+        Format(
+            "📅 <b>Выберите дату и время публикации:</b>\n"
+            "<i>*💰 - платные слоты ({paid_slot_price} руб.) — лучшие позиции для тех, кто хочет продать быстрее и вне очереди.</i>"
+        ),
         Group(
             Select(
                 Format("{item.text}"),
@@ -278,6 +282,7 @@ create_ad_dialog = Dialog(
             Const("✅ Подтвердить"),
             id="confirm",
             on_click=on_confirm_ad,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         Button(
             Const("❌ Отмена"),
@@ -299,15 +304,19 @@ create_ad_dialog = Dialog(
                 item_id_getter=lambda x: str(x[1]),
                 items="available_services",
                 on_click=on_service_paid_selected,
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
             width=1,
         ),
-        Next(Const("⏭ Пропустить")),
+        Next(
+            Const("⏭ Пропустить"),
+            style=Style(style=ButtonStyle.DANGER),
+        ),
         state=CreateAdSG.publication_service,
         getter=getter_publication_service,
     ),
     Window(
-        Const("🤝 <b>Спасибо что выбрали Нас.</b>\n\n"),
+        Const("🤝 <b>Спасибо что выбрали Нас.</b>\n"),
         Format(
             "✅ Ваше объявление о продаже будет опубликовано {slot_day} в {slot_time} в нашем телеграм канале: <a href='https://t.me/{channel_username}'>{region_title}</a>\n",
             when=~F["is_auto_pub"],
@@ -316,17 +325,17 @@ create_ad_dialog = Dialog(
             "✅ Ваше объявление о продаже опубликовано в нашем телеграм канале: <a href='{channel_username}'>{region_title}</a>\n",
             when="is_auto_pub",
         ),
-        Const("‼️ Подписывайтесь на канал, чтобы не потерять объявление!\n\n"),
+        Const("‼️ Подписывайтесь на канал, чтобы не потерять объявление!\n"),
         Const(
-            "Для быстрой продажи рекомендуем воспользоваться платными услугами, выбрав раздел «🚀 Платные Топ услуги (NEW)» в общем меню, чтобы выделить Ваше объявление среди других.\n\n"
+            "Для быстрой продажи рекомендуем воспользоваться платными услугами, выбрав раздел «🚀 Платные Топ услуги (NEW)» в общем меню, чтобы выделить Ваше объявление среди других.\n"
         ),
         Format("🔝 Подключённые услуги:\n{selected_services}."),
         DynamicMedia(selector="media", when="media"),
-        Back(
-            Const("Назад к Услугам!"),
-            style=Style(style=ButtonStyle.PRIMARY),
-        ),
         Column(
+            Back(
+                Const("⬅️ Вернуться к услугам"),
+                style=Style(style=ButtonStyle.SUCCESS),
+            ),
             Button(
                 Const("📝 Редактировать объявление"),
                 id="edit_ad",
@@ -334,8 +343,9 @@ create_ad_dialog = Dialog(
             ),
             Start(
                 Const("🏠 Главное меню"),
-                id="main_menu",
+                id="menu",
                 state=UserMenuSG.menu,
+                style=Style(style=ButtonStyle.PRIMARY),
             ),
         ),
         state=CreateAdSG.finish,
@@ -355,4 +365,5 @@ create_ad_dialog = Dialog(
         ),
         state=CreateAdSG.urgent_done,
     ),
+    on_start=on_start_dialog,
 )
