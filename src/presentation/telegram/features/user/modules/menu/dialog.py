@@ -49,7 +49,6 @@ user_menu_dialog = Dialog(
             Const("💎 Каталог объявлений до публикации"),
             id="early_ads_catalog",
             state=CatalogDeferredPublishSG.start,
-            when="has_pre_publication",
         ),
         Row(
             Start(
@@ -94,7 +93,7 @@ user_menu_dialog = Dialog(
         ),
         Column(
             Start(
-                Const("🚀 Продать номера быстрее (услуги)"),
+                Const("🚀 Продать быстрее (Топ услуги)"),
                 id="paid_services",
                 state=PaidServiceSG.start,
                 style=Style(style=ButtonStyle.SUCCESS),

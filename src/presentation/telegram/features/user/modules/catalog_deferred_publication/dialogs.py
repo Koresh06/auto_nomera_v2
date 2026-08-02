@@ -12,6 +12,9 @@ from src.presentation.telegram.features.user.modules.catalog_deferred_publicatio
     on_delete_catalog_item,
 )
 from src.presentation.telegram.widgets.custom_scroll import CatalogScroll
+from src.presentation.telegram.features.user.modules.paid_services.states import (
+    PaidServiceSG,
+)
 
 from .states import CatalogDeferredPublishSG
 from .getters import getter_catalog_list, getter_urgent_catalog
@@ -19,27 +22,38 @@ from .getters import getter_catalog_list, getter_urgent_catalog
 catalog_deferred_publication_dialog = Dialog(
     Window(
         Const(
+            "💎 <b>Чтобы первым увидеть объявления до публикации и срочного выкупа, "
+            "нужно перейти в раздел услуг в главном меню и приобрести подписку.</b>",
+            when=~F["has_subscription"],
+        ),
+        Const(
             "💎 <b>Каталог срочных выкупов и объявлений до публикации</b>\n\n"
             "😔 В вашем регионе пока нет новых заявок.\n"
             "🚀 Объявления до публикации появятся за 2 часа до размещения в канале.",
-            when=~F["has_ads"],
+            when=F["has_subscription"] & ~F["has_ads"],
         ),
-        DynamicMedia("current_media", when=F["has_ads"]),
-        Format("{card.ad_text}", when=F["has_ads"]),
+        DynamicMedia("current_media", when=F["has_subscription"] & F["has_ads"]),
+        Format("{card.ad_text}", when=F["has_subscription"] & F["has_ads"]),
         Format(
             "\n🕐 <b>Дата публикации:</b> {card.pub_time}",
-            when=F["has_ads"] & F["card"].pub_time,
+            when=F["has_subscription"] & F["has_ads"] & F["card"].pub_time,
         ),
         CatalogScroll(
             id="catalog_scroll",
             view_state=CatalogDeferredPublishSG.list_view,
-            when=F["has_ads"],
+            when=F["has_subscription"] & F["has_ads"],
         ),
         Button(
             Const("🗑 Удалить"),
             id="delete_current_ad",
             on_click=on_delete_catalog_item,
-            when=F["is_admin"] & F["has_ads"],
+            when=F["is_admin"] & F["has_subscription"] & F["has_ads"],
+        ),
+        Start(
+            Const("🚀 Платные услуги"),
+            id="go_to_paid_services",
+            state=PaidServiceSG.start,
+            when=~F["has_subscription"],
         ),
         Start(
             Const("🏠 Главное меню"),

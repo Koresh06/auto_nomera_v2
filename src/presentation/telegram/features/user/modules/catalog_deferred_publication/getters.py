@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram_dialog import DialogManager
 
@@ -27,6 +29,20 @@ async def getter_urgent_catalog(
     tg_id = dialog_manager.event.from_user.id
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
     dialog_manager.dialog_data["region_id"] = user.region_id
+
+    has_subscription = (
+        user.pre_publication_expires_at is not None
+        and user.pre_publication_expires_at > datetime.now(timezone.utc)
+    )
+
+    if not has_subscription:
+        return {
+            "has_subscription": False,
+            "has_ads": False,
+            "card": None,
+            "current_media": None,
+            "is_admin": tg_id in settings.telegram.admin_ids,
+        }
 
     region_dto: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
     region = region_dto.to_entity()
@@ -76,6 +92,7 @@ async def getter_urgent_catalog(
         current_media = build_media_attachment(c.image_file_id if c else None)
 
     return {
+        "has_subscription": True,
         "has_ads": has_ads,
         "count_page": len(items),
         "current_page_display": current_page + 1,

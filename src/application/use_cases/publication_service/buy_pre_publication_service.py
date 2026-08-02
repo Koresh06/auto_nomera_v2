@@ -35,7 +35,7 @@ class BuyPrePublicationServiceUseCase(UseCase[BuyPrePublicationServiceRequest, N
         if user is None:
             raise UserNotFoundException
 
-        price = Decimal(definition.price) * command.days
+        price = Decimal(definition.price)
         user.charge(price)
         user.activate_pre_publication(days=command.days)
         await self.user_repo.save(user)
