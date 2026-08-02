@@ -80,7 +80,7 @@ class SQLAlchemyAdRepo(AdRepository):
             .where(
                 AdModel.region_id == region_id,
                 AdModel.ad_type == AdType.URGENT_BUYOUT,
-                AdModel.status == AdStatus.READY,
+                AdModel.status.in_([AdStatus.PUBLISHED, AdStatus.READY]),
             )
             .order_by(AdModel.created_at.desc())
         )
