@@ -99,7 +99,7 @@ async def getter_region_stats(
 
 
 @inject
-async def getter_region_detail(
+async def getter_region_detailed_payments(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
     **kwargs,

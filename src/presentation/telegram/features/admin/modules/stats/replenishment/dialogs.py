@@ -15,9 +15,6 @@ from aiogram_dialog.widgets.kbd import (
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.style import Style
 
-from src.presentation.telegram.features.admin.modules.region.main.getters import (
-    getter_region_detail,
-)
 from src.presentation.telegram.features.admin.modules.stats.helper import period_row
 from src.presentation.telegram.widgets.smart_scroll_text import SmartScrollingText
 
@@ -28,6 +25,7 @@ from .getters import (
     getter_general_stats,
     getter_regions_list,
     getter_region_stats,
+    getter_region_detailed_payments,
 )
 from .handlers import (
     on_region_selected,
@@ -110,6 +108,6 @@ stats_replenishment_dialog = Dialog(
         ),
         Back(Const("⬅️ Назад")),
         state=StatsReplenishmentSG.region_stats,
-        getter=getter_region_detail,
+        getter=getter_region_detailed_payments,
     ),
 )
