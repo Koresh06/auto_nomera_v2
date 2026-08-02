@@ -14,8 +14,10 @@ from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
+from src.application.ports.ad.draft_reminder_store import DraftReminderStore
 from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.cache.block import RedisBlockCache
+from src.infrastructure.redis.draft_reminder_store import RedisDraftReminderStore
 from src.infrastructure.repositories.ad.sqlalchemy import SQLAlchemyAdRepo
 from src.infrastructure.repositories.payment.sqlalchemy import SQLAlchemyPaymentRepo
 from src.infrastructure.repositories.publication.sqlalchemy import (
@@ -30,13 +32,17 @@ from src.infrastructure.repositories.slot.sqlalchemy import (
     SQLAlchemySlotConvertedRepo,
 )
 from src.infrastructure.repositories.user.sqlalchemy import SQLAlchemyUserRepo
-from src.infrastructure.slots.holt_store.redis import RedisSlotHoldStore
+from src.infrastructure.redis.holt_store.redis import RedisSlotHoldStore
 
 
 class RepositoriesProvider(Provider):
     @provide(scope=Scope.APP)
     def get_slot_hold_store(self, redis: Redis) -> SlotHoldStore:
         return RedisSlotHoldStore(redis)
+
+    @provide(scope=Scope.REQUEST)
+    def get_draft_reminder_store(self, redis: Redis) -> DraftReminderStore:
+        return RedisDraftReminderStore(redis=redis)
 
     @provide(scope=Scope.REQUEST)
     def get_user_repository(self, session: AsyncSession) -> UserRepository:
