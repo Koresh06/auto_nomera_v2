@@ -15,6 +15,9 @@ from src.application.use_cases.ad.schedule_ad_draft_reminder import (
 )
 from src.application.use_cases.miling.enqueue import EnqueueMailingUseCase
 from src.application.use_cases.miling.execute import ExecuteMailingUseCase
+from src.application.use_cases.payment.get_payment_details import (
+    GetPaymentDetailsUseCase,
+)
 from src.application.use_cases.publication.cancel_by_admin import (
     CancelPublicationByAdminUseCase,
 )
@@ -1100,4 +1103,13 @@ class UseCasesProvider(Provider):
     ) -> PublishOverdueBatchUseCase:
         return PublishOverdueBatchUseCase(
             publish_publication=publish_publication,
+        )
+
+    @provide
+    def get_payment_details_use_case(
+        self,
+        payment_repo: PaymentRepository,
+    ) -> GetPaymentDetailsUseCase:
+        return GetPaymentDetailsUseCase(
+            payment_repo=payment_repo,
         )

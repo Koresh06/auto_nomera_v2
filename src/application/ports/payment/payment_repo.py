@@ -24,3 +24,10 @@ class PaymentRepository(Protocol):
         *,
         since_utc: datetime | None = None,
     ) -> list[RegionStatDTO]: ...
+
+    async def list_paid_payments(
+        self,
+        *,
+        since_utc: datetime | None = None,
+        region_id: int | None = None,
+    ) -> list[tuple[Payment, int, str | None, str | None]]: ...

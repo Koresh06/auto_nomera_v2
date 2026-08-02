@@ -1,3 +1,4 @@
+from aiogram import F
 from aiogram.enums import ButtonStyle
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
@@ -6,11 +7,19 @@ from aiogram_dialog.widgets.kbd import (
     Next,
     Cancel,
     Back,
+    Row,
+    PrevPage,
+    NextPage,
+    Button,
 )
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.style import Style
 
+from src.presentation.telegram.features.admin.modules.region.main.getters import (
+    getter_region_detail,
+)
 from src.presentation.telegram.features.admin.modules.stats.helper import period_row
+from src.presentation.telegram.widgets.smart_scroll_text import SmartScrollingText
 
 from .states import (
     StatsReplenishmentSG,
@@ -76,11 +85,31 @@ stats_replenishment_dialog = Dialog(
             "📊 По методам:\n{method_lines}"
         ),
         period_row(on_period_selected),
+        Next(Const("📋 Детализация платежей")),
         Back(
             Const("⬅️ Назад"),
             style=Style(style=ButtonStyle.PRIMARY),
         ),
         state=StatsReplenishmentSG.region_detail,
         getter=getter_region_stats,
+    ),
+    Window(
+        Const("Пополнения отсутствуют", when=~F["cards"]),
+        Const("📍 Пополнения по региону\n", when=F["cards"]),
+        SmartScrollingText(
+            text=Format("{cards}"),
+            id="scroll_cards",
+            items_per_page=5,
+            when=F["cards"],
+        ),
+        Row(
+            PrevPage(scroll="scroll_cards", text=Const("⬅️ Назад")),
+            Button(Format("📄 {page_current} / {pages_total}"), id="paginator"),
+            NextPage(scroll="scroll_cards", text=Const("➡️ Далее")),
+            when=F["cards"],
+        ),
+        Back(Const("⬅️ Назад")),
+        state=StatsReplenishmentSG.region_stats,
+        getter=getter_region_detail,
     ),
 )

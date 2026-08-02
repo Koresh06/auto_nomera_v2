@@ -21,7 +21,7 @@ from src.domain.enums.publication_service import PublicationServiceType
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
 
 from .states import BuyServiceSG, PaidServiceSG, PrePublicationSG
-from .smart_scroll_text import SmartScrollingText
+from .....widgets.smart_scroll_text import SmartScrollingText
 from .getters import (
     getter_buy_service_confirm,
     getter_connected_services_user,

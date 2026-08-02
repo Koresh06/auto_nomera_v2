@@ -137,3 +137,28 @@ class SQLAlchemyPaymentRepo(PaymentRepository):
             )
             for r in rows
         ]
+
+    async def list_paid_payments(
+        self,
+        *,
+        since_utc: datetime | None = None,
+        region_id: int | None = None,
+    ) -> list[tuple[Payment, int, str | None, str | None]]:
+        conds = self._paid_filter(since_utc)
+
+        q = (
+            select(
+                PaymentModel, UserModel.tg_id, UserModel.full_name, UserModel.username
+            )
+            .join(UserModel, PaymentModel.user_id == UserModel.id)
+            .where(and_(*conds))
+            .order_by(PaymentModel.paid_at.desc())
+        )
+        if region_id is not None:
+            q = q.where(UserModel.region_id == region_id)
+
+        rows = (await self.session.execute(q)).all()
+        return [
+            (pm.to_entity(), tg_id, full_name, username)
+            for pm, tg_id, full_name, username in rows
+        ]

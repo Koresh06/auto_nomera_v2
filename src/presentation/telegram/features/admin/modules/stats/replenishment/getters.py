@@ -1,12 +1,17 @@
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram_dialog import DialogManager
 
+from src.application.dtos.payment import PaymentDetailItemDTO
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.payment_stats import PaymentStatsDTO
 from src.application.mediator import Mediator
+from src.application.use_cases.payment.get_payment_details import (
+    GetPaymentDetailsRequest,
+)
 from src.application.use_cases.region.get_all import GetRegionsRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.stats.payment import GetPaymentStatsRequest
+from src.domain.enums.period import StatsPeriod
 from src.presentation.telegram.features.admin.modules.stats.helper import (
     ScopePrivate,
     _current_period,
@@ -90,4 +95,24 @@ async def getter_region_stats(
         "total_amount": stats.total_amount_display,
         "method_lines": method_lines,
         **period_flags(period),
+    }
+
+
+@inject
+async def getter_region_detail(
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+    **kwargs,
+) -> dict:
+    period: StatsPeriod = _current_period(dialog_manager, ScopePrivate.REGION)
+    region_id = dialog_manager.dialog_data.get("region_id")
+
+    items: list[PaymentDetailItemDTO] = await mediator.handle(
+        GetPaymentDetailsRequest(period=period, region_id=region_id)
+    )
+
+    cards = "\n\n".join(i.card_text for i in items) if items else ""
+
+    return {
+        "cards": cards,
     }

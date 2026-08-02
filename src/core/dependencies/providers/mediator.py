@@ -17,6 +17,10 @@ from src.application.use_cases.miling.execute import (
     ExecuteMailingRequest,
     ExecuteMailingUseCase,
 )
+from src.application.use_cases.payment.get_payment_details import (
+    GetPaymentDetailsRequest,
+    GetPaymentDetailsUseCase,
+)
 from src.application.use_cases.publication.cancel_by_admin import (
     CancelPublicationByAdminRequest,
     CancelPublicationByAdminUseCase,
@@ -374,6 +378,7 @@ class MediatorProvider(Provider):
         cancel_ad_draft_reminder_use_case: CancelAdDraftReminderUseCase,
         get_overdue_unpublished_use_case: GetOverdueUnpublishedUseCase,
         publish_overdue_batch_use_case: PublishOverdueBatchUseCase,
+        get_payment_details_use_case: GetPaymentDetailsUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -500,5 +505,6 @@ class MediatorProvider(Provider):
             GetOverdueUnpublishedRequest, get_overdue_unpublished_use_case
         )
         mediator.register(PublishOverdueBatchRequest, publish_overdue_batch_use_case)
+        mediator.register(GetPaymentDetailsRequest, get_payment_details_use_case)
 
         return mediator
