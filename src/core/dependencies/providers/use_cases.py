@@ -21,6 +21,12 @@ from src.application.use_cases.publication.cancel_by_admin import (
 from src.application.use_cases.publication.get_admin_scheduled_catalog import (
     GetAdminScheduledCatalogUseCase,
 )
+from src.application.use_cases.publication.get_overdue_unpublished import (
+    GetOverdueUnpublishedUseCase,
+)
+from src.application.use_cases.publication.publish_overdue_batch import (
+    PublishOverdueBatchUseCase,
+)
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsUseCase
@@ -1076,4 +1082,22 @@ class UseCasesProvider(Provider):
         return CancelAdDraftReminderUseCase(
             task_queue=task_queue,
             reminder_store=reminder_store,
+        )
+
+    @provide
+    def get_overdue_unpublished_use_case(
+        self,
+        publication_repo: PublicationRepository,
+    ) -> GetOverdueUnpublishedUseCase:
+        return GetOverdueUnpublishedUseCase(
+            publication_repo=publication_repo,
+        )
+
+    @provide
+    def publish_overdue_batch_use_case(
+        self,
+        publish_publication: PublishPublicationUseCase,
+    ) -> PublishOverdueBatchUseCase:
+        return PublishOverdueBatchUseCase(
+            publish_publication=publish_publication,
         )

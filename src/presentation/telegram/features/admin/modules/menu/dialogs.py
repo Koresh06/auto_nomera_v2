@@ -26,6 +26,9 @@ from src.presentation.telegram.features.admin.modules.stats.publications.states 
 from src.presentation.telegram.features.admin.modules.stats.replenishment.states import (
     StatsReplenishmentSG,
 )
+from src.presentation.telegram.features.admin.modules.unpublished_publications.states import (
+    UnpublishedAdsSG,
+)
 
 from .getters import getter_admin_menu
 from .states import AdminMenuSG
@@ -87,6 +90,11 @@ admin_menu_dialog = Dialog(
             Const("📈 Общая статистика"),
             id="global_stats",
             state=GlobalStatsSG.start,
+        ),
+        Start(
+            Const("📭 Не опубликованные объявления"),
+            id="start_unpublished_publications",
+            state=UnpublishedAdsSG.pick_slot,
         ),
         state=AdminMenuSG.menu,
         getter=getter_admin_menu,

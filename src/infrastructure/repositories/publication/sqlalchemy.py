@@ -366,3 +366,37 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         by_type = [(r.type, r.cnt) for r in rows]
         total = sum(c for _, c in by_type)
         return total, by_type
+
+    async def list_overdue_scheduled_today(
+        self, now_utc: datetime
+    ) -> list[tuple[Publication, str | None, AdType, str | None, int, str | None, str]]:
+        today_start_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        query = (
+            select(
+                PublicationModel,
+                AdModel.plate_number,
+                AdModel.ad_type,
+                UserModel.username,
+                UserModel.tg_id,
+                AdModel.shop_name,
+                RegionModel.timezone,
+            )
+            .join(AdModel, AdModel.id == PublicationModel.ad_id)
+            .join(UserModel, UserModel.id == AdModel.user_id)
+            .join(RegionModel, RegionModel.id == PublicationModel.region_id)
+            .where(
+                PublicationModel.status == PublicationStatus.SCHEDULED,
+                PublicationModel.publish_at_utc >= today_start_utc,
+                PublicationModel.publish_at_utc < now_utc,
+                PublicationModel.is_child.is_(False),
+            )
+            .order_by(PublicationModel.publish_at_utc.asc())
+        )
+        result = await self._session.execute(query)
+        rows = []
+        for pub_model, plate, ad_type, username, tg_id, shop_name, tz in result.all():
+            rows.append(
+                (pub_model.to_entity(), plate, ad_type, username, tg_id, shop_name, tz)
+            )
+        return rows

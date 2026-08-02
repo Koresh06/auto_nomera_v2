@@ -25,6 +25,14 @@ from src.application.use_cases.publication.get_admin_scheduled_catalog import (
     GetAdminScheduledCatalogRequest,
     GetAdminScheduledCatalogUseCase,
 )
+from src.application.use_cases.publication.get_overdue_unpublished import (
+    GetOverdueUnpublishedRequest,
+    GetOverdueUnpublishedUseCase,
+)
+from src.application.use_cases.publication.publish_overdue_batch import (
+    PublishOverdueBatchRequest,
+    PublishOverdueBatchUseCase,
+)
 from src.application.use_cases.region.toggle_status import (
     ToggleRegionStatusCommand,
     ToggleRegionStatusUseCase,
@@ -364,6 +372,8 @@ class MediatorProvider(Provider):
         get_global_stats_use_case: GetGlobalStatsUseCase,
         schedule_ad_draft_reminder_use_case: ScheduleAdDraftReminderUseCase,
         cancel_ad_draft_reminder_use_case: CancelAdDraftReminderUseCase,
+        get_overdue_unpublished_use_case: GetOverdueUnpublishedUseCase,
+        publish_overdue_batch_use_case: PublishOverdueBatchUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -486,5 +496,9 @@ class MediatorProvider(Provider):
         mediator.register(
             CancelAdDraftReminderRequest, cancel_ad_draft_reminder_use_case
         )
+        mediator.register(
+            GetOverdueUnpublishedRequest, get_overdue_unpublished_use_case
+        )
+        mediator.register(PublishOverdueBatchRequest, publish_overdue_batch_use_case)
 
         return mediator

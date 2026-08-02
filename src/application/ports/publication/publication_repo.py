@@ -72,3 +72,9 @@ class PublicationRepository(Protocol):
         since_utc: datetime | None = None,
         region_id: int | None = None,
     ) -> tuple[int, list[tuple]]: ...
+
+    async def list_overdue_scheduled_today(
+        self, now_utc: datetime
+    ) -> list[
+        tuple[Publication, str | None, AdType, str | None, int, str | None, str]
+    ]: ...
