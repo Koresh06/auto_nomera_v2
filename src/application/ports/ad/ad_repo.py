@@ -31,8 +31,20 @@ class AdRepository(Protocol):
         region_id: int,
     ) -> int: ...
 
-    async def count_ads(self, since_utc=None, region_id=None) -> int: ...
+    async def count_ads(
+        self,
+        since_utc: None = None,
+        region_id: int | None = None,
+    ) -> int: ...
 
     async def count_by_type(
-        self, since_utc=None, region_id=None
+        self,
+        since_utc: None = None,
+        region_id: int | None = None,
     ) -> list[tuple[AdType, int]]: ...
+
+    async def top_regions_by_activity(
+        self,
+        since_utc: None = None,
+        limit: int = 5,
+    ) -> list[tuple[str, int]]: ...

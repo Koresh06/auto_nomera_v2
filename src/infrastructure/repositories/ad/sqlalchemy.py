@@ -6,6 +6,7 @@ from src.application.exceptions.ad import AdNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.domain.enums.ad import AdStatus, AdType
 from src.infrastructure.database.models import AdModel
+from src.infrastructure.database.models.region import RegionModel
 
 
 class SQLAlchemyAdRepo(AdRepository):
@@ -122,3 +123,21 @@ class SQLAlchemyAdRepo(AdRepository):
         q = q.group_by(AdModel.ad_type)
         rows = (await self._session.execute(q)).all()
         return [(r.ad_type, r.cnt) for r in rows]
+
+    async def top_regions_by_activity(
+        self,
+        since_utc: None = None,
+        limit: int = 5,
+    ) -> list[tuple[str, int]]:
+        q = select(RegionModel.title, func.count(AdModel.id).label("cnt")).join(
+            RegionModel, RegionModel.id == AdModel.region_id
+        )
+        if since_utc is not None:
+            q = q.where(AdModel.created_at >= since_utc)
+        q = (
+            q.group_by(RegionModel.title)
+            .order_by(func.count(AdModel.id).desc())
+            .limit(limit)
+        )
+        rows = (await self._session.execute(q)).all()
+        return [(title, cnt) for title, cnt in rows]

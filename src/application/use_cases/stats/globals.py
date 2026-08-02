@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from src.application.dtos.global_stats import (
     AdTypeCountDTO,
     GlobalStatsDTO,
+    RegionActivityDTO,
     ServiceCountDTO,
 )
 from src.application.ports.ad.ad_repo import AdRepository
@@ -47,6 +48,13 @@ class GetGlobalStatsUseCase(UseCase[GetGlobalStatsRequest, GlobalStatsDTO]):
 
         total_regions = await self.region_repo.count_regions()
 
+        top_regions: list[RegionActivityDTO] = []
+        if rid is None:
+            top_raw = await self.ad_repo.top_regions_by_activity(since, limit=5)
+            top_regions = [
+                RegionActivityDTO(title=title, count=count) for title, count in top_raw
+            ]
+
         return GlobalStatsDTO(
             total_users=total_users,
             users_with_store=with_store,
@@ -59,4 +67,5 @@ class GetGlobalStatsUseCase(UseCase[GetGlobalStatsRequest, GlobalStatsDTO]):
             total_amount=pay.total_amount,
             total_services=total_services,
             by_service=[ServiceCountDTO(type=t, count=c) for t, c in by_service_raw],
+            top_regions=top_regions,
         )

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 
 from src.domain.entities.ad import AdType
@@ -31,6 +31,12 @@ class ServiceCountDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class RegionActivityDTO:
+    title: str
+    count: int
+
+
+@dataclass(frozen=True, slots=True)
 class GlobalStatsDTO:
     total_users: int
     users_with_store: int
@@ -43,6 +49,7 @@ class GlobalStatsDTO:
     total_amount: Decimal
     total_services: int
     by_service: list[ServiceCountDTO]
+    top_regions: list[RegionActivityDTO] = field(default_factory=list)
 
     @property
     def top_service(self) -> ServiceCountDTO | None:
