@@ -251,6 +251,7 @@ class Migrator:
 
         # слоты старых объявлений: old ad_id → (date, time)
         self.slots: dict[int, tuple[date, time]] = {}
+        self.import_started_at = datetime.now(timezone.utc)
 
     async def run(self) -> None:
         await self.migrate_regions()
@@ -548,6 +549,10 @@ class Migrator:
             slot = self.slots.get(r["id"])
             slot_day = slot[0] if slot else None
             slot_time = slot[1] if slot else None
+
+            if r["published_at"] > self.import_started_at:
+                self.report.add("publications_future_published_skipped")
+                continue
 
             # публикация УЖЕ состоялась → время = published_at (реальное), не слот
             model = PublicationModel(
