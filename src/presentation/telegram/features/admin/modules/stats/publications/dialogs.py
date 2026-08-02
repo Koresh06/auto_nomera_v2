@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.kbd import (
     Select,
     ScrollingGroup,
     Back,
+    Next,
 )
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.media import DynamicMedia
@@ -27,7 +28,6 @@ from .getters import (
 )
 from .handlers import (
     on_delete_deferred,
-    on_open_deferred_catalog,
     on_period_selected,
     on_schedule_region_selected,
     on_catalog_item_selected,
@@ -82,10 +82,13 @@ publish_stats_dialog = Dialog(
     ),
     Window(
         Format("🗓 <b>Расписание — {region_title}</b>\n\n{legend}\n\n{schedule_text}"),
-        Button(
+        # Button(
+        #     Const("📦 Каталог отложенных публикаций"),
+        #     id="deferred_catalog",
+        #     on_click=on_open_deferred_catalog,
+        # ),
+        Next(
             Const("📦 Каталог отложенных публикаций"),
-            id="deferred_catalog",
-            on_click=on_open_deferred_catalog,
         ),
         Back(
             Const("⬅️ Назад"),

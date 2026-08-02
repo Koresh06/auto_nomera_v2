@@ -10,6 +10,7 @@ from src.application.exceptions.region import RegionNotFoundException
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.domain.enums.ad import AdType
 
 
 @dataclass(frozen=True, eq=False)
@@ -37,7 +38,8 @@ class GetRegionScheduleUseCase(UseCase[GetRegionScheduleRequest, RegionScheduleD
         )
 
         by_date: dict[str, list[ScheduleSlotDTO]] = {}
-        for pub, plate, ad_type, username, tg_id in rows:
+        for pub, plate, ad_type, username, tg_id, shop_name in rows:
+            display_plate = shop_name if ad_type == AdType.STORE else plate
             if pub.publish_at_utc is None:
                 continue
             date_key = pub.publish_at_utc.strftime("%d.%m.%Y")
@@ -46,7 +48,7 @@ class GetRegionScheduleUseCase(UseCase[GetRegionScheduleRequest, RegionScheduleD
                 ScheduleSlotDTO(
                     publication_id=pub.id,
                     time=time_str,
-                    plate=plate or "—",
+                    plate=display_plate or "-",
                     ad_type=ad_type,
                     status=pub.status,
                     owner_tg_id=tg_id,

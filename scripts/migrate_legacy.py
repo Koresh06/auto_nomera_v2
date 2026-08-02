@@ -511,14 +511,20 @@ class Migrator:
     # ----------------------------------------------------------- publications
 
     async def migrate_publications(self) -> None:
-        """Каждая старая строка ads → одна публикация."""
+        """
+        Переносим ТОЛЬКО опубликованные объявления (историю).
+        Будущие/запланированные публикации создаёт ресинхронизатор из Redis —
+        поэтому здесь пропускаем всё, где published_at IS NULL.
+        """
         rows = await self.src.fetch("SELECT * FROM ads ORDER BY id")
-        now = datetime.now(timezone.utc)
 
         for r in rows:
+            # будущие (неопубликованные) — их создаст ресинхронизатор из Redis
             if r["published_at"] is None:
                 self.report.add("publications_future_skipped")
                 continue
+
+            # найти новое объявление
             if r["ad_type"] == "STORE":
                 new_ad_id = self.store_ad_map.get(r["user_id"])
                 if new_ad_id is None:
@@ -538,30 +544,19 @@ class Migrator:
                 self.report.add("publications_skipped")
                 continue
 
-            tz = self.region_tz.get(region_id, DEFAULT_TZ)
+            # слот из slot_settings — историческая инфо о том, в какой слот вышло
             slot = self.slots.get(r["id"])
             slot_day = slot[0] if slot else None
             slot_time = slot[1] if slot else None
 
-            publish_at = None
-            if slot:
-                publish_at = to_utc(slot[0], slot[1], tz)
-
-            if r["published_at"] is not None:
-                status = PublicationStatus.PUBLISHED
-                publish_at = publish_at or r["published_at"]
-            elif publish_at is not None and publish_at > now:
-                status = PublicationStatus.SCHEDULED
-            else:
-                status = PublicationStatus.CANCELED
-
+            # публикация УЖЕ состоялась → время = published_at (реальное), не слот
             model = PublicationModel(
                 ad_id=new_ad_id,
                 region_id=region_id,
-                status=status,
+                status=PublicationStatus.PUBLISHED,
                 slot_day=slot_day,
                 slot_time=slot_time,
-                publish_at_utc=publish_at,
+                publish_at_utc=r["published_at"],
                 scheduler_job_id=None,
                 channel_message_id=r["message_id"],
                 published_at_utc=r["published_at"],
@@ -573,7 +568,7 @@ class Migrator:
 
             self.pub_by_old_ad[r["id"]] = model.id
             self.report.add("publications")
-            self.report.add(f"publications_status_{status.value}")
+            self.report.add("publications_status_published")
 
     # -------------------------------------------------------------- services
 

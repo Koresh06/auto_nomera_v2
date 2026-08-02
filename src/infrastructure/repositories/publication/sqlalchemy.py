@@ -260,7 +260,9 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         region_id: int,
         from_utc: datetime,
         to_utc: datetime,
-    ) -> list[tuple[Publication, str | None, str | None, str | None, int | None]]:
+    ) -> list[
+        tuple[Publication, str | None, str | None, str | None, int | None, str | None]
+    ]:
         rows = (
             await self._session.execute(
                 select(
@@ -269,6 +271,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                     AdModel.ad_type,
                     AdModel.username,
                     UserModel.tg_id,
+                    AdModel.shop_name,
                 )
                 .select_from(PublicationModel)
                 .join(AdModel, PublicationModel.ad_id == AdModel.id)
@@ -297,6 +300,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                 r.ad_type,
                 r.username,
                 r.tg_id,
+                r.shop_name,
             )
             for r in rows
         ]
