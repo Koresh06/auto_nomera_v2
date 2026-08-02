@@ -8,6 +8,7 @@ from dishka import make_async_container
 from dishka.integrations.aiogram import AiogramProvider, setup_dishka
 from taskiq_redis import RedisStreamBroker
 
+from src.core.observability.sentry import setup_sentry
 from src.application.mediator import Mediator
 from src.infrastructure.broker.taskiq import register_taskiq_tasks
 from src.infrastructure.seeds.runner import run_seeds
@@ -29,6 +30,7 @@ async def set_commands(bot: Bot):
 
 async def create_app():
     setup_logging()
+    setup_sentry()
 
     container = make_async_container(
         *make_base_providers(),

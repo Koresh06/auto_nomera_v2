@@ -14,6 +14,7 @@ from src.application.ports.dialog.teleport import DialogTeleporter
 from src.infrastructure.telegram.dialog_teleporter import AiogramDialogTeleporter
 from src.presentation.telegram.common.custom_message_manager import CustomMessageManager
 from src.presentation.telegram.features import get_all_dialogs, get_all_routers
+from src.presentation.telegram.features.error_handlers import handle_error
 
 
 class TelegramProvider(Provider):
@@ -47,6 +48,9 @@ class TelegramProvider(Provider):
 
         dp.include_routers(*get_all_routers())
         dp.include_routers(*get_all_dialogs())
+
+        # dp.errors.register(on_region_disabled_error)
+        dp.errors.register(handle_error)
 
         dp.workflow_data.pop("bot", None)
 

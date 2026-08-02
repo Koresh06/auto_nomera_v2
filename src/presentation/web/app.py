@@ -4,8 +4,10 @@ from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from dishka.integrations.fastapi import FastapiProvider
 from fastapi import FastAPI
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 from taskiq_redis import RedisStreamBroker
 
+from src.core.observability.sentry import setup_sentry
 from src.core.dependencies.providers import make_base_providers
 from src.infrastructure.broker.taskiq import register_taskiq_tasks
 from src.presentation.web.routers.yookassa import router as yookassa_router
@@ -23,7 +25,13 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    setup_sentry(integrations=[FastApiIntegration()])
     app = FastAPI(lifespan=lifespan)
+
+    @app.get("/sentry-test")
+    async def sentry_test():
+        raise RuntimeError("Sentry test from web")
+
     app.include_router(yookassa_router)
     app.include_router(result_router)
     setup_dishka(container=container, app=app)

@@ -1,7 +1,6 @@
 from aiogram import Router
 from aiogram_dialog import Dialog
 
-from src.presentation.telegram.features.error_handlers import router as error_router
 from src.presentation.telegram.features.user.routers import router as user_router
 from src.presentation.telegram.features.admin.routers import router as admin_router
 from src.presentation.telegram.features.admin.modules.urgent_buyout.router import (
@@ -97,7 +96,6 @@ from src.presentation.telegram.features.admin.modules.stats.globals.dialogs impo
 
 def get_all_routers() -> list[Router]:
     return [
-        error_router,
         user_router,
         admin_router,
         admin_urgent_buyout_router,

@@ -11,6 +11,7 @@ from aiogram_dialog.widgets.kbd import (
     Select,
     Start,
     Button,
+    Url,
 )
 from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.style import Style
@@ -125,22 +126,27 @@ store_view_publish_dialog = Dialog(
         getter=getter_publication_service,
     ),
     Window(
-        Const("🤝 <b>Спасибо что выбрали Нас.</b>\n"),
         Format(
-            "✅ Ваше объявление о продаже будет опубликовано {slot_day} в {slot_time} в нашем телеграм канале: <a href='https://t.me/{channel_username}'>{region_title}</a>\n",
+            "✅ Ваше объявление о продаже будет опубликовано {slot_day} в {slot_time} в нашем телеграм канале - <a href='https://t.me/{channel_username}'>{region_title}</a>\n",
             when=~F["is_auto_pub"],
         ),
         Format(
             "✅ Ваше объявление о продаже опубликовано в нашем телеграм канале: <a href='https://t.me/{channel_username}'>{region_title}</a>\n",
             when="is_auto_pub",
         ),
-        Const("‼️ Подписывайтесь на канал, чтобы не потерять объявление!\n"),
+        Format("🔝 Подключённые услуги:\n{selected_services}.\n"),
         Const(
-            "Для быстрой продажи рекомендуем воспользоваться платными услугами, выбрав раздел «🚀 Платные Топ услуги (NEW)» в общем меню, чтобы выделить Ваше объявление среди других.\n"
+            "<b><u>Так же рекомендуем разместить объявление на сайте:</u></b>\n\n"
+            "🌐 Наш сайт: <a href='https://snomerami.ru/'><b>www.snomerami.ru</b></a>\n\n"
+            "⚠️ Аудитория сайта и Telegram частично отличается, поэтому объявления получают дополнительный охват и больше потенциальных просмотров"
         ),
-        Format("🔝 Подключённые услуги:\n{selected_services}."),
         DynamicMedia(selector="media", when="media"),
         Column(
+            Url(
+                Const("🌐 Разместить на нашем сайте"),
+                url=Const("https://snomerami.ru/"),
+                style=Style(style=ButtonStyle.DANGER),
+            ),
             Back(
                 Const("⬅️ Вернуться к услугам"),
                 style=Style(style=ButtonStyle.SUCCESS),

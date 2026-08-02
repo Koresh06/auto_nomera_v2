@@ -42,7 +42,6 @@ from src.presentation.telegram.features.user.modules.catalog_deferred_publicatio
     CatalogDeferredPublishSG,
 )
 
-
 user_menu_dialog = Dialog(
     Window(
         Const("Выберите действие:"),
@@ -58,20 +57,27 @@ user_menu_dialog = Dialog(
                 id="sale",
                 state=CreateAdSG.plate,
                 data={"ad_type": AdType.SALE},
+                style=Style(style=ButtonStyle.PRIMARY),
             ),
-            Start(
-                Const("⚠️ Срочный выкуп"),
-                id="urgent_buyout",
-                state=CreateAdSG.plate,
-                data={"ad_type": AdType.URGENT_BUYOUT},
-            ),
-        ),
-        Row(
             Start(
                 Const("📥 КУПИТЬ"),
                 id="buy",
                 state=CreateAdSG.plate,
                 data={"ad_type": AdType.BUY},
+                style=Style(style=ButtonStyle.PRIMARY),
+            ),
+        ),
+        Start(
+            Const("📝 Редактировать мои объявления"),
+            id="edit_ad",
+            state=EditAdSG.list,
+        ),
+        Row(
+            Start(
+                Const("⚠️ Срочный выкуп"),
+                id="urgent_buyout",
+                state=CreateAdSG.plate,
+                data={"ad_type": AdType.URGENT_BUYOUT},
             ),
             Start(
                 Const("🏦 Мой магазин"),
@@ -88,14 +94,10 @@ user_menu_dialog = Dialog(
         ),
         Column(
             Start(
-                Const("📝 Редактировать мои объявления"),
-                id="edit_ad",
-                state=EditAdSG.list,
-            ),
-            Start(
-                Const("🚀 Платные Топ услуги (NEW)"),
+                Const("🚀 Продать номера быстрее (услуги)"),
                 id="paid_services",
                 state=PaidServiceSG.start,
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
         ),
         Row(
@@ -113,8 +115,14 @@ user_menu_dialog = Dialog(
         Column(
             Next(Format("♻️ Смена региона ({title_region})")),
             Url(
+                Const("🌐 Наш сайт - Snomerami.ru"),
+                url=Const("https://snomerami.ru/"),
+                style=Style(style=ButtonStyle.DANGER),
+            ),
+            Url(
                 Const("👨‍💻 Поддержка 24/7"),
                 url=Const("https://t.me/mlnora"),
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
         ),
         state=UserMenuSG.menu,
