@@ -32,8 +32,8 @@ class GetGlobalStatsUseCase(UseCase[GetGlobalStatsRequest, GlobalStatsDTO]):
         since = command.period.since_utc()
         rid = command.region_id
 
-        total_users = await self.user_repo.count_users(rid)
-        with_store = await self.user_repo.count_users_with_store(rid)
+        total_users = await self.user_repo.count_users(since, rid)
+        with_store = await self.user_repo.count_users_with_store(since, rid)
 
         total_ads = await self.ad_repo.count_ads(since, rid)
         by_type_raw = await self.ad_repo.count_by_type(since, rid)

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Protocol
 
 from src.application.dtos.user import UpdateUserDTO
@@ -26,6 +27,14 @@ class UserRepository(Protocol):
 
     async def get_by_region(self, region_id: int) -> list[User]: ...
 
-    async def count_users(self, region_id: int | None = None) -> int: ...
+    async def count_users(
+        self,
+        since_utc: datetime | None = None,
+        region_id: int | None = None,
+    ) -> int: ...
 
-    async def count_users_with_store(self, region_id: int | None = None) -> int: ...
+    async def count_users_with_store(
+        self,
+        since_utc: datetime | None = None,
+        region_id: int | None = None,
+    ) -> int: ...

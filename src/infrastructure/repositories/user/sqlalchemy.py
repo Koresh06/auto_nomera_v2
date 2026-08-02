@@ -93,16 +93,28 @@ class SQLAlchemyUserRepo(UserRepository):
         )
         return [m.to_entity() for m in result.scalars().all()]
 
-    async def count_users(self, region_id=None) -> int:
+    async def count_users(
+        self,
+        since_utc: datetime | None = None,
+        region_id=None,
+    ) -> int:
         q = select(func.count(UserModel.id))
+        if since_utc is not None:
+            q = q.where(UserModel.created_at >= since_utc)
         if region_id is not None:
             q = q.where(UserModel.region_id == region_id)
         return (await self._session.execute(q)).scalar() or 0
 
-    async def count_users_with_store(self, region_id=None) -> int:
+    async def count_users_with_store(
+        self,
+        since_utc: datetime | None = None,
+        region_id=None,
+    ) -> int:
         q = select(func.count(func.distinct(AdModel.user_id))).where(
             AdModel.ad_type == AdType.STORE
         )
+        if since_utc is not None:
+            q = q.where(AdModel.created_at >= since_utc)
         if region_id is not None:
             q = q.where(AdModel.region_id == region_id)
         return (await self._session.execute(q)).scalar() or 0
