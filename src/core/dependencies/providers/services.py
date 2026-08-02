@@ -58,14 +58,12 @@ class ServicesProvider(Provider):
         booking_repo: SlotBookingRepository,
         converted_repo: SlotConvertedRepository,
         hold_store: SlotHoldStore,
-        pricing_policy: SlotPricingPolicy,
         slot_hold_ttl: timedelta,
     ) -> SlotReservationService:
         return SlotReservationService(
             booking_repo=booking_repo,
             converted_repo=converted_repo,
             hold_store=hold_store,
-            pricing_policy=pricing_policy,
             hold_ttl=slot_hold_ttl,
         )
 

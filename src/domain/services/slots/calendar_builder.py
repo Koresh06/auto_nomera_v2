@@ -53,6 +53,7 @@ class CalendarBuilder:
         future_slots = future_slots[:total_needed]
 
         # 2) pricing policy (первые N)
+        print(settings.system_paid_slots_count)
         policy = SlotPricingPolicy(system_paid_count=settings.system_paid_slots_count)
 
         # 3) собираем view

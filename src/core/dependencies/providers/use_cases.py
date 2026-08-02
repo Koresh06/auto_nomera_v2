@@ -2,10 +2,17 @@ from aiogram import Bot
 from dishka import Provider, provide, Scope
 
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.ad.draft_reminder_store import DraftReminderStore
 from src.application.ports.cache.block import BlockCache
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.services.payment_notifier import PaymentNotifier
+from src.application.use_cases.ad.cancel_ad_draft_reminder import (
+    CancelAdDraftReminderUseCase,
+)
+from src.application.use_cases.ad.schedule_ad_draft_reminder import (
+    ScheduleAdDraftReminderUseCase,
+)
 from src.application.use_cases.miling.enqueue import EnqueueMailingUseCase
 from src.application.use_cases.miling.execute import ExecuteMailingUseCase
 from src.application.use_cases.publication.cancel_by_admin import (
@@ -1047,4 +1054,26 @@ class UseCasesProvider(Provider):
             publication_repo=publication_repo,
             region_repo=region_repo,
             payment_repo=payment_repo,
+        )
+
+    @provide
+    def schedule_ad_draft_reminder_use_case(
+        self,
+        task_queue: TaskQueue,
+        reminder_store: DraftReminderStore,
+    ) -> ScheduleAdDraftReminderUseCase:
+        return ScheduleAdDraftReminderUseCase(
+            task_queue=task_queue,
+            reminder_store=reminder_store,
+        )
+
+    @provide
+    def cancel_ad_draft_reminder_use_case(
+        self,
+        task_queue: TaskQueue,
+        reminder_store: DraftReminderStore,
+    ) -> CancelAdDraftReminderUseCase:
+        return CancelAdDraftReminderUseCase(
+            task_queue=task_queue,
+            reminder_store=reminder_store,
         )

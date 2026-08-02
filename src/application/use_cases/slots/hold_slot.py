@@ -44,6 +44,7 @@ class HoldSlotUseCase(UseCase[HoldSlotRequest, HoldResult]):
             slot=command.slot,
             user_id=command.user_id,
             ordered_future_slots=ordered_future_slots,
+            system_paid_slots_count=region.settings.system_paid_slots_count,
             now_utc=now,
         )
         await self.transaction_manager.commit()

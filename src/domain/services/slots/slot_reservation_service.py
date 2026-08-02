@@ -29,8 +29,6 @@ class SlotReservationService:
     booking_repo: SlotBookingRepository
     converted_repo: SlotConvertedRepository
     hold_store: SlotHoldStore
-
-    pricing_policy: SlotPricingPolicy
     hold_ttl: timedelta
 
     async def hold_slot(
@@ -39,6 +37,7 @@ class SlotReservationService:
         slot: SlotKey,
         user_id: int,
         ordered_future_slots: list[SlotKey],
+        system_paid_slots_count: int,
         now_utc: datetime | None = None,
     ) -> HoldResult:
         now = now_utc or get_datetime_utc_now()
@@ -57,7 +56,8 @@ class SlotReservationService:
         hold_until = now + self.hold_ttl
         await self.hold_store.set(slot, owner, self.hold_ttl)
 
-        is_system_paid = self.pricing_policy.is_system_paid(
+        pricing_policy = SlotPricingPolicy(system_paid_count=system_paid_slots_count)
+        is_system_paid = pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots,
             slot=slot,
         )
