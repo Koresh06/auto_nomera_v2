@@ -1,4 +1,7 @@
 from src.application.mediator import Mediator
+from src.application.services.notification.notification_service import (
+    NotificationService,
+)
 from src.application.use_cases.miling.execute import ExecuteMailingRequest
 from src.application.use_cases.notification.notify_pre_publication_users import (
     NotifyPrePublicationUsersRequest,
@@ -69,6 +72,18 @@ def register_taskiq_tasks(broker, *, container):
                 )
             )
 
+    @broker.task(name="send_ad_draft_reminder")
+    async def send_ad_draft_reminder(tg_id: int) -> None:
+        async with container() as request_container:
+            notifications = await request_container.get(NotificationService)
+            await notifications.notify_user(
+                tg_id=tg_id,
+                text=(
+                    "⚠️ Напоминаем: вы начали добавлять объявление, но не опубликовали его.\n"
+                    "Если хотите продолжить — отправьте команду /start 🙂",
+                ),
+            )
+
     return {
         "publish_publication": publish_publication,
         "unpin_message": unpin_message,
@@ -76,4 +91,5 @@ def register_taskiq_tasks(broker, *, container):
         "confirm_payment": confirm_payment,
         "mark_payment_failed": mark_payment_failed,
         "execute_mailing": execute_mailing,
+        "send_ad_draft_reminder": send_ad_draft_reminder,
     }
