@@ -38,14 +38,13 @@ async def getter_general_stats(
         or "  —"
     )
 
-    top = stats.top_method
     top_region = stats.top_region
 
     return {
         "period_label": period.label(),
         "total_count": stats.total_count,
         "total_amount": f"{stats.total_amount:.0f}",
-        "top_method": top.label if top else "—",
+        "stars_total": stats.stars_total,
         "top_region": (
             f"{top_region.region_title} ({top_region.amount_display} руб.)"
             if top_region

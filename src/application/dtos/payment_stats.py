@@ -45,6 +45,7 @@ class PaymentStatsDTO:
     total_amount: Decimal
     by_method: list[MethodStatDTO]
     top_region: RegionStatDTO | None
+    stars_total: int
 
     @property
     def top_method(self) -> MethodStatDTO | None:

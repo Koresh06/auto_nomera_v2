@@ -39,7 +39,7 @@ stats_replenishment_dialog = Dialog(
             "📅 Период: <b>{period_label}</b>\n\n"
             "✅ Успешных оплат: <b>{total_count}</b>\n"
             "💵 Общая сумма: <b>{total_amount} руб.</b>\n"
-            "🏆 Топ метод: <b>{top_method}</b>\n"
+            "⭐️ Stars: <b>{stars_total}</b>\n"
             "📍 Топ регион: <b>{top_region}</b>\n\n"
             "📊 По методам:\n{method_lines}"
         ),

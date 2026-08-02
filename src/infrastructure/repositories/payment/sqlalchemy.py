@@ -12,7 +12,7 @@ from src.application.dtos.payment_stats import (
 from src.application.exceptions.payment import PaymentNotFoundByIdException
 from src.domain.entities.payment import Payment
 from src.application.ports.payment.payment_repo import PaymentRepository
-from src.domain.enums.payment import PaymentStatus
+from src.domain.enums.payment import PaymentMethod, PaymentStatus
 from src.infrastructure.database.models import PaymentModel
 from src.infrastructure.database.models.region import RegionModel
 from src.infrastructure.database.models.user import UserModel
@@ -92,6 +92,15 @@ class SQLAlchemyPaymentRepo(PaymentRepository):
         total_count = sum(m.count for m in by_method)
         total_amount = sum((m.amount for m in by_method), Decimal("0"))
 
+        stars_q = select(PaymentModel.meta).where(
+            and_(*conds, PaymentModel.method == PaymentMethod.TELEGRAM_STARS)
+        )
+        if region_id is not None:
+            stars_q = stars_q.join(UserModel, PaymentModel.user_id == UserModel.id)
+
+        stars_rows = (await self.session.execute(stars_q)).scalars().all()
+        stars_total = sum(int(m.get("stars_amount", 0)) for m in stars_rows if m)
+
         # топ-регион
         top_region = None
         if region_id is None:
@@ -104,6 +113,7 @@ class SQLAlchemyPaymentRepo(PaymentRepository):
             total_amount=total_amount,
             by_method=by_method,
             top_region=top_region,
+            stars_total=stars_total,
         )
 
     async def get_region_breakdown(

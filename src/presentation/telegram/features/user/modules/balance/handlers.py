@@ -14,6 +14,9 @@ from src.presentation.telegram.features.user.modules.payment.helpers import (
 logger = logging.getLogger(__name__)
 
 
+MIN_TOPUP_AMOUNT = Decimal("100")
+
+
 async def on_amount_input_success(
     message: Message,
     widget: ManagedTextInput[str],
@@ -26,6 +29,12 @@ async def on_amount_input_success(
             raise ValueError
     except (ValueError, InvalidOperation):
         await message.answer("⚠️ Введите корректную сумму, например 500")
+        return
+
+    if amount < MIN_TOPUP_AMOUNT:
+        await message.answer(
+            f"⚠️ Минимальная сумма пополнения — {MIN_TOPUP_AMOUNT:.0f} руб. Попробуйте ещё раз."
+        )
         return
 
     await start_payment(

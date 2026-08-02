@@ -11,7 +11,9 @@ from .handlers import on_amount_input_success
 
 topup_dialog = Dialog(
     Window(
-        Const("💰 <b>Пополнение баланса</b>\n\nВведите сумму в рублях:"),
+        Const(
+            "💰 <b>Пополнение баланса</b>\n\nВведите сумму в рублях (минимум 100 руб.):"
+        ),
         TextInput(
             id="amount_input",
             type_factory=str,
