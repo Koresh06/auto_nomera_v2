@@ -50,6 +50,7 @@ class GetCatalogDeferredPublicationsUseCase(
         urgent_ads: list[Ad] = await self.ad_repo.list_urgent_published(
             region_id=command.region_id
         )
+        # print(urgent_ads)
 
         pre_publications: list[
             Publication
