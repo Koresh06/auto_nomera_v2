@@ -75,6 +75,9 @@ class Resyncer:
         self.slot_info: dict[int, tuple[int, object, object]] = {}
         # старый ads.id -> ad_type
         self.ad_type: dict[int, str] = {}
+        # (ad_id, publish_at_utc с округлением до минуты) уже существующих publications —
+        # чтобы не плодить дубли поверх того, что уже создал ETL (или предыдущий запуск resync)
+        self.existing_pubs: set[tuple[int, datetime]] = set()
 
     def add(self, key: str, n: int = 1) -> None:
         self.counts[key] = self.counts.get(key, 0) + n
@@ -118,6 +121,19 @@ class Resyncer:
                     self.ad_map[a["id"]] = new_id
 
         self.add("ad_map_built", len(self.ad_map))
+
+        # 3.5. существующие публикации (из ETL и/или прошлых запусков resync) —
+        # округляем до минуты, т.к. время из Redis и из старой БД может плавать на секунды
+        existing = await self.dst.execute(
+            sa_text(
+                "SELECT ad_id, publish_at_utc FROM publications WHERE publish_at_utc IS NOT NULL"
+            )
+        )
+        for ad_id, publish_at in existing.all():
+            key_time = publish_at.replace(second=0, microsecond=0)
+            self.existing_pubs.add((ad_id, key_time))
+
+        self.add("existing_pubs_loaded", len(self.existing_pubs))
 
         # 3. слоты старых объявлений
         slots = await self.src.fetch(
@@ -230,6 +246,17 @@ class Resyncer:
             #     local_time=slot_time,
             # )
 
+        # дедупликация: если для этого объявления на это же время (±1 минута)
+        # уже есть publication (создана ETL'ом из PUBLISHED, либо предыдущим
+        # запуском resync) — не создаём ещё одну, старый Redis-job считаем хвостом
+        key_time = run_at.replace(second=0, microsecond=0)
+        if (new_ad_id, key_time) in self.existing_pubs:
+            self.add("skipped_duplicate")
+            self.warn(
+                f"ad {new_ad_id}: publication на {run_at} уже существует, job пропущен"
+            )
+            return
+
         if self.dry:
             return
 
@@ -245,6 +272,10 @@ class Resyncer:
         )
         self.dst.add(model)
         await self.dst.flush()
+
+        # сразу регистрируем как существующую — на случай если в этом же
+        # прогоне встретится ещё один job на тот же ad_id+время
+        self.existing_pubs.add((new_ad_id, key_time))
 
         # ставим задачу в новый taskiq
         job_id = await self.queue.schedule(
