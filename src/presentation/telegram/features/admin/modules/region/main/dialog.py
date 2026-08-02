@@ -12,7 +12,6 @@ from .handlers import (
     on_open_edit_metadata,
     on_open_edit_settings,
     on_region_selected,
-    on_toggle_status,
 )
 from .getters import getter_region_detail, getter_region_list
 
@@ -69,13 +68,13 @@ main_region_dialog = Dialog(
             Format("💵 Цена платного слота: {paid_slot_price} руб."),
             sep="\n",
         ),
-        Row(
-            Button(
-                Format("{status_label}  (нажми, чтобы переключить)"),
-                id="toggle_status",
-                on_click=on_toggle_status,
-            ),
-        ),
+        # Row(
+        #     Button(
+        #         Format("{status_label}  (нажми, чтобы переключить)"),
+        #         id="toggle_status",
+        #         on_click=on_toggle_status,
+        #     ),
+        # ),
         Row(
             Button(
                 Const("✏️ Настройки слотов"),

@@ -27,20 +27,20 @@ from .handlers import (
 
 mailing_dialog = Dialog(
     Window(
-        Const("📢 <b>Меню рассылки</b>\n\nВыберите тип:"),
+        Const("📢 <b>Рассылка</b>\n\nВыберите тип:"),
         Group(
             Button(
-                Const("🧍 Всем пользователям"),
+                Const("Внутри бота"),
                 id="all",
                 on_click=on_choose_type,
             ),
             Button(
-                Const("🌍 По региону"),
+                Const("В регион"),
                 id="region",
                 on_click=on_choose_type,
             ),
             Button(
-                Const("📢 Во все каналы"),
+                Const("Во все каналы"),
                 id="all_regions",
                 on_click=on_choose_type,
             ),

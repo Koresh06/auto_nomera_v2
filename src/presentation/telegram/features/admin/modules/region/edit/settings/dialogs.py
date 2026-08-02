@@ -30,7 +30,7 @@ edit_region_settings_dialog = Dialog(
     Window(
         Multi(
             Const("⚙️ <b>Настройки слотов</b>\n"),
-            Format("⏰ Времена: {slot_times_str}"),
+            Format("⏰ Время: {slot_times_str}"),
             Format("📅 Слоты на: {days_range} дн. вперёд"),
             Format("💰 Системно-платных: {system_paid_slots_count}"),
             Format("🔒 Лимит публикаций: {limit_label}"),
@@ -39,7 +39,7 @@ edit_region_settings_dialog = Dialog(
         ),
         Column(
             SwitchTo(
-                Const("⏰ Изменить времена слотов"),
+                Const("⏰ Изменить время слотов"),
                 id="edit_slot_times",
                 state=EditRegionSettingsSG.slot_times,
             ),
@@ -65,9 +65,10 @@ edit_region_settings_dialog = Dialog(
             ),
         ),
         Button(
-            Const("♻️ По умолчанию"),
+            Const("По умолчанию"),
             id="reset_defaults",
             on_click=on_reset_defaults,
+            style=Style(style=ButtonStyle.DANGER),
         ),
         Cancel(
             Const("⬅️ Назад"),
@@ -77,7 +78,7 @@ edit_region_settings_dialog = Dialog(
         getter=getter_settings_menu,
     ),
     Window(
-        Const("⏰ <b>Времена публикации</b>\n\nВыберите нужные:"),
+        Const("⏰ <b>Время публикации</b>\n\nВыберите нужные:"),
         Column(
             Select(
                 Format("{item[label]}"),
@@ -121,7 +122,7 @@ edit_region_settings_dialog = Dialog(
     ),
     Window(
         Format(
-            "💰 <b>Системно-платные слоты</b>\n\nТекущее: {system_paid_slots_count}\nВведите количество:"
+            "💰 <b>Кол-во платных слотов</b>\n\nТекущее: {system_paid_slots_count}\nВведите количество:"
         ),
         TextInput(
             id="paid_count_input",

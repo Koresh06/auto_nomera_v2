@@ -84,9 +84,10 @@ paid_service_admin_dialog = Dialog(
             width=2,
         ),
         Button(
-            Const("♻️ Сбросить к стандартным"),
+            Const("По умолчанию"),
             id="reset_default",
             on_click=on_reset_default,
+            style=Style(style=ButtonStyle.DANGER),
         ),
         Back(
             Const("⬅️ Назад"),

@@ -129,7 +129,7 @@ async def on_slot_times_done(
         await callback.answer(f"⚠️ {e}", show_alert=True)
         return
 
-    await callback.answer("✅ Времена сохранены")
+    await callback.answer("✅ Время сохранено")
     await dialog_manager.switch_to(EditRegionSettingsSG.menu)
 
 

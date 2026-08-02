@@ -1,6 +1,14 @@
 from dishka import Provider, provide, Scope
 
 from src.application.mediator import Mediator
+from src.application.use_cases.ad.cancel_ad_draft_reminder import (
+    CancelAdDraftReminderRequest,
+    CancelAdDraftReminderUseCase,
+)
+from src.application.use_cases.ad.schedule_ad_draft_reminder import (
+    ScheduleAdDraftReminderRequest,
+    ScheduleAdDraftReminderUseCase,
+)
 from src.application.use_cases.miling.enqueue import (
     EnqueueMailingRequest,
     EnqueueMailingUseCase,
@@ -354,6 +362,8 @@ class MediatorProvider(Provider):
         cancel_publication_by_admin_use_case: CancelPublicationByAdminUseCase,
         get_admin_scheduled_catalog_use_case: GetAdminScheduledCatalogUseCase,
         get_global_stats_use_case: GetGlobalStatsUseCase,
+        schedule_ad_draft_reminder_use_case: ScheduleAdDraftReminderUseCase,
+        cancel_ad_draft_reminder_use_case: CancelAdDraftReminderUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -470,5 +480,11 @@ class MediatorProvider(Provider):
             GetAdminScheduledCatalogRequest, get_admin_scheduled_catalog_use_case
         )
         mediator.register(GetGlobalStatsRequest, get_global_stats_use_case)
+        mediator.register(
+            ScheduleAdDraftReminderRequest, schedule_ad_draft_reminder_use_case
+        )
+        mediator.register(
+            CancelAdDraftReminderRequest, cancel_ad_draft_reminder_use_case
+        )
 
         return mediator

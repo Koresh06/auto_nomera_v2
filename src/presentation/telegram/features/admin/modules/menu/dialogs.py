@@ -34,7 +34,7 @@ admin_menu_dialog = Dialog(
     Window(
         Const("🚘 <b>Админ-панель</b>\n\nВыберите раздел:"),
         Start(
-            Const("🗺 Регионы"),
+            Const("🌎 Регионы"),
             id="region_menu",
             state=MainRegionSG.start,
             when=F["is_super_admin"],

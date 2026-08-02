@@ -24,17 +24,17 @@ edit_region_metadata_dialog = Dialog(
         ),
         Column(
             SwitchTo(
-                Const("📱 Telegram-группа"),
+                Const("Telegram-чат"),
                 id="edit_tg",
                 state=EditRegionMetadataSG.tg_group_url,
             ),
             SwitchTo(
-                Const("🔵 VK-группа"),
+                Const("VK-группа"),
                 id="edit_vk",
                 state=EditRegionMetadataSG.vk_group_url,
             ),
             SwitchTo(
-                Const("📺 Макс-канал"),
+                Const("MAX-группа"),
                 id="edit_max",
                 state=EditRegionMetadataSG.max_channel_url,
             ),
@@ -49,7 +49,7 @@ edit_region_metadata_dialog = Dialog(
     ),
     Window(
         Format(
-            "📱 <b>Telegram-группа</b>\n\n"
+            "<b>Telegram-чат</b>\n\n"
             "Текущее: {tg_group_url}\n"
             "Введите ссылку (или <code>-</code> для очистки):"
         ),
@@ -71,7 +71,7 @@ edit_region_metadata_dialog = Dialog(
     ),
     Window(
         Format(
-            "🔵 <b>VK-группа</b>\n\n"
+            "<b>VK-группа</b>\n\n"
             "Текущее: {vk_group_url}\n"
             "Введите ссылку (или <code>-</code> для очистки):"
         ),
@@ -93,7 +93,7 @@ edit_region_metadata_dialog = Dialog(
     ),
     Window(
         Format(
-            "📺 <b>Макс-канал</b>\n\n"
+            "<b>MAX-группа</b>\n\n"
             "Текущее: {max_channel_url}\n"
             "Введите ссылку (или <code>-</code> для очистки):"
         ),
