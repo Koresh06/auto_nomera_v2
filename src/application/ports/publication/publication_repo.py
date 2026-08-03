@@ -82,3 +82,9 @@ class PublicationRepository(Protocol):
     async def get_ad_ids_with_active_autopublish_series(
         self, ad_ids: list[int]
     ) -> set[int]: ...
+
+    async def list_all_by_user(
+        self,
+        user_id: int,
+        region_id: int,
+    ) -> list[tuple[Publication, str | None, str | None]]: ...

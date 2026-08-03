@@ -29,6 +29,10 @@ from src.application.use_cases.publication.get_admin_scheduled_catalog import (
     GetAdminScheduledCatalogRequest,
     GetAdminScheduledCatalogUseCase,
 )
+from src.application.use_cases.publication.get_all_user_publications import (
+    GetAllUserPublicationsRequest,
+    GetAllUserPublicationsUseCase,
+)
 from src.application.use_cases.publication.get_overdue_unpublished import (
     GetOverdueUnpublishedRequest,
     GetOverdueUnpublishedUseCase,
@@ -384,6 +388,7 @@ class MediatorProvider(Provider):
         publish_overdue_batch_use_case: PublishOverdueBatchUseCase,
         get_payment_details_use_case: GetPaymentDetailsUseCase,
         get_ad_ids_with_active_autopublish_series_use_case: GetAdIdsWithActiveAutopublishSeriesUseCase,
+        get_all_user_publications_use_case: GetAllUserPublicationsUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -514,6 +519,9 @@ class MediatorProvider(Provider):
         mediator.register(
             GetAdIdsWithActiveAutopublishSeriesRequest,
             get_ad_ids_with_active_autopublish_series_use_case,
+        )
+        mediator.register(
+            GetAllUserPublicationsRequest, get_all_user_publications_use_case
         )
 
         return mediator

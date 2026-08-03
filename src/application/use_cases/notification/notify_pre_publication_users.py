@@ -47,9 +47,15 @@ class NotifyPrePublicationUsersUseCase(UseCase[NotifyPrePublicationUsersRequest,
             return
 
         c = ad.content
+        if c is not None:
+            title_line = f"🚘 <b>Номер:</b> <code>{c.plate_number}</code>"
+        elif ad.store_content is not None:
+            title_line = f"🏦 <b>Магазин:</b> <code>{ad.store_content.shop_name}</code>"
+        else:
+            title_line = "🚘 <b>Объявление</b>"
+
         text = (
-            f"🚀 <b>Новое объявление доступно по раннему доступу!</b>\n\n"
-            f"🚘 <b>Номер:</b> <code>{c.plate_number}</code>"
+            f"🚀 <b>Новое объявление доступно по раннему доступу!</b>\n\n{title_line}"
         )
         await self.notification_service.notify_users(
             user_ids=[u.tg_id for u in users],

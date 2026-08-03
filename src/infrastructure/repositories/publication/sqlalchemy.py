@@ -432,3 +432,27 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         )
         result = await self._session.execute(query)
         return {row[0] for row in result.all()}
+
+    async def list_all_by_user(
+        self,
+        user_id: int,
+        region_id: int,
+    ) -> list[tuple[Publication, str | None, str | None]]:
+        query = (
+            select(PublicationModel, AdModel.plate_number, AdModel.shop_name)
+            .join(AdModel, PublicationModel.ad_id == AdModel.id)
+            .where(
+                AdModel.user_id == user_id,
+                AdModel.region_id == region_id,
+                PublicationModel.status.notin_(
+                    [PublicationStatus.CANCELED, PublicationStatus.REPLACED]
+                ),
+            )
+            .options(selectinload(PublicationModel.services))
+            .order_by(PublicationModel.ad_id, PublicationModel.created_at)
+        )
+        result = await self._session.execute(query)
+        return [
+            (pub_model.to_entity(), plate, shop_name)
+            for pub_model, plate, shop_name in result.all()
+        ]

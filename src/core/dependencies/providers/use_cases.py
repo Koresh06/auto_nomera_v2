@@ -24,6 +24,9 @@ from src.application.use_cases.publication.cancel_by_admin import (
 from src.application.use_cases.publication.get_admin_scheduled_catalog import (
     GetAdminScheduledCatalogUseCase,
 )
+from src.application.use_cases.publication.get_all_user_publications import (
+    GetAllUserPublicationsUseCase,
+)
 from src.application.use_cases.publication.get_overdue_unpublished import (
     GetOverdueUnpublishedUseCase,
 )
@@ -1131,5 +1134,14 @@ class UseCasesProvider(Provider):
         publication_repo: PublicationRepository,
     ) -> GetAdIdsWithActiveAutopublishSeriesUseCase:
         return GetAdIdsWithActiveAutopublishSeriesUseCase(
+            publication_repo=publication_repo,
+        )
+
+    @provide
+    def get_all_user_publications_use_case(
+        self,
+        publication_repo: PublicationRepository,
+    ) -> GetAllUserPublicationsUseCase:
+        return GetAllUserPublicationsUseCase(
             publication_repo=publication_repo,
         )
