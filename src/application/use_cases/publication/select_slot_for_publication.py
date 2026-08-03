@@ -2,6 +2,8 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
+from src.application.ports.tasks.task_queue import TaskQueue
+from src.core.config import AppSettings
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
@@ -38,6 +40,8 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
     time_resolver: PublishTimeResolver
     reservation_service: SlotReservationService
     pricing_policy: SlotPricingPolicy
+    task_queue: TaskQueue
+    settings: AppSettings
     transaction_manager: TransactionManager
 
     async def __call__(self, command: SelectSlotForPublicationRequest) -> None:
@@ -66,18 +70,19 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             now_utc=now,
         )
 
-        publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=1)  # test
-        # publish_at_utc = self.time_resolver.resolve_publish_at_utc(
-        #     tz=region.timezone,
-        #     slot=command.slot,
-        # )
+        if self.settings.app.debug:
+            publish_at_utc = datetime.now(timezone.utc) + timedelta(minutes=2)
+        else:
+            publish_at_utc = self.time_resolver.resolve_publish_at_utc(
+                tz=region.timezone,
+                slot=command.slot,
+            )
 
         is_system_paid = self.pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots,
             slot=command.slot,
         )
 
-        # узнаём владельца конверсии и привязанный ad_id (если есть)
         converted_info = (
             await self.reservation_service.converted_repo.get_converted_owner_and_ad(
                 command.slot
@@ -85,7 +90,6 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         )
         is_converted = converted_info is not None
 
-        # своя незавершённая оплата — публикация по ней ещё не создана (ad_id is None)
         is_own_pending_payment = (
             converted_info is not None
             and converted_info[0] == command.user_id
@@ -112,10 +116,6 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
         publication.schedule(slot=command.slot, publish_at_utc=publish_at_utc)
         await self.publication_repo.save(publication)
 
-        # фиксируем/обновляем конверсию, проставляя реальный ad_id —
-        # публикация создана, конверсия "закрывается" окончательно.
-        # При следующем заходе на этот слот (любым юзером) is_own_pending_payment
-        # будет False, и слот снова станет платным.
         await self.reservation_service.converted_repo.mark_converted(
             slot=command.slot,
             user_id=command.user_id,
@@ -132,6 +132,38 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             publication_id=publication.id,
             run_at_utc=publish_at_utc,
         )
+
+        await self._schedule_pre_publication_notification(
+            ad_id=command.ad_id, publish_at_utc=publish_at_utc
+        )
+
         logger.info(
             f"[SelectSlot:done] pub_id={publication.id} status={publication.status}"
+        )
+
+    async def _schedule_pre_publication_notification(
+        self, *, ad_id: int, publish_at_utc: datetime
+    ) -> None:
+        if self.settings.app.debug:
+            notify_at = publish_at_utc - timedelta(minutes=1)
+        else:
+            notify_at = publish_at_utc - timedelta(
+                hours=self.settings.app.pre_publication_window_hours
+            )
+
+        now = datetime.now(timezone.utc)
+        if notify_at <= now:
+            logger.info(
+                f"[SelectSlot:notify_skip] ad_id={ad_id} "
+                f"publish_at_utc={publish_at_utc} слишком близко, уведомление не ставим"
+            )
+            return
+
+        await self.task_queue.schedule(
+            task_name="notify_pre_publication_users",
+            args=(ad_id,),
+            run_at_utc=notify_at,
+        )
+        logger.info(
+            f"[SelectSlot:notify_scheduled] ad_id={ad_id} notify_at={notify_at}"
         )

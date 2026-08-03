@@ -287,12 +287,16 @@ class UseCasesProvider(Provider):
         publication_repo: PublicationRepository,
         scheduler: Scheduler,
         reservation_service: SlotReservationService,
+        task_queue: TaskQueue,
+        settings: AppSettings,
         transaction_manager: TransactionManager,
     ) -> ConfirmPaidSlotAndSchedulePublicationUseCase:
         return ConfirmPaidSlotAndSchedulePublicationUseCase(
             publication_repo=publication_repo,
             scheduler=scheduler,
             reservation_service=reservation_service,
+            task_queue=task_queue,
+            settings=settings,
             transaction_manager=transaction_manager,
         )
 
@@ -306,6 +310,8 @@ class UseCasesProvider(Provider):
         time_resolver: PublishTimeResolver,
         reservation_service: SlotReservationService,
         pricing_policy: SlotPricingPolicy,
+        task_queue: TaskQueue,
+        settings: AppSettings,
         transaction_manager: TransactionManager,
     ) -> SelectSlotForPublicationUseCase:
         return SelectSlotForPublicationUseCase(
@@ -316,6 +322,8 @@ class UseCasesProvider(Provider):
             time_resolver=time_resolver,
             reservation_service=reservation_service,
             pricing_policy=pricing_policy,
+            task_queue=task_queue,
+            settings=settings,
             transaction_manager=transaction_manager,
         )
 

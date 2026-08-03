@@ -43,14 +43,17 @@ class GetCatalogDeferredPublicationsUseCase(
         logger.info("[GetCatalog] region_id=%s", command.region_id)
 
         now_utc = datetime.now(timezone.utc)
-        before_utc = now_utc + timedelta(
-            hours=self.settings.app.pre_publication_window_hours
-        )
+
+        if self.settings.app.debug:
+            before_utc = now_utc + timedelta(minutes=2)
+        else:
+            before_utc = now_utc + timedelta(
+                hours=self.settings.app.pre_publication_window_hours
+            )
 
         urgent_ads: list[Ad] = await self.ad_repo.list_urgent_published(
             region_id=command.region_id
         )
-        # print(urgent_ads)
 
         pre_publications: list[
             Publication
@@ -59,7 +62,6 @@ class GetCatalogDeferredPublicationsUseCase(
             now_utc=now_utc,
             before_utc=before_utc,
         )
-        # print(pre_publications)
 
         pre_pub_items: list[CatalogItem] = []
         for pub in pre_publications:

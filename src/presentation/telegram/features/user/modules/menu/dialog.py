@@ -45,10 +45,20 @@ from src.presentation.telegram.features.user.modules.catalog_deferred_publicatio
 user_menu_dialog = Dialog(
     Window(
         Const("Выберите действие:"),
-        Start(
-            Const("💎 Каталог объявлений до публикации"),
-            id="early_ads_catalog",
-            state=CatalogDeferredPublishSG.start,
+        Row(
+            Start(
+                Const("💎 Ранний доступ"),
+                id="early_ads_catalog",
+                state=CatalogDeferredPublishSG.start,
+                style=Style(style=ButtonStyle.SUCCESS),
+            ),
+            Start(
+                Const("⚠️ Срочный выкуп"),
+                id="urgent_buyout",
+                state=CreateAdSG.plate,
+                data={"ad_type": AdType.URGENT_BUYOUT},
+                style=Style(style=ButtonStyle.DANGER),
+            ),
         ),
         Row(
             Start(
@@ -66,17 +76,11 @@ user_menu_dialog = Dialog(
                 style=Style(style=ButtonStyle.PRIMARY),
             ),
         ),
-        Start(
-            Const("📝 Редактировать мои объявления"),
-            id="edit_ad",
-            state=EditAdSG.list,
-        ),
         Row(
             Start(
-                Const("⚠️ Срочный выкуп"),
-                id="urgent_buyout",
-                state=CreateAdSG.plate,
-                data={"ad_type": AdType.URGENT_BUYOUT},
+                Const("📝 Мои объявления"),
+                id="edit_ad",
+                state=EditAdSG.list,
             ),
             Start(
                 Const("🏦 Мой магазин"),
@@ -91,13 +95,11 @@ user_menu_dialog = Dialog(
                 when=~F["has_store"],
             ),
         ),
-        Column(
-            Start(
-                Const("🚀 Продать быстрее (Топ услуги)"),
-                id="paid_services",
-                state=PaidServiceSG.start,
-                style=Style(style=ButtonStyle.SUCCESS),
-            ),
+        Start(
+            Const("🚀 Продать быстрее (Топ услуги)"),
+            id="paid_services",
+            state=PaidServiceSG.start,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         Row(
             Start(
@@ -121,7 +123,6 @@ user_menu_dialog = Dialog(
             Url(
                 Const("👨‍💻 Поддержка 24/7"),
                 url=Const("https://t.me/mlnora"),
-                style=Style(style=ButtonStyle.SUCCESS),
             ),
         ),
         state=UserMenuSG.menu,
