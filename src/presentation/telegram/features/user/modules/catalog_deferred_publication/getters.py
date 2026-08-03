@@ -42,6 +42,7 @@ async def getter_urgent_catalog(
             "card": None,
             "current_media": None,
             "is_admin": tg_id in settings.telegram.admin_ids,
+            "pre_publication_window_hours": settings.app.pre_publication_window_hours,
         }
 
     region_dto: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
@@ -99,6 +100,7 @@ async def getter_urgent_catalog(
         "current_media": current_media,
         "card": card,
         "is_admin": tg_id in settings.telegram.admin_ids,
+        "pre_publication_window_hours": settings.app.pre_publication_window_hours,
     }
 
 

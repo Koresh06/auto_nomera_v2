@@ -15,7 +15,7 @@ profile_dialog = Dialog(
             "📌 <b>Ваш профиль</b> 📌\n\n"
             "💎 <b>Имя:</b> {user.full_name}\n"
             "🌎 <b>Регион:</b> <a href='https://t.me/{region.channel_username}'>{region.title}</a>\n"
-            "📣 <b>Количество объявлений:</b> {count_ads}\n"
+            "📣 <b>Всего объявлений:</b> {count_ads}\n"
             "💰 <b>Ваш баланс:</b> {user.balance_display}\n"
         ),
         Cancel(Const("🏠 Главное меню")),

@@ -14,7 +14,7 @@ async def profile_getter(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
     **kwargs,
-):
+) -> dict:
     user: UserDTO = await mediator.handle(
         GetTgIdRequest(tg_id=dialog_manager.event.from_user.id)
     )

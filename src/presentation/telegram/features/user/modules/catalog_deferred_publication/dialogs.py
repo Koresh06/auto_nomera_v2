@@ -21,15 +21,14 @@ from .getters import getter_catalog_list, getter_urgent_catalog
 
 catalog_deferred_publication_dialog = Dialog(
     Window(
-        Const(
-            "💎 <b>Чтобы первым увидеть объявления до публикации и срочного выкупа, "
-            "нужно перейти в раздел услуг в главном меню и приобрести подписку.</b>",
+        Format(
+            "<b>💎 Получайте первыми эксклюзивный доступ к объявлениям из раздела «Срочный выкуп», а также к новым объявлениям за {pre_publication_window_hours} часа до их публикации на канале.</b>",
             when=~F["has_subscription"],
         ),
-        Const(
+        Format(
             "💎 <b>Каталог срочных выкупов и объявлений до публикации</b>\n\n"
             "😔 В вашем регионе пока нет новых заявок.\n"
-            "🚀 Объявления до публикации появятся за 2 часа до размещения в канале.",
+            "🚀 Объявления до публикации появятся за {pre_publication_window_hours} часа до размещения в канале.",
             when=F["has_subscription"] & ~F["has_ads"],
         ),
         DynamicMedia("current_media", when=F["has_subscription"] & F["has_ads"]),
