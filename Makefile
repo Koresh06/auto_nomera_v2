@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := help
+SHELL := /bin/bash
 
 COMPOSE := docker compose
 
