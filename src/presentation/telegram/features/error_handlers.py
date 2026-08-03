@@ -107,11 +107,11 @@ async def handle_error(
     try:
         if update.message:
             await update.message.answer(
-                "⚠️ Произошла ошибка. Попробуйте ещё раз или вернитесь в главное меню /start"
+                "⚠️ Произошла ошибка. Попробуйте ещё раз или вернитесь в главное меню, или отправьте боту команду: /start"
             )
         elif update.callback_query:
             await update.callback_query.answer(
-                "⚠️ Произошла ошибка. Попробуйте ещё раз.",
+                "⚠️ Произошла ошибка. Попробуйте ещё раз или вернитесь в главное меню, или отправьте боту команду: /start",
                 show_alert=True,
             )
     except Exception:
