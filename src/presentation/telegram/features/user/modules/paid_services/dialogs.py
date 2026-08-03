@@ -153,6 +153,7 @@ buy_service_dialog = Dialog(
             Const("✅ Подключить"),
             id="confirm_buy",
             on_click=on_confirm_buy_service,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         Back(
             Const("⬅️ Назад"),
@@ -190,6 +191,7 @@ pre_publication_dialog = Dialog(
             Const("✅ Подключить подписку"),
             id="confirm_buy_pre_publication",
             on_click=on_confirm_buy_pre_publication,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         Cancel(
             Const("⬅️ Назад"),

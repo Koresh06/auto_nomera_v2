@@ -125,33 +125,25 @@ async def on_confirm_buy_pre_publication(
         GetByIdServiceDefinitionRequest(definition_id)
     )
 
-    if dialog_manager.dialog_data.get("confirm_warning"):
-        dialog_manager.dialog_data.pop("confirm_warning")
-        try:
-            await mediator.handle(BuyPrePublicationServiceRequest(user_id=user_id))
-            action_text = "продлена" if was_active else "подключена"
-            await callback.answer(
-                f"✅ Подписка {action_text} на {definition.duration_days} дн.!",
-                show_alert=True,
-            )
-            await dialog_manager.done()
-        except InsufficientBalance:
-            await start_payment(
-                dialog_manager,
-                user_id=callback.from_user.id,
-                chat_id=callback.message.chat.id,
-                params=PaymentStartParams(
-                    purpose=PaymentPurpose.PRE_PUBLICATION,
-                    amount=Decimal(definition.price),
-                    description=definition.title,
-                    return_state="PaidServiceSG:start",
-                    return_data={},
-                    meta={"days": definition.duration_days or 30},
-                ),
-            )
-    else:
-        dialog_manager.dialog_data["confirm_warning"] = True
+    try:
+        await mediator.handle(BuyPrePublicationServiceRequest(user_id=user_id))
+        action_text = "продлена" if was_active else "подключена"
         await callback.answer(
-            "Нажмите ещё раз для подтверждения покупки подписки.",
+            f"✅ Подписка {action_text} на {definition.duration_days} дн.!",
             show_alert=True,
+        )
+        await dialog_manager.done()
+    except InsufficientBalance:
+        await start_payment(
+            dialog_manager,
+            user_id=callback.from_user.id,
+            chat_id=callback.message.chat.id,
+            params=PaymentStartParams(
+                purpose=PaymentPurpose.PRE_PUBLICATION,
+                amount=Decimal(definition.price),
+                description=definition.title,
+                return_state="PaidServiceSG:start",
+                return_data={},
+                meta={"days": definition.duration_days or 30},
+            ),
         )

@@ -1,3 +1,5 @@
+from aiogram.enums.button_style import ButtonStyle
+from aiogram_dialog.widgets.style import Style
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Column, Start
@@ -56,6 +58,7 @@ store_main_dialog = Dialog(
                 Const("🏠 Главное меню"),
                 id="menu",
                 state=UserMenuSG.menu,
+                style=Style(style=ButtonStyle.PRIMARY),
             ),
         ),
         getter=getter_store_main,

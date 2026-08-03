@@ -1,5 +1,7 @@
 from aiogram import F
+from aiogram.enums.button_style import ButtonStyle
 from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.style import Style
 from aiogram_dialog.widgets.text import Format, Const, List
 from aiogram_dialog.widgets.kbd import Cancel, Group, Select, Column, Button, Back
 
@@ -25,7 +27,10 @@ unpublished_publications_dialog = Dialog(
             width=3,
             when="has_slots",
         ),
-        Cancel(Const("⬅️ Назад")),
+        Cancel(
+            Const("⬅️ Назад"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=UnpublishedAdsSG.pick_slot,
         getter=getter_overdue_slots,
     ),
@@ -52,7 +57,10 @@ unpublished_publications_dialog = Dialog(
                 on_click=on_publish_all,
                 when="has_ads",
             ),
-            Back(Const("⬅️ Назад")),
+            Back(
+                Const("⬅️ Назад"),
+                style=Style(style=ButtonStyle.PRIMARY),
+            ),
         ),
         state=UnpublishedAdsSG.view,
         getter=getter_unpublished_by_slot,

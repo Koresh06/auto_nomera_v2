@@ -1,3 +1,5 @@
+from aiogram.enums.button_style import ButtonStyle
+from aiogram_dialog.widgets.style import Style
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Format, Const
 from aiogram_dialog.widgets.kbd import Cancel
@@ -8,7 +10,6 @@ from src.presentation.telegram.features.user.modules.profile.getters import (
 
 from .states import ProfileSG
 
-
 profile_dialog = Dialog(
     Window(
         Format(
@@ -18,7 +19,10 @@ profile_dialog = Dialog(
             "📣 <b>Всего объявлений:</b> {count_ads}\n"
             "💰 <b>Ваш баланс:</b> {user.balance_display}\n"
         ),
-        Cancel(Const("🏠 Главное меню")),
+        Cancel(
+            Const("🏠 Главное меню"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         getter=profile_getter,
         state=ProfileSG.start,
     )

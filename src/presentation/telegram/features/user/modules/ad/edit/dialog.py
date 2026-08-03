@@ -52,7 +52,10 @@ edit_ad_dialog = Dialog(
             hide_on_single_page=True,
             when="publications",
         ),
-        Cancel(Const("🏠 Главное меню")),
+        Cancel(
+            Const("🏠 Главное меню"),
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
         state=EditAdSG.list,
         getter=getter_list_publications,
     ),
@@ -94,6 +97,7 @@ edit_ad_dialog = Dialog(
             id="delete_ad",
             on_click=on_delete_ad,
             when=~F["start_data"]["back_to_finish"],
+            style=Style(style=ButtonStyle.DANGER),
         ),
         Back(
             Const("⬅️ Назад"),

@@ -94,6 +94,7 @@ store_add_items_dialog = Dialog(
                 Const("🏠 Главное меню"),
                 id="menu",
                 state=UserMenuSG.menu,
+                style=Style(style=ButtonStyle.PRIMARY),
             ),
         ),
         getter=add_items_getter,

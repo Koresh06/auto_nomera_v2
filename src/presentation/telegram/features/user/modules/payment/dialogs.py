@@ -56,12 +56,21 @@ payment_dialog = Dialog(
     ),
     Window(
         Format(
+            "⚠️ <b>Выбирайте оплату - СБП</b>\n\nСумма: <b>{dialog_data[amount]} руб.</b>",
+            when=F["dialog_data"]["payment_method"] == PaymentMethod.YOOKASSA.value,
+        ),
+        Url(
+            Const("Оплатить"),
+            url=Format("{dialog_data[confirmation_url]}"),
+            when=F["dialog_data"]["payment_method"] == PaymentMethod.YOOKASSA.value,
+        ),
+        Format(
             "⭐ <b>Оплата звёздами</b>\n\nСумма: <b>{dialog_data[amount]} руб.</b>",
             when=F["dialog_data"]["payment_method"]
             == PaymentMethod.TELEGRAM_STARS.value,
         ),
         Url(
-            Const("⭐ Оплатить звёздами"),
+            Const("Оплатить"),
             url=Format("{dialog_data[invoice_link]}"),
             when=F["dialog_data"]["payment_method"]
             == PaymentMethod.TELEGRAM_STARS.value,
@@ -73,15 +82,6 @@ payment_dialog = Dialog(
         #     "После перевода отправьте чек администратору.",
         #     when=F["dialog_data"]["payment_method"] == PaymentMethod.MANUAL_CARD.value,
         # ),
-        Format(
-            "🏦 <b>Оплата через ЮKassa</b>\n\nСумма: <b>{dialog_data[amount]} руб.</b>",
-            when=F["dialog_data"]["payment_method"] == PaymentMethod.YOOKASSA.value,
-        ),
-        Url(
-            Const("🏦 Перейти к оплате"),
-            url=Format("{dialog_data[confirmation_url]}"),
-            when=F["dialog_data"]["payment_method"] == PaymentMethod.YOOKASSA.value,
-        ),
         Cancel(Const("❌ Отменить")),
         state=PaymentSG.waiting_payment,
     ),

@@ -75,6 +75,7 @@ store_edit_items_dialog = Dialog(
             Const("🗑 Удалить"),
             id="delete_item",
             on_click=on_delete_item,
+            style=Style(style=ButtonStyle.PRIMARY),
         ),
         Back(
             Const("⬅️ Назад"),
