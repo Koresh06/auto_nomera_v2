@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton, CallbackQuery
 from aiogram.fsm.state import State
 
-from aiogram_dialog import DialogManager, ShowMode
+from aiogram_dialog import DialogManager
 from aiogram_dialog.api.internal import RawKeyboard
 from aiogram_dialog.api.protocols import DialogProtocol
 from aiogram_dialog.widgets.common import WhenCondition
@@ -83,5 +83,4 @@ class CatalogScroll(BaseScroll, Keyboard):
             requested = 0
 
         await BaseScroll.set_page(self, callback, requested, manager)
-        manager.show_mode = ShowMode.SEND
         return True
