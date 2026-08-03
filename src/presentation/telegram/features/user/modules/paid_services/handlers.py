@@ -134,7 +134,7 @@ async def on_confirm_buy_pre_publication(
                 purpose=PaymentPurpose.PRE_PUBLICATION,
                 amount=Decimal(definition.price),
                 description=definition.title,
-                return_state="PaidServiceSG:start",
+                return_state="UserMenuSG:menu",
                 return_data={},
                 meta={"days": definition.duration_days or 30},
             ),
