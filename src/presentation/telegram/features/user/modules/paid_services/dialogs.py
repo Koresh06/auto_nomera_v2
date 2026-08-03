@@ -19,9 +19,9 @@ from aiogram_dialog.widgets.style import Style
 
 from src.domain.enums.publication_service import PublicationServiceType
 from src.presentation.telegram.features.user.modules.menu.states import UserMenuSG
+from src.presentation.telegram.widgets.smart_scroll_text import SmartScrollingText
 
 from .states import BuyServiceSG, PaidServiceSG, PrePublicationSG
-from .....widgets.smart_scroll_text import SmartScrollingText
 from .getters import (
     getter_buy_service_confirm,
     getter_connected_services_user,
@@ -117,9 +117,11 @@ paid_service_dialog = Dialog(
 
 buy_service_dialog = Dialog(
     Window(
-        Format("<b>{service_name}</b>\n\nВыберите объявление:"),
+        Format("<b>{service_name}</b>\n"),
+        Const("Выберите объявление:", when=F["has_ads"]),
         Const(
-            "У вас пока нет объявлений с неподключенной услугой.", when=~F["has_ads"]
+            "Нет подходящих объявлений. Данная услуга применяется только в момент публикации нового или повторной публикации старого объявления.",
+            when=~F["has_ads"],
         ),
         ScrollingGroup(
             Select(
@@ -167,15 +169,6 @@ buy_service_dialog = Dialog(
 
 pre_publication_dialog = Dialog(
     Window(
-        # Format(
-        #     "<b>{service_name}</b>\n\n"
-        #     "🕒 <b>Срок действия:</b> {duration_text} дн.\n"
-        #     "💰 <b>Стоимость:</b> {price_text}\n\n"
-        #     "⚠️ После подключения подписки Вы получаете полный доступ к объявлениям из раздела "
-        #     '"Срочный выкуп", а также к объявлениям подписчиков до публикации в канале выбранного ранее Вами региона.\n'
-        #     "⚠️ После подключения подписки, в главном меню появится новая кнопка "
-        #     '"<b>💎 Каталог объявлений до публикации</b>".'
-        # ),
         Format(
             "<b>{service_name}</b>\n"
             "{description}\n"

@@ -37,6 +37,10 @@ from src.application.use_cases.publication.publish_overdue_batch import (
     PublishOverdueBatchRequest,
     PublishOverdueBatchUseCase,
 )
+from src.application.use_cases.publication_service.get_ad_ids_with_active_autipublish_series import (
+    GetAdIdsWithActiveAutopublishSeriesRequest,
+    GetAdIdsWithActiveAutopublishSeriesUseCase,
+)
 from src.application.use_cases.region.toggle_status import (
     ToggleRegionStatusCommand,
     ToggleRegionStatusUseCase,
@@ -379,6 +383,7 @@ class MediatorProvider(Provider):
         get_overdue_unpublished_use_case: GetOverdueUnpublishedUseCase,
         publish_overdue_batch_use_case: PublishOverdueBatchUseCase,
         get_payment_details_use_case: GetPaymentDetailsUseCase,
+        get_ad_ids_with_active_autopublish_series_use_case: GetAdIdsWithActiveAutopublishSeriesUseCase,
     ) -> Mediator:
         mediator = Mediator()
 
@@ -506,5 +511,9 @@ class MediatorProvider(Provider):
         )
         mediator.register(PublishOverdueBatchRequest, publish_overdue_batch_use_case)
         mediator.register(GetPaymentDetailsRequest, get_payment_details_use_case)
+        mediator.register(
+            GetAdIdsWithActiveAutopublishSeriesRequest,
+            get_ad_ids_with_active_autopublish_series_use_case,
+        )
 
         return mediator

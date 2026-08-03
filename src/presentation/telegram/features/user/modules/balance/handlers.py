@@ -44,6 +44,6 @@ async def on_amount_input_success(
         params=PaymentStartParams(
             purpose=PaymentPurpose.BALANCE_TOPUP,
             amount=amount,
-            description=f"Пополнение баланса на {amount} руб.",
+            description="Пополнение баланса",
         ),
     )

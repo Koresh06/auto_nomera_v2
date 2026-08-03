@@ -5,6 +5,7 @@ from aiogram_dialog import DialogManager
 
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
+from src.application.dtos.publication_service import PublicationServiceDTO
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.dtos.user import UserDTO
@@ -12,6 +13,9 @@ from src.application.mediator import Mediator
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.application.use_cases.publication.get_user import GetUserPublicationsRequest
+from src.application.use_cases.publication_service.get_ad_ids_with_active_autipublish_series import (
+    GetAdIdsWithActiveAutopublishSeriesRequest,
+)
 from src.application.use_cases.service_difinition.get_all import GetAllServicesRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
@@ -115,6 +119,35 @@ async def getter_connected_services_user(
     }
 
 
+REPEATABLE_ALWAYS = {PublicationServiceType.PRIORITY_PUBLISH}
+
+
+def _is_blocking(
+    s: PublicationServiceDTO, service_type: PublicationServiceType
+) -> bool:
+    if s.type != service_type:
+        return False
+
+    if s.status == PublicationServiceStatus.ACTIVE:
+        return True
+
+    if s.status != PublicationServiceStatus.USED:
+        return False
+
+    if service_type in REPEATABLE_ALWAYS:
+        return False  # PRIORITY_PUBLISH: USED не блокирует вообще
+
+    if service_type == PublicationServiceType.PIN:
+        # PIN блокирует, пока реально не истёк срок закрепления
+        unpin_at_raw = s.params.get("unpin_at_utc") if s.params else None
+        if not unpin_at_raw:
+            return True  # старые записи без даты — считаем что ещё активен, безопасный дефолт
+        return datetime.fromisoformat(unpin_at_raw) > datetime.now(timezone.utc)
+
+    # HIGHLIGHT и всё остальное — USED блокирует навсегда (один раз на публикацию)
+    return True
+
+
 @inject
 async def getter_user_ads_for_service(
     dialog_manager: DialogManager,
@@ -132,31 +165,24 @@ async def getter_user_ads_for_service(
         GetUserPublicationsRequest(user_id=user.id, region_id=region.id)
     )
 
+    blocked_ad_ids: set[int] = set()
+    if service_type == PublicationServiceType.AUTOPUBLISH:
+        ad_ids = [p.ad_id for p in publications]
+        blocked_ad_ids = await mediator.handle(
+            GetAdIdsWithActiveAutopublishSeriesRequest(ad_ids=ad_ids)
+        )
+
     eligible: list[PublicationDTO] = []
     for p in publications:
         if p.status not in (PublicationStatus.PUBLISHED, PublicationStatus.SCHEDULED):
             continue
-        if any(
-            s.type == service_type
-            and s.status
-            in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
-            for s in p.services
-        ):
+        if any(_is_blocking(s, service_type) for s in p.services):
             continue
-        if (
-            service_type == PublicationServiceType.PRIORITY_PUBLISH
-            and p.status != PublicationStatus.SCHEDULED
-        ):
+        if p.ad_id in blocked_ad_ids:
             continue
         eligible.append(p)
 
-    ads = [
-        {
-            "id": p.id,
-            "title": f"{p.display_title or '—'} — {p.slot_display}",
-        }
-        for p in eligible
-    ]
+    ads = [{"id": p.id, "title": p.display_title} for p in eligible]
 
     dialog_manager.dialog_data["user_id"] = user.id
 
@@ -191,7 +217,7 @@ async def getter_buy_service_confirm(
     return {
         "service_name": definition.title if definition else service_type.value,
         "price_text": definition.price_display if definition else "—",
-        "ad_title": f"{ad.content.plate_number} — {pub.slot_display}",
+        "ad_title": ad.content.plate_number,
     }
 
 

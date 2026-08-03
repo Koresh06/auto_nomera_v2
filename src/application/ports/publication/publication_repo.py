@@ -78,3 +78,7 @@ class PublicationRepository(Protocol):
     ) -> list[
         tuple[Publication, str | None, AdType, str | None, int, str | None, str]
     ]: ...
+
+    async def get_ad_ids_with_active_autopublish_series(
+        self, ad_ids: list[int]
+    ) -> set[int]: ...

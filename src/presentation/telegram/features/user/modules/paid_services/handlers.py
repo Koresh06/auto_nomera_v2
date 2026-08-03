@@ -61,52 +61,44 @@ async def on_confirm_buy_service(
         GetByIdServiceDefinitionRequest(definition_id)
     )
 
-    if dialog_manager.dialog_data.get("confirm_warning"):
-        dialog_manager.dialog_data.pop("confirm_warning")
-        try:
+    try:
+        await mediator.handle(
+            BuyPublicationServiceRequest(
+                user_id=user_id,
+                publication_id=pub_id,
+                service_type=service_type,
+            )
+        )
+        pub: PublicationDTO = await mediator.handle(
+            GetPublicationByIdRequest(publication_id=pub_id)
+        )
+        if service_type == PublicationServiceType.PRIORITY_PUBLISH:
             await mediator.handle(
-                BuyPublicationServiceRequest(
-                    user_id=user_id,
+                PriorityPublishPublicationRequest(publication_id=pub_id)
+            )
+        elif pub.status == PublicationStatus.PUBLISHED:
+            await mediator.handle(
+                ApplyServiceToPublishedRequest(
                     publication_id=pub_id,
                     service_type=service_type,
                 )
             )
-            pub: PublicationDTO = await mediator.handle(
-                GetPublicationByIdRequest(publication_id=pub_id)
-            )
-            if service_type == PublicationServiceType.PRIORITY_PUBLISH:
-                await mediator.handle(
-                    PriorityPublishPublicationRequest(publication_id=pub_id)
-                )
-            elif pub.status == PublicationStatus.PUBLISHED:
-                await mediator.handle(
-                    ApplyServiceToPublishedRequest(
-                        publication_id=pub_id,
-                        service_type=service_type,
-                    )
-                )
-            await callback.answer("✅ Услуга подключена!", show_alert=True)
-            await dialog_manager.done()
-        except InsufficientBalance:
-            await start_payment(
-                dialog_manager,
-                user_id=callback.from_user.id,
-                chat_id=callback.message.chat.id,
-                params=PaymentStartParams(
-                    purpose=PaymentPurpose.PUBLICATION_SERVICE,
-                    amount=Decimal(definition.price),
-                    description=definition.title,
-                    purpose_id=pub_id,
-                    return_state="PaidServiceSG:start",
-                    return_data={},
-                    meta={"service_type": service_type_raw},
-                ),
-            )
-    else:
-        dialog_manager.dialog_data["confirm_warning"] = True
-        await callback.answer(
-            "Нажмите ещё раз для подтверждения покупки.",
-            show_alert=True,
+        await callback.answer("✅ Услуга подключена!", show_alert=True)
+        await dialog_manager.done()
+    except InsufficientBalance:
+        await start_payment(
+            dialog_manager,
+            user_id=callback.from_user.id,
+            chat_id=callback.message.chat.id,
+            params=PaymentStartParams(
+                purpose=PaymentPurpose.PUBLICATION_SERVICE,
+                amount=Decimal(definition.price),
+                description=definition.title,
+                purpose_id=pub_id,
+                return_state="PaidServiceSG:start",
+                return_data={},
+                meta={"service_type": service_type_raw},
+            ),
         )
 
 

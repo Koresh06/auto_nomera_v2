@@ -61,23 +61,37 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         user_id: int,
         region_id: int,
     ) -> list[tuple[Publication, str | None, str | None]]:
-        query = (
-            select(PublicationModel, AdModel.plate_number, AdModel.shop_name)
+        ranked = (
+            select(
+                PublicationModel.id,
+                func.row_number()
+                .over(
+                    partition_by=PublicationModel.ad_id,
+                    order_by=PublicationModel.created_at.desc(),
+                )
+                .label("rn"),
+            )
             .join(AdModel, PublicationModel.ad_id == AdModel.id)
             .where(
                 AdModel.user_id == user_id,
                 AdModel.region_id == region_id,
-                PublicationModel.is_child.is_(False),
                 PublicationModel.status.notin_(
-                    [
-                        PublicationStatus.CANCELED,
-                        PublicationStatus.REPLACED,
-                    ]
+                    [PublicationStatus.CANCELED, PublicationStatus.REPLACED]
                 ),
             )
+            .cte("ranked_publications")
+        )
+
+        latest_ids = select(ranked.c.id).where(ranked.c.rn == 1)
+
+        query = (
+            select(PublicationModel, AdModel.plate_number, AdModel.shop_name)
+            .join(AdModel, PublicationModel.ad_id == AdModel.id)
+            .where(PublicationModel.id.in_(latest_ids))
             .options(selectinload(PublicationModel.services))
             .order_by(PublicationModel.created_at.desc())
         )
+
         result = await self._session.execute(query)
         return [
             (pub_model.to_entity(), plate, shop_name)
@@ -400,3 +414,21 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                 (pub_model.to_entity(), plate, ad_type, username, tg_id, shop_name, tz)
             )
         return rows
+
+    async def get_ad_ids_with_active_autopublish_series(
+        self, ad_ids: list[int]
+    ) -> set[int]:
+        if not ad_ids:
+            return set()
+
+        query = (
+            select(PublicationModel.ad_id)
+            .where(
+                PublicationModel.ad_id.in_(ad_ids),
+                PublicationModel.is_child.is_(True),
+                PublicationModel.status == PublicationStatus.SCHEDULED,
+            )
+            .distinct()
+        )
+        result = await self._session.execute(query)
+        return {row[0] for row in result.all()}

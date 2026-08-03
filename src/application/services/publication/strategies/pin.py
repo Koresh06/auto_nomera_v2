@@ -13,6 +13,7 @@ class PinStrategy:
         if publication.channel_message_id is None:
             service.mark_used()
             return
+
         unpin_at = context.time_resolver.resolve_unpin_time(
             publication.published_at_utc,
             service.params,
@@ -26,4 +27,6 @@ class PinStrategy:
             message_id=publication.channel_message_id,
             run_at_utc=unpin_at,
         )
+
+        service.params["unpin_at_utc"] = unpin_at.isoformat()
         service.mark_used()

@@ -30,6 +30,9 @@ from src.application.use_cases.publication.get_overdue_unpublished import (
 from src.application.use_cases.publication.publish_overdue_batch import (
     PublishOverdueBatchUseCase,
 )
+from src.application.use_cases.publication_service.get_ad_ids_with_active_autipublish_series import (
+    GetAdIdsWithActiveAutopublishSeriesUseCase,
+)
 from src.application.use_cases.region.toggle_status import ToggleRegionStatusUseCase
 from src.application.use_cases.region.update_metadata import UpdateRegionMetadataUseCase
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsUseCase
@@ -1120,4 +1123,13 @@ class UseCasesProvider(Provider):
     ) -> GetPaymentDetailsUseCase:
         return GetPaymentDetailsUseCase(
             payment_repo=payment_repo,
+        )
+
+    @provide
+    def get_ad_ids_with_active_autopublish_series_use_case(
+        self,
+        publication_repo: PublicationRepository,
+    ) -> GetAdIdsWithActiveAutopublishSeriesUseCase:
+        return GetAdIdsWithActiveAutopublishSeriesUseCase(
+            publication_repo=publication_repo,
         )

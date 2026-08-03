@@ -114,6 +114,13 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
             )
             await self.publication_repo.save(pub)
 
+        # помечаем PRIORITY_PUBLISH использованной, если она есть — сама публикация
+        # "вне очереди" уже случилась фактом вызова этого юзкейса
+        priority_svc = _get_active_service(pub, PublicationServiceType.PRIORITY_PUBLISH)
+        if priority_svc is not None:
+            priority_svc.mark_used()
+            await self.publication_repo.save(pub)
+
         # 2) публикация в канал
         if ad.ad_type == AdType.STORE:
             result = await self.telegram.publish_text(

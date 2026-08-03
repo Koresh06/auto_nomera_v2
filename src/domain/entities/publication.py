@@ -11,7 +11,6 @@ from src.domain.enums.publication_service import (
 from src.domain.exceptions.publication import (
     InvalidPublicationState,
     ServiceAlreadyAdded,
-    ServiceNotAllowed,
 )
 from src.domain.value_objects.slot_key import SlotKey
 
@@ -42,23 +41,11 @@ class Publication(Entity):
         self.touch()
 
     def add_service(self, service: PublicationService) -> None:
-        # запретим дубли по типу (если нужно — можно ослабить)
         if any(
             s.type == service.type and s.status == PublicationServiceStatus.ACTIVE
             for s in self.services
         ):
             raise ServiceAlreadyAdded(f"Услуга {service.type} уже добавлена")
-
-        # PRIORITY можно добавлять только если публикация ещё не published/canceled
-        if service.type == PublicationServiceType.PRIORITY_PUBLISH:
-            if self.status in (
-                PublicationStatus.PUBLISHED,
-                PublicationStatus.CANCELED,
-                PublicationStatus.REPLACED,
-            ):
-                raise ServiceNotAllowed(
-                    "Услуга PRIORITY_PUBLISH нельзя добавить после публикации"
-                )
 
         self.services.append(service)
         self.touch()
@@ -138,3 +125,15 @@ class Publication(Entity):
             s.type == service_type and s.status == PublicationServiceStatus.ACTIVE
             for s in self.services
         )
+
+    def schedule_immediate(self, *, publish_at_utc: datetime) -> None:
+        if self.status not in (
+            PublicationStatus.DRAFT,
+            PublicationStatus.AWAITING_PAYMENT,
+            PublicationStatus.SCHEDULED,
+        ):
+            raise InvalidPublicationState(f"Невозможно запланировать с {self.status}")
+        self.slot = None
+        self.publish_at_utc = publish_at_utc
+        self.status = PublicationStatus.SCHEDULED
+        self.touch()

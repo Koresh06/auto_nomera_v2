@@ -7,9 +7,9 @@ from aiogram_dialog.widgets.kbd import (
     Back,
     Cancel,
     RequestContact,
-    ScrollingGroup,
-    Select,
     Url,
+    Column,
+    Button,
 )
 from aiogram_dialog.widgets.style import Style
 from aiogram_dialog.widgets.markup.reply_keyboard import ReplyKeyboardFactory
@@ -30,22 +30,35 @@ payment_dialog = Dialog(
     Window(
         Format(
             "💳 <b>Оплата</b>\n\n"
-            "{description}\n"
+            "{description}\n\n"
             "Сумма: <b>{amount} руб.</b>\n\n"
             "Выберите способ оплаты:"
         ),
-        ScrollingGroup(
-            Select(
-                Format("{item[title]}"),
-                id="method_select",
-                items="methods",
-                item_id_getter=lambda it: it["id"],
+        # ScrollingGroup(
+        #     Select(
+        #         Format("{item[title]}"),
+        #         id="method_select",
+        #         items="methods",
+        #         item_id_getter=lambda it: it["id"],
+        #         on_click=on_payment_method_selected,
+        #     ),
+        #     id="methods_scroll",
+        #     width=1,
+        #     height=4,
+        #     hide_on_single_page=True,
+        # ),
+        Column(
+            Button(
+                Const("💳 СБП / Банк карты / ЮMoney"),
+                id="method_yookassa",
+                on_click=on_payment_method_selected,
+                style=Style(style=ButtonStyle.SUCCESS),
+            ),
+            Button(
+                Const("⭐ TG Stars"),
+                id="method_stars",
                 on_click=on_payment_method_selected,
             ),
-            id="methods_scroll",
-            width=1,
-            height=4,
-            hide_on_single_page=True,
         ),
         Cancel(
             Const("⬅️ Назад"),
@@ -82,7 +95,10 @@ payment_dialog = Dialog(
         #     "После перевода отправьте чек администратору.",
         #     when=F["dialog_data"]["payment_method"] == PaymentMethod.MANUAL_CARD.value,
         # ),
-        Cancel(Const("❌ Отменить")),
+        Cancel(
+            Const("Отменить"),
+            style=Style(style=ButtonStyle.DANGER),
+        ),
         state=PaymentSG.waiting_payment,
     ),
     Window(

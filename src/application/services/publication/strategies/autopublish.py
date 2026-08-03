@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from src.domain.entities.publication import Publication
 from src.domain.entities.publication_service import PublicationService
@@ -13,27 +14,34 @@ class AutopublishStrategy:
         service: PublicationService,
         context: ServiceContext,
     ) -> None:
-        if publication.slot is None:
-            service.mark_used()
-            return
-
         if service.params is None:
             service.mark_used()
             return
 
         days = service.params.get("days", 7)
+
+        if publication.slot is not None:
+            base_day = publication.slot.local_day
+            base_time = publication.slot.local_time
+        else:
+            # публикация без обычного слота (например, "вне очереди") —
+            # берём реальное время публикации как точку отсчёта серии
+            local_dt = (
+                publication.published_at_utc or datetime.now(timezone.utc)
+            ).astimezone(ZoneInfo(context.region.timezone.value))
+            base_day = local_dt.date()
+            base_time = local_dt.time()
+
         for i in range(1, days):
             next_slot = SlotKey(
                 region_id=publication.region_id,
-                local_day=publication.slot.local_day + timedelta(days=i),
-                local_time=publication.slot.local_time,
+                local_day=base_day + timedelta(days=i),
+                local_time=base_time,
             )
             publish_at_utc = context.time_resolver.resolve_publish_at_utc(
                 tz=context.region.timezone,
                 slot=next_slot,
             )
-            # now_utc = datetime.now(UTC)
-            # publish_at_utc = now_utc + timedelta(seconds=30 * i) # test
             new_pub = Publication(
                 ad_id=publication.ad_id,
                 region_id=publication.region_id,
