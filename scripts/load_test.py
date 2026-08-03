@@ -1,23 +1,13 @@
 """
-Быстрый нагрузочный тест: параллельно долбит выбранные use-case'ы
-и печатает время выполнения + разброс (min/avg/max/p95).
+Нагрузочный тест: параллельно долбит use-case через ОБЩИЙ DI-контейнер
+(как в реальном проде — контейнер живёт постоянно, каждый вызов получает
+свой request-scope с собственной AsyncSession из общего пула соединений).
 
-Запуск (по аналогии с migrate_legacy.py):
-
+Запуск:
     docker compose run --rm \
       -v ~/auto_nomera_v2/scripts:/app/scripts \
       -e PYTHONPATH=/app \
       bot python scripts/load_test.py --scenario calendar --n 100 --region-id 1
-
-Сценарии:
-    calendar    — GetCalendarUseCase (построение календаря слотов)
-    schedule    — GetRegionScheduleUseCase (расписание региона)
-    stats       — GetGlobalStatsUseCase (общая статистика)
-    mailing     — запускает execute_mailing (ОСТОРОЖНО — реально разошлёт!)
-
-Во время работы скрипта в соседнем терминале держи открытым:
-    docker stats
-чтобы видеть CPU%/RAM% каждого контейнера в реальном времени.
 """
 
 from __future__ import annotations
@@ -32,36 +22,33 @@ from dishka import make_async_container
 
 from src.application.mediator import Mediator
 from src.application.use_cases.slots.get_calendar import GetCalendarRequest
-from src.application.use_cases.stats.globals import GetGlobalStatsRequest
+
 from src.application.use_cases.stats.region_schedule import GetRegionScheduleRequest
 from src.core.dependencies.providers import make_base_providers
 
 
+async def one_call(container, scenario: str, region_id: int):
+    start = time.perf_counter()
+    try:
+        async with container() as request_container:
+            mediator = await request_container.get(Mediator)
+            if scenario == "calendar":
+                await mediator.handle(GetCalendarRequest(region_id=region_id))
+            elif scenario == "schedule":
+                await mediator.handle(GetRegionScheduleRequest(region_id=region_id))
+            else:
+                raise ValueError(f"unknown scenario {scenario}")
+    except Exception as e:
+        print(f"  ! error: {type(e).__name__}: {e}", file=sys.stderr)
+        return None
+    return time.perf_counter() - start
+
+
 async def run_scenario(container, scenario: str, region_id: int, n: int):
-    async def one_call():
-        start = time.perf_counter()
-        try:
-            async with container() as request_container:
-                mediator = await request_container.get(Mediator)
-                if scenario == "calendar":
-                    await mediator.handle(GetCalendarRequest(region_id=region_id))
-                elif scenario == "schedule":
-                    await mediator.handle(GetRegionScheduleRequest(region_id=region_id))
-                elif scenario == "stats":
-                    from src.domain.enums.period import StatsPeriod
-
-                    await mediator.handle(
-                        GetGlobalStatsRequest(period=StatsPeriod.MONTH, region_id=None)
-                    )
-        except Exception as e:
-            print(f"  ! error: {type(e).__name__}: {e}", file=sys.stderr)
-            return None
-        return time.perf_counter() - start
-
     print(f"Запускаю {n} параллельных вызовов сценария '{scenario}'...")
     overall_start = time.perf_counter()
 
-    tasks = [one_call() for _ in range(n)]
+    tasks = [one_call(container, scenario, region_id) for _ in range(n)]
     results = await asyncio.gather(*tasks)
 
     overall_elapsed = time.perf_counter() - overall_start
@@ -73,7 +60,7 @@ async def run_scenario(container, scenario: str, region_id: int, n: int):
         return
 
     durations.sort()
-    p95_idx = int(len(durations) * 0.95)
+    p95_idx = min(int(len(durations) * 0.95), len(durations) - 1)
 
     print()
     print("=" * 50)
@@ -94,33 +81,14 @@ async def run_scenario(container, scenario: str, region_id: int, n: int):
 
 async def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--scenario",
-        choices=["calendar", "schedule", "stats", "mailing"],
-        required=True,
-    )
-    parser.add_argument("--n", type=int, default=50, help="кол-во параллельных вызовов")
+    parser.add_argument("--scenario", choices=["calendar", "schedule"], required=True)
+    parser.add_argument("--n", type=int, default=50)
     parser.add_argument("--region-id", type=int, default=1)
     args = parser.parse_args()
 
-    if args.scenario == "mailing":
-        confirm = input("⚠️  Это реально разошлёт сообщение! Продолжить? (yes/no): ")
-        if confirm.strip().lower() != "yes":
-            print("Отменено.")
-            return 0
-
     container = make_async_container(*make_base_providers())
-
     try:
-        # async with container() as request_container:
-        #     pass
-
-        if args.scenario == "mailing":
-            # тут лучше вызвать через use-case ExecuteMailingRequest
-            # с тестовым mail_type/безопасным получателем — заполни под себя
-            print("Реализуй тестовый вызов ExecuteMailingRequest здесь")
-        else:
-            await run_scenario(container, args.scenario, args.region_id, args.n)
+        await run_scenario(container, args.scenario, args.region_id, args.n)
     finally:
         await container.close()
 
