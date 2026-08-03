@@ -76,6 +76,7 @@ payment_dialog = Dialog(
             Const("Оплатить"),
             url=Format("{dialog_data[confirmation_url]}"),
             when=F["dialog_data"]["payment_method"] == PaymentMethod.YOOKASSA.value,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         Format(
             "⭐ <b>Оплата звёздами</b>\n\nСумма: <b>{dialog_data[amount]} руб.</b>",
@@ -87,6 +88,7 @@ payment_dialog = Dialog(
             url=Format("{dialog_data[invoice_link]}"),
             when=F["dialog_data"]["payment_method"]
             == PaymentMethod.TELEGRAM_STARS.value,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         # Format(
         #     "💳 Переведите <b>{dialog_data[amount]} руб.</b> на карту:\n"

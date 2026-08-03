@@ -45,5 +45,7 @@ async def on_amount_input_success(
             purpose=PaymentPurpose.BALANCE_TOPUP,
             amount=amount,
             description="Пополнение баланса",
+            return_state="UserMenuSG:menu",
+            return_data={},
         ),
     )

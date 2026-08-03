@@ -1,3 +1,5 @@
+import logging
+
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select, Button
@@ -32,6 +34,11 @@ from src.presentation.telegram.features.user.modules.ad.create_ad.texts import (
 from src.presentation.telegram.utils.text_validators import validate_phone_number
 from src.presentation.telegram.utils.price_validators import validate_price
 from .states import EditAdSG
+
+
+async def on_dialog_start(start_data: dict, dialog_manager: DialogManager) -> None:
+    if start_data:
+        dialog_manager.dialog_data.update(start_data)
 
 
 @inject
@@ -231,6 +238,9 @@ async def on_field_input(
     await dialog_manager.switch_to(EditAdSG.confirm_edit)
 
 
+logger = logging.getLogger(__name__)
+
+
 @inject
 async def on_apply_edit(
     callback: CallbackQuery,
@@ -239,8 +249,11 @@ async def on_apply_edit(
     mediator: FromDishka[Mediator],
 ) -> None:
     data = dialog_manager.dialog_data
-    ad_id: int = data["ad_id"]
+    ad_id: int = data.get("selected_ad_id") or data.get("ad_id")
     pub_id: int | None = data.get("selected_pub_id") or data.get("pub_id")
+    logger.info(
+        f"[on_apply_edit:debug] ad_id={ad_id} pub_id={pub_id} full_data={dict(data)}"
+    )
     plate = data.get("pending_plate")
     city = data.get("pending_city")
     price_raw: int | None = data.get("pending_price")

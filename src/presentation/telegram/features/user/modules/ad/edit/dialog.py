@@ -22,6 +22,7 @@ from src.presentation.telegram.features.user.modules.ad.edit.getters import (
     getter_list_publications,
 )
 from src.presentation.telegram.features.user.modules.ad.edit.handlers import (
+    on_dialog_start,
     on_apply_edit,
     on_delete_ad,
     on_edit_city,
@@ -40,7 +41,7 @@ edit_ad_dialog = Dialog(
         Const("📋 У вас пока нет объявлений", when=~F["publications"]),
         ScrollingGroup(
             Select(
-                Format("{item.display_title} — {item.slot_display}"),
+                Format("{item.display_title}"),
                 id="pub_select",
                 item_id_getter=lambda p: p.id,
                 items="publications",
@@ -142,4 +143,5 @@ edit_ad_dialog = Dialog(
         state=EditAdSG.confirm_edit,
         getter=getter_confirm_edit,
     ),
+    on_start=on_dialog_start,
 )
