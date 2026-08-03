@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, func, select
@@ -22,6 +23,9 @@ from src.infrastructure.database.models.publication_service import (
 )
 from src.infrastructure.database.models.region import RegionModel
 from src.infrastructure.database.models.user import UserModel
+
+
+MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
 
 class SQLAlchemyPublicationRepo(PublicationRepository):
@@ -384,8 +388,14 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
     async def list_overdue_scheduled_today(
         self, now_utc: datetime
     ) -> list[tuple[Publication, str | None, AdType, str | None, int, str | None, str]]:
-        today_start_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end_utc = today_start_utc + timedelta(days=1)
+        now_moscow = now_utc.astimezone(MOSCOW_TZ)
+        today_start_moscow = now_moscow.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        today_end_moscow = today_start_moscow + timedelta(days=1)
+
+        today_start_utc = today_start_moscow.astimezone(timezone.utc)
+        today_end_utc = today_end_moscow.astimezone(timezone.utc)
 
         query = (
             select(
