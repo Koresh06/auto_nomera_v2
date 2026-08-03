@@ -2,9 +2,8 @@ from decimal import Decimal
 from dishka.integrations.aiogram_dialog import FromDishka, inject
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
-from aiogram_dialog.widgets.kbd import Select
+from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
-from aiogram_dialog.widgets.kbd.select import OnItemClick
 
 from src.application.dtos.user import UpdateUserDTO, UserDTO
 from src.application.exceptions.user import (
@@ -23,12 +22,19 @@ from src.presentation.telegram.features.user.modules.payment.states import Payme
 @inject
 async def on_payment_method_selected(
     callback: CallbackQuery,
-    widget: OnItemClick[Select[str], str],
+    widget: Button,
     dialog_manager: DialogManager,
-    item_id: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    method = PaymentMethod(item_id)
+    method_map = {
+        "method_yookassa": PaymentMethod.YOOKASSA,
+        "method_stars": PaymentMethod.TELEGRAM_STARS,
+    }
+    method = method_map.get(widget.widget_id)
+    if method is None:
+        await callback.answer("❌ Неизвестный способ оплаты.", show_alert=True)
+        return
+
     dialog_manager.dialog_data["payment_method"] = method.value
 
     await _create_payment_and_route(callback, dialog_manager, mediator, method)
