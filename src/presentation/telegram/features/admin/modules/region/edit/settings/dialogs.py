@@ -22,7 +22,6 @@ from .handlers import (
     on_reset_defaults,
     on_settings_field_update,
     on_slot_time_toggle,
-    on_slot_times_done,
     on_toggle_publication_limit,
 )
 
@@ -87,11 +86,6 @@ edit_region_settings_dialog = Dialog(
                 items="candidates",
                 on_click=on_slot_time_toggle,
             ),
-        ),
-        Button(
-            Const("✅ Готово"),
-            id="slot_times_done",
-            on_click=on_slot_times_done,
         ),
         SwitchTo(
             Const("⬅️ Назад"),

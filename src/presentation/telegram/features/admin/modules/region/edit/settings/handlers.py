@@ -4,7 +4,7 @@ from datetime import time
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager, ShowMode
-from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.widgets.kbd import Button, Select
 from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.application.mediator import Mediator
@@ -92,11 +92,13 @@ async def on_toggle_publication_limit(
     await dialog_manager.show(show_mode=ShowMode.EDIT)
 
 
+@inject
 async def on_slot_time_toggle(
     callback: CallbackQuery,
-    widget,
+    widget: Select,
     dialog_manager: DialogManager,
     item_id: str,
+    mediator: FromDishka[Mediator],
 ) -> None:
     selected: list[str] = dialog_manager.dialog_data.setdefault("slot_times", [])
     if item_id in selected:
@@ -104,6 +106,29 @@ async def on_slot_time_toggle(
     else:
         selected.append(item_id)
         selected.sort()
+
+    if not selected:
+        await callback.answer("⚠️ Нужно выбрать хотя бы одно время", show_alert=True)
+        return
+
+    region_id: int = dialog_manager.start_data["region_id"]
+    slot_times = tuple(time.fromisoformat(t) for t in selected)
+
+    try:
+        await mediator.handle(
+            UpdateRegionSettingsCommand(region_id=region_id, slot_times=slot_times)
+        )
+    except Exception as e:
+        # откатываем локальное изменение, раз сохранить не удалось
+        if item_id in selected:
+            selected.remove(item_id)
+        else:
+            selected.append(item_id)
+            selected.sort()
+        await callback.answer(f"⚠️ {e}", show_alert=True)
+        return
+
+    await callback.answer("✅ Сохранено")
 
 
 @inject
