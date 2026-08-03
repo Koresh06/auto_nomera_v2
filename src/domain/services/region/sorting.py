@@ -10,8 +10,13 @@ def extract_region_codes(region: RegionDTO) -> list[int]:
     codes: list[str] = []
     if region.channel_username:
         codes += re.findall(r"\d+", region.channel_username)
+
     if region.title:
-        codes += re.findall(r"\|(\d+)\|", region.title)
+        match = re.match(r"^((?:\|\d+)+\|)", region.title.strip())
+        if match:
+            prefix = match.group(1)
+            codes += re.findall(r"\d+", prefix)
+
     return [int(c) for c in codes]
 
 
