@@ -37,24 +37,24 @@ from src.application.use_cases.stats.region_schedule import GetRegionScheduleReq
 from src.core.dependencies.providers import make_base_providers
 
 
-async def run_scenario(mediator: Mediator, scenario: str, region_id: int, n: int):
+async def run_scenario(container, scenario: str, region_id: int, n: int):
     async def one_call():
         start = time.perf_counter()
         try:
-            if scenario == "calendar":
-                await mediator.handle(GetCalendarRequest(region_id=region_id))
-            elif scenario == "schedule":
-                await mediator.handle(GetRegionScheduleRequest(region_id=region_id))
-            elif scenario == "stats":
-                from src.domain.enums.period import StatsPeriod
+            async with container() as request_container:
+                mediator = await request_container.get(Mediator)
+                if scenario == "calendar":
+                    await mediator.handle(GetCalendarRequest(region_id=region_id))
+                elif scenario == "schedule":
+                    await mediator.handle(GetRegionScheduleRequest(region_id=region_id))
+                elif scenario == "stats":
+                    from src.domain.enums.period import StatsPeriod
 
-                await mediator.handle(
-                    GetGlobalStatsRequest(period=StatsPeriod.MONTH, region_id=None)
-                )
-            else:
-                raise ValueError(f"unknown scenario {scenario}")
+                    await mediator.handle(
+                        GetGlobalStatsRequest(period=StatsPeriod.MONTH, region_id=None)
+                    )
         except Exception as e:
-            print(f"  ! error: {e}", file=sys.stderr)
+            print(f"  ! error: {type(e).__name__}: {e}", file=sys.stderr)
             return None
         return time.perf_counter() - start
 
@@ -112,15 +112,15 @@ async def main() -> int:
     container = make_async_container(*make_base_providers())
 
     try:
-        async with container() as request_container:
-            mediator = await request_container.get(Mediator)
+        # async with container() as request_container:
+        #     pass
 
-            if args.scenario == "mailing":
-                # тут лучше вызвать через use-case ExecuteMailingRequest
-                # с тестовым mail_type/безопасным получателем — заполни под себя
-                print("Реализуй тестовый вызов ExecuteMailingRequest здесь")
-            else:
-                await run_scenario(mediator, args.scenario, args.region_id, args.n)
+        if args.scenario == "mailing":
+            # тут лучше вызвать через use-case ExecuteMailingRequest
+            # с тестовым mail_type/безопасным получателем — заполни под себя
+            print("Реализуй тестовый вызов ExecuteMailingRequest здесь")
+        else:
+            await run_scenario(container, args.scenario, args.region_id, args.n)
     finally:
         await container.close()
 
