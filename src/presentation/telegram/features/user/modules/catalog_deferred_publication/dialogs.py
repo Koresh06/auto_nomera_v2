@@ -47,7 +47,7 @@ catalog_deferred_publication_dialog = Dialog(
             id="delete_current_ad",
             on_click=on_delete_catalog_item,
             when=F["is_admin"] & F["has_subscription"] & F["has_ads"],
-            style=Style(style=ButtonStyle.PRIMARY),
+            style=Style(style=ButtonStyle.DANGER),
         ),
         Start(
             Const("💎 Получить доступ"),
