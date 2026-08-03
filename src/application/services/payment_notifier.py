@@ -7,6 +7,7 @@ from src.application.services.notification.notification_service import (
     NotificationService,
 )
 from src.application.ports.region.region_repo import RegionRepository
+from src.domain.enums.payment import PaymentMethod
 
 _MSK = ZoneInfo("Europe/Moscow")
 
@@ -66,6 +67,12 @@ class PaymentNotifier:
         time_str = self._msk_time(payment.paid_at)
         user_link = self._user_link(user)
 
+        if payment.method == PaymentMethod.TELEGRAM_STARS:
+            stars = payment.meta.get("stars_amount", 0)
+            amount_line = f"⭐️ Сумма: <b>{stars} Stars</b>"
+        else:
+            amount_line = f"💰 Сумма: <b>{payment.amount:.0f} руб.</b>"
+
         return (
             f"💸 <b>Успешная оплата</b>\n\n"
             f"👤 {user_link}\n"
@@ -73,7 +80,7 @@ class PaymentNotifier:
             f"🌍 Регион: {region_title}\n"
             f"━━━━━━━━━━━━━━\n"
             f"{self._purpose_line(payment.purpose)}\n"
-            f"💰 Сумма: <b>{payment.amount:.0f} руб.</b>\n"
+            f"{amount_line}\n"
             f"💳 Способ: {payment.method_label}\n"
             f"🧾 <code>{payment.external_id}</code>\n"
             f"🕓 {time_str} (МСК)"
