@@ -31,7 +31,7 @@ catalog_deferred_publication_dialog = Dialog(
             "🚀 Объявления до публикации появятся за {pre_publication_window_hours} часа до размещения в канале.",
             when=F["has_subscription"] & ~F["has_ads"],
         ),
-        DynamicMedia("current_media", when=F["has_subscription"] & F["has_ads"]),
+        DynamicMedia("current_media", when=F["current_media"]),
         Format("{card.ad_text}", when=F["has_subscription"] & F["has_ads"]),
         Format(
             "\n🕐 <b>Дата публикации:</b> {card.pub_time}",
