@@ -10,8 +10,8 @@ from src.core.config import settings
 engine: AsyncEngine = create_async_engine(
     settings.db.postgres.url,
     echo=settings.db.postgres.echo,
-    pool_size=30,  # временно увеличено для нагрузочного теста
-    max_overflow=30,
+    # pool_size=30,  # временно увеличено для нагрузочного теста
+    # max_overflow=30,
 )
 
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
