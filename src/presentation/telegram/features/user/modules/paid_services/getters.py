@@ -232,12 +232,13 @@ async def getter_pre_publication_confirm(
 
     return {
         "service_name": definition.title if definition else "",
-        "price_text": definition.price_display if definition else "—",
+        "description": definition.description if definition else "",
         "duration_text": (
             str(definition.duration_days)
             if definition and definition.duration_days
             else "30"
         ),
+        "price_text": definition.price_display if definition else "—",
         "already_active": already_active,
         "current_expires_display": (
             user.pre_publication_expires_at.strftime("%d.%m.%Y")

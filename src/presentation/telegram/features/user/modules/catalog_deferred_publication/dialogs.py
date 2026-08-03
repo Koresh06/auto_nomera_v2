@@ -13,7 +13,7 @@ from src.presentation.telegram.features.user.modules.catalog_deferred_publicatio
 )
 from src.presentation.telegram.widgets.custom_scroll import CatalogScroll
 from src.presentation.telegram.features.user.modules.paid_services.states import (
-    PaidServiceSG,
+    PrePublicationSG,
 )
 
 from .states import CatalogDeferredPublishSG
@@ -50,9 +50,9 @@ catalog_deferred_publication_dialog = Dialog(
             when=F["is_admin"] & F["has_subscription"] & F["has_ads"],
         ),
         Start(
-            Const("🚀 Платные услуги"),
+            Const("💎 Получить доступ"),
             id="go_to_paid_services",
-            state=PaidServiceSG.start,
+            state=PrePublicationSG.confirm,
             when=~F["has_subscription"],
         ),
         Start(
