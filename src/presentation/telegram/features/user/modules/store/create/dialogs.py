@@ -49,8 +49,14 @@ create_store_dialog = Dialog(
             "Вы действительно хотите создать магазин?"
         ),
         Column(
-            Next(Const("✅ Да")),
-            Cancel(Const("✖️ Нет")),
+            Next(
+                Const("✅ Да"),
+                style=Style(style=ButtonStyle.SUCCESS),
+            ),
+            Cancel(
+                Const("✖️ Нет"),
+                style=Style(style=ButtonStyle.DANGER),
+            ),
         ),
         state=StoreCreateSG.confirm_create,
         getter=getter_current_region_user,
@@ -125,6 +131,7 @@ create_store_dialog = Dialog(
             Const("✅ Подтвердить"),
             id="confirm_finish",
             on_click=on_finish,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         Back(
             Const("⬅️ Назад"),
@@ -142,6 +149,7 @@ create_store_dialog = Dialog(
             Const("🏦 Мой магазин"),
             id="my_store",
             state=StoreMainSG.main,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         state=StoreCreateSG.message_final,
     ),

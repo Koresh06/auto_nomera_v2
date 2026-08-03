@@ -1,5 +1,3 @@
-import logging
-
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select, Button
@@ -228,17 +226,16 @@ async def on_field_input(
         if field == "phone"
         else None
     )
+    print(contacts)
 
     data["pending_value"] = value
     data["pending_plate"] = plate
     data["pending_city"] = city
     data["pending_price"] = price.value if price else None
-    data["pending_contacts"] = contacts.display if contacts else None
+    data["pending_contacts_username"] = contacts.username if contacts else None
+    data["pending_contacts_phone"] = contacts.phone if contacts else None
 
     await dialog_manager.switch_to(EditAdSG.confirm_edit)
-
-
-logger = logging.getLogger(__name__)
 
 
 @inject
@@ -251,14 +248,18 @@ async def on_apply_edit(
     data = dialog_manager.dialog_data
     ad_id: int = data.get("selected_ad_id") or data.get("ad_id")
     pub_id: int | None = data.get("selected_pub_id") or data.get("pub_id")
-    logger.info(
-        f"[on_apply_edit:debug] ad_id={ad_id} pub_id={pub_id} full_data={dict(data)}"
-    )
     plate = data.get("pending_plate")
     city = data.get("pending_city")
     price_raw: int | None = data.get("pending_price")
     price: Price | None = Price(price_raw) if price_raw is not None else None
-    contacts: Contacts | None = data.get("pending_contacts")
+    contacts: Contacts | None = (
+        Contacts.from_user(
+            username=data.get("pending_contacts_username"),
+            phone=data.get("pending_contacts_phone"),
+        )
+        if data.get("pending_contacts_phone") is not None
+        else None
+    )
 
     if pub_id is not None:
         pub: PublicationDTO = await mediator.handle(

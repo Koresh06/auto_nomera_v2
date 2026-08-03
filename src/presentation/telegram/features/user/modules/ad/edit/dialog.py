@@ -138,8 +138,12 @@ edit_ad_dialog = Dialog(
             Const("✅ Применить"),
             id="apply_edit",
             on_click=on_apply_edit,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
-        Back(Const("❌ Отмена")),
+        Back(
+            Const("❌ Отмена"),
+            style=Style(style=ButtonStyle.DANGER),
+        ),
         state=EditAdSG.confirm_edit,
         getter=getter_confirm_edit,
     ),

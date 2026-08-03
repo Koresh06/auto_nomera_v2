@@ -169,6 +169,7 @@ create_region_dialog = Dialog(
             Const("✅ Подтвердить"),
             id="confirm",
             on_click=on_confirm_region,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         Back(
             Const("⬅️ Назад"),

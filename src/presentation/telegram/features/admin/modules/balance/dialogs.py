@@ -88,6 +88,7 @@ admin_balance_dialog = Dialog(
                 Const("✅ Подтвердить"),
                 id="confirm_balance",
                 on_click=on_balance_confirm,
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
             Back(Const("❌ Отменить")),
         ),

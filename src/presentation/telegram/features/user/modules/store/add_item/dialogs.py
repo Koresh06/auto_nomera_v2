@@ -89,6 +89,7 @@ store_add_items_dialog = Dialog(
                 Const("🏦 Мой магазин"),
                 id="my_store",
                 state=StoreMainSG.main,
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
             Start(
                 Const("🏠 Главное меню"),
