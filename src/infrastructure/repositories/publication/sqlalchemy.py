@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, func, select
@@ -385,6 +385,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         self, now_utc: datetime
     ) -> list[tuple[Publication, str | None, AdType, str | None, int, str | None, str]]:
         today_start_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end_utc = today_start_utc + timedelta(days=1)
 
         query = (
             select(
@@ -402,7 +403,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
             .where(
                 PublicationModel.status == PublicationStatus.SCHEDULED,
                 PublicationModel.publish_at_utc >= today_start_utc,
-                PublicationModel.publish_at_utc < now_utc,
+                PublicationModel.publish_at_utc < today_end_utc,
                 PublicationModel.is_child.is_(False),
             )
             .order_by(PublicationModel.publish_at_utc.asc())
