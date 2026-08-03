@@ -39,10 +39,10 @@ paid_service_dialog = Dialog(
     Window(
         List(
             field=Format(
-                "<b>{item[name]}</b>\n"
+                "<b><u>{item[name]}</u></b>\n"
                 "{item[description]}\n"
-                "Срок: {item[duration_text]}\n"
-                "Цена: <i>{item[price_text]}</i>\n"
+                "<b>Срок:</b> {item[duration_text]}\n"
+                "<b>Цена:</b> <i>{item[price_text]}</i>\n"
             ),
             items="services",
             id="services_list",
@@ -51,6 +51,7 @@ paid_service_dialog = Dialog(
             Const("💎 Объявления до публикации"),
             id="buy_pre_publication",
             state=PrePublicationSG.confirm,
+            style=Style(style=ButtonStyle.SUCCESS),
         ),
         Group(
             Start(
@@ -58,24 +59,28 @@ paid_service_dialog = Dialog(
                 id="buy_priority",
                 state=BuyServiceSG.select_ad,
                 data={"service_type": PublicationServiceType.PRIORITY_PUBLISH.value},
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
             Start(
                 Const("🔂 Автопубликация"),
                 id="buy_auto",
                 state=BuyServiceSG.select_ad,
                 data={"service_type": PublicationServiceType.AUTOPUBLISH.value},
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
             Start(
                 Const("📌 Закрепление"),
                 id="buy_pin",
                 state=BuyServiceSG.select_ad,
                 data={"service_type": PublicationServiceType.PIN.value},
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
             Start(
                 Const("🟥 Выделение"),
                 id="buy_highlight",
                 state=BuyServiceSG.select_ad,
                 data={"service_type": PublicationServiceType.HIGHLIGHT.value},
+                style=Style(style=ButtonStyle.SUCCESS),
             ),
             width=2,
         ),
@@ -170,10 +175,10 @@ buy_service_dialog = Dialog(
 pre_publication_dialog = Dialog(
     Window(
         Format(
-            "<b>{service_name}</b>\n"
-            "{description}\n"
-            "Срок: {duration_text}\n"
-            "Цена: <i>{price_text}</i>\n"
+            "<b><u>{service_name}</u></b>\n\n"
+            "{description}\n\n"
+            "<b>Срок:</b> {duration_text}\n\n"
+            "<b>Цена:</b> <i>{price_text}</i>\n"
         ),
         Format(
             "⚠️ <b>У вас уже активна подписка</b> до <b>{current_expires_display}</b>.\n"

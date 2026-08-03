@@ -67,6 +67,7 @@ async def getter_current_services(
                 else (
                     "бессрочно. (Распространяется только на один пост)"
                     if d.type == PublicationServiceType.HIGHLIGHT
+                    or d.type == PublicationServiceType.PRIORITY_PUBLISH
                     else "бессрочно."
                 )
             ),

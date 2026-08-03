@@ -226,7 +226,6 @@ async def on_field_input(
         if field == "phone"
         else None
     )
-    print(contacts)
 
     data["pending_value"] = value
     data["pending_plate"] = plate

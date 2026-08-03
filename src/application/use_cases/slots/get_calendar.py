@@ -42,7 +42,7 @@ class GetCalendarUseCase(UseCase[GetCalendarRequest, CalendarDTO]):
 
         booked = await self.booking_repo.get_booked_set(future_slots)
         converted = await self.converted_repo.get_converted_set(future_slots)
-        logger.info(f"[GetCalendar] converted={converted}")
+        # logger.info(f"[GetCalendar] converted={converted}")
         held = await self.hold_store.get_held_set(future_slots)
 
         views = self.calendar_builder.build(
