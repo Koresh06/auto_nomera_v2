@@ -27,7 +27,9 @@ class NotificationService(Protocol):
         *,
         user_ids: list[int],
         text: str,
+        photo_id: str | None = None,
         reply_markup: Any | None = None,
+        throttle_seconds: float = 0.05,
     ) -> None: ...
 
     async def notify_user(

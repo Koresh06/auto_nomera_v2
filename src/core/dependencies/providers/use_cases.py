@@ -766,12 +766,16 @@ class UseCasesProvider(Provider):
         self,
         ad_repo: AdRepository,
         user_repo: UserRepository,
+        region_repo: RegionRepository,
         notification_service: NotificationService,
+        settings: AppSettings,
     ) -> NotifyPrePublicationUsersUseCase:
         return NotifyPrePublicationUsersUseCase(
             ad_repo=ad_repo,
             user_repo=user_repo,
+            region_repo=region_repo,
             notification_service=notification_service,
+            settings=settings,
         )
 
     @provide

@@ -57,7 +57,7 @@ async def on_catalog_item_selected(
     item_id: str,
     mediator: FromDishka[Mediator],
 ) -> None:
-    await dialog_manager.back()
+    await dialog_manager.next()
     scroll = dialog_manager.find("catalog_scroll")
     if scroll:
         await scroll.set_page(int(item_id))

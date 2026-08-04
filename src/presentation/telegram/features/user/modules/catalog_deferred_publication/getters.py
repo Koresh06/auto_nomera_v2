@@ -110,7 +110,10 @@ async def getter_catalog_list(
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
-    region_id: int = dialog_manager.dialog_data["region_id"]
+    tg_id = dialog_manager.event.from_user.id
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
+    region_id = user.region_id
+    dialog_manager.dialog_data["region_id"] = region_id
 
     scroll = dialog_manager.find("catalog_scroll")
     current_page = await scroll.get_page() if scroll else 0

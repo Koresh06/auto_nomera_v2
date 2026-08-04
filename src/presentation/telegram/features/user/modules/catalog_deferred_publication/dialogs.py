@@ -21,6 +21,32 @@ from .getters import getter_catalog_list, getter_urgent_catalog
 
 catalog_deferred_publication_dialog = Dialog(
     Window(
+        Const("📋 <b>Список объявлений:</b>\n"),
+        ScrollingGroup(
+            Select(
+                Format("{item[0]}"),
+                id="catalog_select",
+                item_id_getter=lambda x: x[1],
+                items="catalog_buttons",
+                on_click=on_catalog_item_selected,
+            ),
+            id="catalog_list_scroll",
+            width=1,
+            height=10,
+            hide_on_single_page=True,
+        ),
+        Const("😔 Список пуст.", when=~F["has_ads"]),
+        Start(
+            Const("🏠 Главное меню"),
+            id="general_menu",
+            state=UserMenuSG.menu,
+            mode=StartMode.RESET_STACK,
+            style=Style(style=ButtonStyle.PRIMARY),
+        ),
+        state=CatalogDeferredPublishSG.start,
+        getter=getter_catalog_list,
+    ),
+    Window(
         Format(
             "<b>💎 Получайте первыми эксклюзивный доступ к объявлениям из раздела «Срочный выкуп», а также к новым объявлениям за {pre_publication_window_hours} часа до их публикации на канале.</b>",
             when=~F["has_subscription"],
@@ -39,7 +65,7 @@ catalog_deferred_publication_dialog = Dialog(
         ),
         CatalogScroll(
             id="catalog_scroll",
-            view_state=CatalogDeferredPublishSG.list_view,
+            view_state=CatalogDeferredPublishSG.start,
             when=F["has_subscription"] & F["has_ads"],
         ),
         Button(
@@ -56,38 +82,12 @@ catalog_deferred_publication_dialog = Dialog(
             when=~F["has_subscription"],
             style=Style(style=ButtonStyle.SUCCESS),
         ),
-        Start(
-            Const("🏠 Главное меню"),
-            id="general_menu",
-            state=UserMenuSG.menu,
-            mode=StartMode.RESET_STACK,
-            style=Style(style=ButtonStyle.PRIMARY),
-        ),
-        state=CatalogDeferredPublishSG.start,
-        getter=getter_urgent_catalog,
-        disable_web_page_preview=True,
-    ),
-    Window(
-        Const("📋 <b>Список объявлений:</b>\n"),
-        ScrollingGroup(
-            Select(
-                Format("{item[0]}"),
-                id="catalog_select",
-                item_id_getter=lambda x: x[1],
-                items="catalog_buttons",
-                on_click=on_catalog_item_selected,
-            ),
-            id="catalog_list_scroll",
-            width=1,
-            height=10,
-            hide_on_single_page=True,
-        ),
-        Const("😔 Список пуст.", when=~F["has_ads"]),
         Back(
             Const("⬅️ Назад"),
             style=Style(style=ButtonStyle.PRIMARY),
         ),
-        state=CatalogDeferredPublishSG.list_view,
-        getter=getter_catalog_list,
+        state=CatalogDeferredPublishSG.details,
+        getter=getter_urgent_catalog,
+        disable_web_page_preview=True,
     ),
 )

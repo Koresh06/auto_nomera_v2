@@ -1,3 +1,7 @@
+import logging
+
+from aiogram.exceptions import TelegramForbiddenError
+
 from src.application.mediator import Mediator
 from src.application.services.notification.notification_service import (
     NotificationService,
@@ -16,6 +20,9 @@ from src.application.use_cases.publication_service.unpin_message import (
     UnpinMessageRequest,
 )
 from src.domain.enums.miling import MailingType
+
+
+logger = logging.getLogger(__name__)
 
 
 def register_taskiq_tasks(broker, *, container):
@@ -76,13 +83,20 @@ def register_taskiq_tasks(broker, *, container):
     async def send_ad_draft_reminder(tg_id: int) -> None:
         async with container() as request_container:
             notifications = await request_container.get(NotificationService)
-            await notifications.notify_user(
-                tg_id=tg_id,
-                text=(
-                    "⚠️ Напоминаем: вы начали добавлять объявление, но не опубликовали его.\n"
-                    "Если хотите продолжить — отправьте команду /start 🙂"
-                ),
-            )
+            try:
+                await notifications.notify_user(
+                    tg_id=tg_id,
+                    text=(
+                        "⚠️ Напоминаем: вы начали добавлять объявление, но не опубликовали его.\n"
+                        "Если хотите продолжить — отправьте команду /start 🙂"
+                    ),
+                )
+            except TelegramForbiddenError:
+                logger.info(
+                    "[send_ad_draft_reminder] user blocked the bot, tg_id=%s", tg_id
+                )
+            except Exception:
+                logger.exception("[send_ad_draft_reminder] failed for tg_id=%s", tg_id)
 
     return {
         "publish_publication": publish_publication,
