@@ -129,7 +129,7 @@ REGION_SETTINGS = {
     "days_range": 7,
     "system_paid_slots_count": 3,
     "publication_limit_enabled": True,
-    "paid_slot_price": "200",
+    "paid_slot_price": "199",
 }
 
 
