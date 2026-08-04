@@ -1,11 +1,12 @@
 import logging
 import traceback
+import sentry_sdk
 from aiogram import Router
 from aiogram.types import ErrorEvent
 from aiogram.types import Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput
-import sentry_sdk
+from aiogram_dialog.api.exceptions import UnknownIntent
 
 
 async def on_input_error(
@@ -57,6 +58,28 @@ async def handle_error(
 ) -> None:
     exc = event.exception
     update = event.update
+
+    if isinstance(exc, UnknownIntent):
+        try:
+            if update.callback_query:
+                await update.callback_query.answer(
+                    "⚠️ Это меню устарело. Отправьте /start, чтобы начать заново.",
+                    show_alert=True,
+                )
+            elif update.message:
+                await update.message.answer(
+                    "⚠️ Это меню устарело. Отправьте /start, чтобы начать заново."
+                )
+        except Exception:
+            logger.exception("[UnknownIntent] не удалось ответить пользователю")
+
+        logger.info(
+            "[UnknownIntent] stale dialog interaction user_id=%s",
+            update.callback_query.from_user.id
+            if update.callback_query
+            else (update.message.from_user.id if update.message else None),
+        )
+        return
 
     user_id = None
     chat_id = None
