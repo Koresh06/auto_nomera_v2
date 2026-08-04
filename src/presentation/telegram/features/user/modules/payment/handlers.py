@@ -86,8 +86,6 @@ async def _create_payment_and_route(
         await dialog_manager.switch_to(PaymentSG.waiting_phone)
         return
 
-    dialog_manager.dialog_data["amount"] = str(amount)
-
     if method == PaymentMethod.TELEGRAM_STARS:
         dialog_manager.dialog_data["invoice_link"] = payment.meta.get("invoice_link")
     elif method == PaymentMethod.MANUAL_CARD:
