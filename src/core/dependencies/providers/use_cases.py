@@ -986,11 +986,13 @@ class UseCasesProvider(Provider):
         user_repo: UserRepository,
         region_repo: RegionRepository,
         notification_service: NotificationService,
+        task_queue: TaskQueue,
     ) -> ExecuteMailingUseCase:
         return ExecuteMailingUseCase(
             user_repo=user_repo,
             region_repo=region_repo,
             notification_service=notification_service,
+            task_queue=task_queue,
         )
 
     @provide
