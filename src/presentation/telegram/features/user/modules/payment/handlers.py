@@ -51,6 +51,8 @@ async def _create_payment_and_route(
     amount = Decimal(start_data["amount"])
     tg_id = callback.from_user.id
 
+    dialog_manager.dialog_data["amount"] = str(amount)
+
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
 
     meta = {
