@@ -6,7 +6,10 @@ from src.infrastructure.broker.middleware.sentry import SentryMiddleware
 
 result_backend = RedisAsyncResultBackend(redis_url=settings.db.redis.taskiq_url)
 broker = (
-    RedisStreamBroker(url=settings.db.redis.taskiq_url)
+    RedisStreamBroker(
+        url=settings.db.redis.taskiq_url,
+        idle_timeout=1800000,  # 30 минут
+    )
     .with_result_backend(result_backend)
     .with_middlewares(SentryMiddleware())
 )

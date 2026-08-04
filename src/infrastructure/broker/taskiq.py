@@ -21,7 +21,6 @@ from src.application.use_cases.publication_service.unpin_message import (
 )
 from src.domain.enums.miling import MailingType
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -78,6 +77,34 @@ def register_taskiq_tasks(broker, *, container):
                     region_id=region_id,
                 )
             )
+
+    @broker.task(name="execute_mailing_batch")
+    async def execute_mailing_batch(
+        chat_ids: list[int],
+        from_chat_id: int,
+        message_id: int,
+        batch_num: int,
+        total_batches: int,
+        mail_type_label: str,
+    ) -> None:
+        async with container() as request_container:
+            notifications = await request_container.get(NotificationService)
+            result = await notifications.broadcast_copy(
+                chat_ids=chat_ids,
+                from_chat_id=from_chat_id,
+                message_id=message_id,
+            )
+            logger.info(
+                f"[MailingBatch {batch_num}/{total_batches}] "
+                f"success={result['success']} fail={result['fail']}"
+            )
+            if batch_num == total_batches:
+                await notifications.notify_admins(
+                    text=(
+                        f"✅ Рассылка <b>{mail_type_label}</b> завершена "
+                        f"({total_batches} батчей отправлено)"
+                    ),
+                )
 
     @broker.task(name="send_ad_draft_reminder")
     async def send_ad_draft_reminder(tg_id: int) -> None:
