@@ -124,35 +124,36 @@ async def getter_finish(
 ) -> dict:
     data = dialog_manager.dialog_data
     start_data = dialog_manager.start_data or {}
-
     pub_id: int = data.get("publication_id") or start_data.get("publication_id")
     data["publication_id"] = pub_id
-
     pub: PublicationDTO = await mediator.handle(
         GetPublicationByIdRequest(publication_id=pub_id)
     )
     ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=pub.ad_id))
     region: RegionDTO = await mediator.handle(IdRegionRequest(ad.region_id))
-
     slot = pub.slot
-
     active_services = [
         s
         for s in pub.services
         if s.status in (PublicationServiceStatus.ACTIVE, PublicationServiceStatus.USED)
     ]
-
     if active_services:
+        definitions: list[ServiceDefinitionDTO] = await mediator.handle(
+            GetAllServicesRequest()
+        )
+        title_by_type = {d.type: d.title for d in definitions}
         selected_services = ",\n".join(
-            PublicationServiceType(s.type).display for s in active_services
+            title_by_type.get(
+                PublicationServiceType(s.type),
+                PublicationServiceType(s.type).display,
+            )
+            for s in active_services
         )
     else:
         selected_services = "Нет"
-
     is_auto_pub = any(
         s.type == PublicationServiceType.PRIORITY_PUBLISH for s in active_services
     )
-
     media_file_id = data.get("media_file_id") or (
         ad.content.image_file_id if ad.content else None
     )

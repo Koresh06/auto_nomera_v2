@@ -76,9 +76,30 @@ async def getter_current_services(
         for d in active_defs
     ]
 
+    title_by_type = {d.type: d.title for d in definitions}
+
     return {
         "services": services,
         "user": user,
+        "pre_publication_name": title_by_type.get(
+            PublicationServiceType.PRE_PUBLICATION,
+            PublicationServiceType.PRE_PUBLICATION.display,
+        ),
+        "priority_name": title_by_type.get(
+            PublicationServiceType.PRIORITY_PUBLISH,
+            PublicationServiceType.PRIORITY_PUBLISH.display,
+        ),
+        "autopublish_name": title_by_type.get(
+            PublicationServiceType.AUTOPUBLISH,
+            PublicationServiceType.AUTOPUBLISH.display,
+        ),
+        "pin_name": title_by_type.get(
+            PublicationServiceType.PIN, PublicationServiceType.PIN.display
+        ),
+        "highlight_name": title_by_type.get(
+            PublicationServiceType.HIGHLIGHT,
+            PublicationServiceType.HIGHLIGHT.display,
+        ),
     }
 
 
