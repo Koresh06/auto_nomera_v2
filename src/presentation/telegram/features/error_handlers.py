@@ -6,7 +6,7 @@ from aiogram.types import ErrorEvent
 from aiogram.types import Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput
-from aiogram_dialog.api.exceptions import UnknownIntent
+from aiogram_dialog.api.exceptions import UnknownIntent, OutdatedIntent
 
 
 async def on_input_error(
@@ -59,7 +59,7 @@ async def handle_error(
     exc = event.exception
     update = event.update
 
-    if isinstance(exc, UnknownIntent):
+    if isinstance(exc, (UnknownIntent, OutdatedIntent)):
         try:
             if update.callback_query:
                 await update.callback_query.answer(

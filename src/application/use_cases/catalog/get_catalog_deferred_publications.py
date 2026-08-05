@@ -89,11 +89,9 @@ class GetCatalogDeferredPublicationsUseCase(
         all_items.sort(key=lambda x: x.ad.created_at, reverse=True)
 
         logger.info(
-            "[GetCatalog:done] region_id=%s urgent=%s pre_pub=%s urgent_plates=%s pre_plates=%s",
+            "[GetCatalog:done] region_id=%s urgent=%s pre_pub=%s",
             command.region_id,
             len(urgent_items),
             len(pre_pub_items),
-            [ad.content.plate_number for ad in urgent_ads if ad.content],
-            [p.publish_at_utc for p in pre_publications],
         )
         return all_items
