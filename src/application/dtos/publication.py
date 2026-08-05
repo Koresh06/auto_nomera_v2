@@ -20,6 +20,7 @@ class PublicationDTO:
     published_at_utc: datetime | None
     scheduler_job_id: str | None
     is_child: bool
+    notify_scheduled: bool
     services: list[PublicationServiceDTO]
     plate_number: str | None = None
     shop_name: str | None = None

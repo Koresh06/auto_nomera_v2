@@ -77,6 +77,9 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
     is_child: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default="false", nullable=False
     )
+    notify_scheduled: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False
+    )
 
     ad: Mapped["AdModel"] = relationship(
         "AdModel",
@@ -133,6 +136,7 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
             published_at_utc=self.published_at_utc,
             scheduler_job_id=self.scheduler_job_id,
             is_child=self.is_child,
+            notify_scheduled=self.notify_scheduled,
             services=services,
         )
 
@@ -149,6 +153,7 @@ class PublicationModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
         model.scheduler_job_id = pub.scheduler_job_id
         model.channel_message_id = pub.channel_message_id
         model.is_child = pub.is_child
+        model.notify_scheduled = pub.notify_scheduled
         model.published_at_utc = pub.published_at_utc
 
         # синхронизируем services

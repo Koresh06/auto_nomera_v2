@@ -17,21 +17,16 @@ class AutopublishStrategy:
         if service.params is None:
             service.mark_used()
             return
-
         days = service.params.get("days", 7)
-
         if publication.slot is not None:
             base_day = publication.slot.local_day
             base_time = publication.slot.local_time
         else:
-            # публикация без обычного слота (например, "вне очереди") —
-            # берём реальное время публикации как точку отсчёта серии
             local_dt = (
                 publication.published_at_utc or datetime.now(timezone.utc)
             ).astimezone(ZoneInfo(context.region.timezone.value))
             base_day = local_dt.date()
             base_time = local_dt.time()
-
         for i in range(1, days):
             next_slot = SlotKey(
                 region_id=publication.region_id,
@@ -53,5 +48,17 @@ class AutopublishStrategy:
                 publication_id=created.id,
                 run_at_utc=publish_at_utc,
             )
+
+            notify_at = publish_at_utc - timedelta(
+                hours=context.pre_publication_window_hours
+            )
+            if notify_at > datetime.now(timezone.utc):
+                await context.task_queue.schedule(
+                    task_name="notify_pre_publication_users",
+                    args=(publication.ad_id,),
+                    run_at_utc=notify_at,
+                )
+                created.notify_scheduled = True
+                await context.publication_repo.save(created)
 
         service.mark_used()

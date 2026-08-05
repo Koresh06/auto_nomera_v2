@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from src.application.ports.tasks.task_queue import TaskQueue
 from src.core.config import AppSettings
+from src.domain.entities.publication import Publication
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
@@ -16,7 +17,6 @@ from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.region import RegionNotFoundException
 from src.infrastructure.database.transaction_manager.base import TransactionManager
-
 
 logger = logging.getLogger(__name__)
 
@@ -126,23 +126,28 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             f"{command.slot.local_time} user_id={command.user_id} ad_id={command.ad_id}"
         )
 
-        await self.transaction_manager.commit()
-
         await self.scheduler.schedule_publication(
             publication_id=publication.id,
             run_at_utc=publish_at_utc,
         )
 
         await self._schedule_pre_publication_notification(
-            ad_id=command.ad_id, publish_at_utc=publish_at_utc
+            ad_id=command.ad_id,
+            publish_at_utc=publish_at_utc,
+            publication=publication,
         )
+        await self.transaction_manager.commit()
 
         logger.info(
             f"[SelectSlot:done] pub_id={publication.id} status={publication.status}"
         )
 
     async def _schedule_pre_publication_notification(
-        self, *, ad_id: int, publish_at_utc: datetime
+        self,
+        *,
+        ad_id: int,
+        publish_at_utc: datetime,
+        publication: Publication,
     ) -> None:
         if self.settings.app.debug:
             notify_at = publish_at_utc - timedelta(minutes=1)
@@ -153,10 +158,7 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
 
         now = datetime.now(timezone.utc)
         if notify_at <= now:
-            logger.info(
-                f"[SelectSlot:notify_skip] ad_id={ad_id} "
-                f"publish_at_utc={publish_at_utc} слишком близко, уведомление не ставим"
-            )
+            logger.info(f"[SelectSlot:notify_skip] ad_id={ad_id} ...")
             return
 
         await self.task_queue.schedule(
@@ -164,6 +166,9 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             args=(ad_id,),
             run_at_utc=notify_at,
         )
+        publication.notify_scheduled = True
+        await self.publication_repo.save(publication)
+
         logger.info(
             f"[SelectSlot:notify_scheduled] ad_id={ad_id} notify_at={notify_at}"
         )

@@ -26,6 +26,7 @@ class Publication(Entity):
     published_at_utc: datetime | None = None
     scheduler_job_id: str | None = None
     is_child: bool = False
+    notify_scheduled: bool = False
     services: list[PublicationService] = field(default_factory=list)
 
     def schedule(self, *, slot: SlotKey, publish_at_utc: datetime) -> None:

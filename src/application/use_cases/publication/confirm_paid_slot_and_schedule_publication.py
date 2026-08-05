@@ -8,11 +8,11 @@ from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.tasks.task_queue import TaskQueue
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.core.config import AppSettings
+from src.domain.entities.publication import Publication
 from src.domain.enums.publication import PublicationStatus
 from src.domain.exceptions.publication import InvalidPublicationState
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.infrastructure.database.transaction_manager.base import TransactionManager
-
 
 logger = logging.getLogger(__name__)
 
@@ -71,14 +71,20 @@ class ConfirmPaidSlotAndSchedulePublicationUseCase(
             publication_id=publication.id,
             run_at_utc=publication.publish_at_utc,
         )
-        await self.transaction_manager.commit()
 
         await self._schedule_pre_publication_notification(
-            ad_id=command.ad_id, publish_at_utc=publication.publish_at_utc
+            ad_id=command.ad_id,
+            publish_at_utc=publication.publish_at_utc,
+            publication=publication,
         )
+        await self.transaction_manager.commit()
 
     async def _schedule_pre_publication_notification(
-        self, *, ad_id: int, publish_at_utc: datetime
+        self,
+        *,
+        ad_id: int,
+        publish_at_utc: datetime,
+        publication: Publication,
     ) -> None:
         if self.settings.app.debug:
             notify_at = publish_at_utc - timedelta(minutes=1)
@@ -89,10 +95,7 @@ class ConfirmPaidSlotAndSchedulePublicationUseCase(
 
         now = datetime.now(timezone.utc)
         if notify_at <= now:
-            logger.info(
-                f"[SelectSlot:notify_skip] ad_id={ad_id} "
-                f"publish_at_utc={publish_at_utc} слишком близко, уведомление не ставим"
-            )
+            logger.info(f"[SelectSlot:notify_skip] ad_id={ad_id} ...")
             return
 
         await self.task_queue.schedule(
@@ -100,6 +103,9 @@ class ConfirmPaidSlotAndSchedulePublicationUseCase(
             args=(ad_id,),
             run_at_utc=notify_at,
         )
+        publication.notify_scheduled = True
+        await self.publication_repo.save(publication)
+
         logger.info(
             f"[SelectSlot:notify_scheduled] ad_id={ad_id} notify_at={notify_at}"
         )

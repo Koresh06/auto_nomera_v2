@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.publication_service.image_processor import ImageProcessor
+from src.application.ports.tasks.task_queue import TaskQueue
 from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.domain.entities.ad import Ad
 from src.domain.entities.region import Region
@@ -20,4 +21,6 @@ class ServiceContext:
     image_processor: ImageProcessor
     tg_id: int
     caption: str
+    task_queue: TaskQueue
+    pre_publication_window_hours: int
     highlight_file_id: str | None = None
