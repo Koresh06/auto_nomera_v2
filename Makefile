@@ -23,7 +23,7 @@ deploy: ## Миграции + сборка + запуск
 
 .PHONY: up
 up: ## Поднять сервисы
-	$(COMPOSE) up -d --build
+	$(COMPOSE) up -d
 
 .PHONY: down
 down: ## Остановить сервисы
@@ -56,12 +56,12 @@ logs-worker: ## Логи воркера (taskiq)
 	$(COMPOSE) logs -f worker
 
 .PHONY: logs-web
-logs-web: ## Логи веб-сервиса (вебхуки ЮKassa)
-	$(COMPOSE) logs -f web
+logs-webhook: ## Логи веб-сервиса (вебхуки ЮKassa)
+	$(COMPOSE) logs -f webhook
 
 .PHONY: logs-errors
 logs-errors: ## Только ошибки за последний час, по всем сервисам
-	$(COMPOSE) logs --since 1h | grep -iE "error|exception|traceback"
+	$(COMPOSE) logs | grep -iE "error|exception|traceback"
 
 # ==================== БАЗА ДАННЫХ ====================
 
