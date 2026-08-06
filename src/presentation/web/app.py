@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from taskiq_redis import RedisStreamBroker
 
+from src.utils.logging import setup_logging
 from src.core.observability.sentry import setup_sentry
 from src.core.dependencies.providers import make_base_providers
 from src.infrastructure.broker.taskiq import register_taskiq_tasks
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    setup_logging()
     setup_sentry(integrations=[FastApiIntegration()])
     app = FastAPI(lifespan=lifespan)
 

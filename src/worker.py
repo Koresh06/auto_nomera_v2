@@ -5,6 +5,7 @@ from dishka.integrations.aiogram import setup_dishka
 from taskiq import TaskiqEvents, TaskiqState
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
+from src.utils.logging import setup_logging
 from src.core.observability.sentry import setup_sentry
 from src.core.dependencies.providers import make_base_providers
 from src.infrastructure.broker.taskiq import register_taskiq_tasks
@@ -16,6 +17,7 @@ container = make_async_container(*make_base_providers())
 
 @broker.on_event(TaskiqEvents.WORKER_STARTUP)
 async def setup_worker(state: TaskiqState) -> None:
+    setup_logging()
     setup_sentry(integrations=[AsyncioIntegration()])
 
     dp: Dispatcher = await container.get(Dispatcher)
