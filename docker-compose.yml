@@ -20,8 +20,11 @@ services:
 
   redis:
     image: redis:7
+    command: redis-server --appendonly yes --save "900 1 300 10 60 100"
     container_name: auto_nomera_redis
     restart: always
+    volumes:
+      - redis_data:/data  
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -84,3 +87,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
