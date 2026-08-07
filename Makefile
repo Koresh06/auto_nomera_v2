@@ -125,6 +125,16 @@ tasks-summary: ## Сводка: сколько задач и записей БД
 	@$(COMPOSE) exec -T $(DB_SERVICE) psql -U $(DB_USER) -d $(DB_NAME) -tAc \
 		"SELECT count(*) FROM publications WHERE status='SCHEDULED' AND scheduler_job_id IS NULL"
 
+.PHONY: tz-drift
+tz-drift:
+	@$(COMPOSE) exec -T db psql -U my_user -d auto_db_2 -c "\
+	SELECT p.id, r.timezone, p.slot_day, p.slot_time, p.publish_at_utc, \
+	       ((p.slot_day + p.slot_time) AT TIME ZONE r.timezone) AS expected_utc \
+	FROM publications p JOIN regions r ON r.id = p.region_id \
+	WHERE p.status = 'SCHEDULED' AND p.slot_day IS NOT NULL \
+	  AND p.publish_at_utc <> ((p.slot_day + p.slot_time) AT TIME ZONE r.timezone) \
+	ORDER BY p.publish_at_utc;"
+
 # ==================== МОНИТОРИНГ ХОСТИНГА ====================
 
 .PHONY: top

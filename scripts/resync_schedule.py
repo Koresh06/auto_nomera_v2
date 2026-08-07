@@ -34,6 +34,7 @@ import os
 import re
 import sys
 from datetime import datetime, time, timezone
+from zoneinfo import ZoneInfo
 
 import redis.asyncio as aioredis
 from sqlalchemy import text as sa_text
@@ -230,30 +231,38 @@ class Resyncer:
         if info:
             _, slot_day, slot_time = info
 
-        # регион берём у нового объявления (надёжнее)
+        # регион + таймзона у нового объявления (надёжнее)
         region_row = await self.dst.execute(
-            sa_text("SELECT region_id FROM ads WHERE id = :id"),
+            sa_text(
+                "SELECT a.region_id, r.timezone "
+                "FROM ads a JOIN regions r ON r.id = a.region_id "
+                "WHERE a.id = :id"
+            ),
             {"id": new_ad_id},
         )
-        region_id = region_row.scalar_one()
+        region_id, region_tz = region_row.one()
 
         slot_day = slot_time = None
         if info:
             _, slot_day, slot_time = info
-            # slot = SlotKey(
-            #     region_id=region_id,
-            #     local_day=slot_day,
-            #     local_time=slot_time,
-            # )
 
-        # дедупликация: если для этого объявления на это же время (±1 минута)
-        # уже есть publication (создана ETL'ом из PUBLISHED, либо предыдущим
-        # запуском resync) — не создаём ещё одну, старый Redis-job считаем хвостом
-        key_time = run_at.replace(second=0, microsecond=0)
+        # publish_at_utc считаем ЧЕСТНО из локального слота в таймзоне региона.
+        # run_at из старого Redis — МСК-based (старый бот хранил всё по Москве),
+        # для немосковских регионов он сдвинут на разницу с Москвой.
+        if slot_day is not None and slot_time is not None:
+            local = datetime.combine(slot_day, slot_time, tzinfo=ZoneInfo(region_tz))
+            publish_at_utc = local.astimezone(timezone.utc)
+        else:
+            # слот неизвестен (не должно случаться для scheduled-постов) — fallback
+            publish_at_utc = run_at
+
+        # дедупликация по корректному времени
+        key_time = publish_at_utc.replace(second=0, microsecond=0)
         if (new_ad_id, key_time) in self.existing_pubs:
             self.add("skipped_duplicate")
             self.warn(
-                f"ad {new_ad_id}: publication на {run_at} уже существует, job пропущен"
+                f"ad {new_ad_id}: publication на {publish_at_utc} уже существует, "
+                f"job пропущен"
             )
             return
 
@@ -266,7 +275,7 @@ class Resyncer:
             status=PublicationStatus.SCHEDULED,
             slot_day=slot_day,
             slot_time=slot_time,
-            publish_at_utc=run_at,
+            publish_at_utc=publish_at_utc,
             is_child=is_child,
             created_at=datetime.now(timezone.utc),
         )
@@ -281,7 +290,7 @@ class Resyncer:
         job_id = await self.queue.schedule(
             task_name="publish_publication",
             args=(model.id,),
-            run_at_utc=run_at,
+            run_at_utc=publish_at_utc,
         )
         if job_id:
             await self.dst.execute(
