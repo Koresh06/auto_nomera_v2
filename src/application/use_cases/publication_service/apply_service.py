@@ -10,9 +10,11 @@ from src.application.ports.publication.publication_repo import PublicationReposi
 from src.application.ports.publication.scheduler import Scheduler
 from src.application.ports.publication_service.image_processor import ImageProcessor
 from src.application.ports.region.region_repo import RegionRepository
+from src.application.ports.tasks.task_queue import TaskQueue
 from src.application.ports.telegram.telegram_publisher import TelegramPublisher
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.core.config import AppSettings
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import (
     PublicationServiceStatus,
@@ -45,6 +47,8 @@ class ApplyServiceToPublishedUseCase(UseCase[ApplyServiceToPublishedRequest, Non
     image_processor: ImageProcessor
     renderer: AdTextRenderer
     scheduler: Scheduler
+    task_queue: TaskQueue
+    settings: AppSettings
     time_resolver: PublishTimeResolver
     transaction_manager: TransactionManager
 
@@ -95,6 +99,8 @@ class ApplyServiceToPublishedUseCase(UseCase[ApplyServiceToPublishedRequest, Non
             time_resolver=self.time_resolver,
             tg_id=user.tg_id,
             caption=text,
+            task_queue=self.task_queue,
+            pre_publication_window_hours=self.settings.app.pre_publication_window_hours,
         )
 
         strategy = STRATEGIES.get(command.service_type)

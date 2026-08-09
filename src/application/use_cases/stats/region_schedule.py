@@ -41,7 +41,7 @@ class GetRegionScheduleUseCase(UseCase[GetRegionScheduleRequest, RegionScheduleD
         )
 
         by_date: dict[str, list[ScheduleSlotDTO]] = {}
-        for pub, plate, ad_type, username, tg_id, shop_name in rows:
+        for pub, plate, ad_type, username, tg_id, shop_name, is_paid in rows:
             display_plate = shop_name if ad_type == AdType.STORE else plate
             if pub.publish_at_utc is None:
                 continue
@@ -57,6 +57,7 @@ class GetRegionScheduleUseCase(UseCase[GetRegionScheduleRequest, RegionScheduleD
                     status=pub.status,
                     owner_tg_id=tg_id,
                     owner_username=username,
+                    is_paid=is_paid,
                 )
             )
 

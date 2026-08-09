@@ -13,6 +13,7 @@ class ScheduleSlotDTO:
     status: PublicationStatus
     owner_tg_id: int
     owner_username: str | None
+    is_paid: bool = False
 
     @property
     def type_emoji(self) -> str:
@@ -36,6 +37,10 @@ class ScheduleSlotDTO:
         if self.owner_username:
             return f'<a href="https://t.me/{self.owner_username}">👤</a>'
         return f'<a href="tg://user?id={self.owner_tg_id}">👤</a>'
+
+    @property
+    def paid_emoji(self) -> str:
+        return "💰" if self.is_paid else ""
 
 
 @dataclass(frozen=True, slots=True)

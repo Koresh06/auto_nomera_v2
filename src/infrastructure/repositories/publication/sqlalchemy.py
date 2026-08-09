@@ -22,6 +22,7 @@ from src.infrastructure.database.models.publication_service import (
     PublicationServiceModel,
 )
 from src.infrastructure.database.models.region import RegionModel
+from src.infrastructure.database.models.slot import SlotConvertedModel
 from src.infrastructure.database.models.user import UserModel
 
 
@@ -279,7 +280,15 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         from_utc: datetime,
         to_utc: datetime,
     ) -> list[
-        tuple[Publication, str | None, str | None, str | None, int | None, str | None]
+        tuple[
+            Publication,
+            str | None,
+            str | None,
+            str | None,
+            int | None,
+            str | None,
+            bool,
+        ]
     ]:
         rows = (
             await self._session.execute(
@@ -290,10 +299,19 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                     AdModel.username,
                     UserModel.tg_id,
                     AdModel.shop_name,
+                    SlotConvertedModel.id.isnot(None).label("is_paid"),
                 )
                 .select_from(PublicationModel)
                 .join(AdModel, PublicationModel.ad_id == AdModel.id)
                 .join(UserModel, AdModel.user_id == UserModel.id)
+                .outerjoin(
+                    SlotConvertedModel,
+                    and_(
+                        SlotConvertedModel.region_id == PublicationModel.region_id,
+                        SlotConvertedModel.slot_day == PublicationModel.slot_day,
+                        SlotConvertedModel.slot_time == PublicationModel.slot_time,
+                    ),
+                )
                 .where(
                     PublicationModel.region_id == region_id,
                     PublicationModel.publish_at_utc >= from_utc,
@@ -319,6 +337,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                 r.username,
                 r.tg_id,
                 r.shop_name,
+                r.is_paid,
             )
             for r in rows
         ]

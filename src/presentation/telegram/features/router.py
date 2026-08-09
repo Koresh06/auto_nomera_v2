@@ -7,6 +7,6 @@ fallback_router = Router()
 @fallback_router.callback_query()
 async def on_unhandled_callback(callback: CallbackQuery) -> None:
     await callback.answer(
-        "⚠️ Это меню устарело. Отправьте /start, чтобы начать заново.",
+        "⚠️ Произошла ошибка. Попробуйте ещё раз или вернитесь в главное меню, или отправьте боту команду: /start",
         show_alert=True,
     )

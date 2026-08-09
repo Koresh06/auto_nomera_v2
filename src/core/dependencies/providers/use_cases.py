@@ -738,6 +738,8 @@ class UseCasesProvider(Provider):
         image_processor: ImageProcessor,
         renderer: AdTextRenderer,
         scheduler: Scheduler,
+        task_queue: TaskQueue,
+        settings: AppSettings,
         time_resolver: PublishTimeResolver,
         transaction_manager: TransactionManager,
     ) -> ApplyServiceToPublishedUseCase:
@@ -750,6 +752,8 @@ class UseCasesProvider(Provider):
             image_processor=image_processor,
             renderer=renderer,
             scheduler=scheduler,
+            task_queue=task_queue,
+            settings=settings,
             time_resolver=time_resolver,
             transaction_manager=transaction_manager,
         )

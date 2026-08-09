@@ -17,16 +17,28 @@ class AutopublishStrategy:
         if service.params is None:
             service.mark_used()
             return
+
         days = service.params.get("days", 7)
+
+        region_tz = ZoneInfo(context.region.timezone.value)
+        now_utc = datetime.now(timezone.utc)
+        today_local = now_utc.astimezone(region_tz).date()
+
+        # база отсчёта серии
         if publication.slot is not None:
             base_day = publication.slot.local_day
             base_time = publication.slot.local_time
         else:
-            local_dt = (
-                publication.published_at_utc or datetime.now(timezone.utc)
-            ).astimezone(ZoneInfo(context.region.timezone.value))
+            local_dt = (publication.published_at_utc or now_utc).astimezone(region_tz)
             base_day = local_dt.date()
             base_time = local_dt.time()
+
+        # Услугу могли докупить к СТАРОЙ публикации (слот родителя в прошлом).
+        # Тогда серия должна идти от сегодняшнего дня вперёд, а не от прошедшей
+        # даты родителя — иначе все слоты окажутся в прошлом и опубликуются разом.
+        if base_day < today_local:
+            base_day = today_local
+
         for i in range(1, days):
             next_slot = SlotKey(
                 region_id=publication.region_id,
@@ -37,6 +49,12 @@ class AutopublishStrategy:
                 tz=context.region.timezone,
                 slot=next_slot,
             )
+
+            # Страховка: никогда не создаём публикацию с прошедшим временем
+            # (иначе taskiq выполнит её немедленно — залп постов вне слота).
+            if publish_at_utc <= now_utc:
+                continue
+
             new_pub = Publication(
                 ad_id=publication.ad_id,
                 region_id=publication.region_id,
@@ -44,6 +62,7 @@ class AutopublishStrategy:
             )
             new_pub.schedule(slot=next_slot, publish_at_utc=publish_at_utc)
             created = await context.publication_repo.create(new_pub)
+
             await context.scheduler.schedule_publication(
                 publication_id=created.id,
                 run_at_utc=publish_at_utc,
@@ -52,7 +71,7 @@ class AutopublishStrategy:
             notify_at = publish_at_utc - timedelta(
                 hours=context.pre_publication_window_hours
             )
-            if notify_at > datetime.now(timezone.utc):
+            if notify_at > now_utc:
                 await context.task_queue.schedule(
                     task_name="notify_pre_publication_users",
                     args=(publication.ad_id,),

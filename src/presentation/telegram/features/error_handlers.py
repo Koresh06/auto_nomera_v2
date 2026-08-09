@@ -63,12 +63,12 @@ async def handle_error(
         try:
             if update.callback_query:
                 await update.callback_query.answer(
-                    "⚠️ Это меню устарело. Отправьте /start, чтобы начать заново.",
+                    "⚠️ Произошла ошибка. Попробуйте ещё раз или вернитесь в главное меню, или отправьте боту команду: /start",
                     show_alert=True,
                 )
             elif update.message:
                 await update.message.answer(
-                    "⚠️ Это меню устарело. Отправьте /start, чтобы начать заново."
+                    "⚠️ Произошла ошибка. Попробуйте ещё раз или вернитесь в главное меню, или отправьте боту команду: /start"
                 )
         except Exception:
             logger.exception("[UnknownIntent] не удалось ответить пользователю")

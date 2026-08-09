@@ -20,10 +20,10 @@ class PublicationDTO:
     published_at_utc: datetime | None
     scheduler_job_id: str | None
     is_child: bool
-    notify_scheduled: bool
     services: list[PublicationServiceDTO]
     plate_number: str | None = None
     shop_name: str | None = None
+    notify_scheduled: bool = False
 
     @classmethod
     def from_entity(
@@ -48,6 +48,7 @@ class PublicationDTO:
             ],
             plate_number=plate_number,
             shop_name=shop_name,
+            notify_scheduled=publication.notify_scheduled,
         )
 
     @property

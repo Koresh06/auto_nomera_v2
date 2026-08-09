@@ -58,7 +58,15 @@ class PublicationRepository(Protocol):
         from_utc: datetime,
         to_utc: datetime,
     ) -> list[
-        tuple[Publication, str | None, str | None, str | None, int | None, str | None]
+        tuple[
+            Publication,
+            str | None,
+            str | None,
+            str | None,
+            int | None,
+            str | None,
+            bool,
+        ]
     ]: ...
 
     async def list_scheduled_for_catalog(

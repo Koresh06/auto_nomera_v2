@@ -95,7 +95,7 @@ async def getter_region_schedule(
 
     legend = (
         "🔴 Продажа | 🟢 Покупка | ⚡ Срочно | 🏪 Магазин\n"
-        "✅ Опубликовано | 🕓 В ожидании | 📤 Публикуется"
+        "✅ Опубликовано | 🕓 В ожидании | 📤 Публикуется | 💰 Платный слот"
     )
 
     blocks = []
@@ -103,7 +103,7 @@ async def getter_region_schedule(
         header = f"📅 <b>{day.date}</b> ({day.count} пост.)"
         if day.slots:
             lines = "\n".join(
-                f"  {s.time} | <code>{s.plate}</code> | {s.type_emoji} | {s.status_emoji} {s.owner_link}        "
+                f"{s.time} | <code>{s.plate}</code> | {s.type_emoji} | {s.status_emoji} {s.paid_emoji} {s.owner_link}"
                 for s in day.slots
             )
         else:
