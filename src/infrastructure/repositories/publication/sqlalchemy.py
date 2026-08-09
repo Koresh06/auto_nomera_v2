@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import and_, func, select
+from sqlalchemy import Date, Integer, Time, and_, cast, exists, func, select
 from sqlalchemy.orm import selectinload
 
 from src.application.dtos.publication_stats import (
@@ -14,15 +14,16 @@ from src.domain.entities.publication import Publication
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.domain.enums.ad import AdType
+from src.domain.enums.payment import PaymentPurpose, PaymentStatus
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceStatus
 from src.infrastructure.database.models import PublicationModel
 from src.infrastructure.database.models.ad import AdModel
+from src.infrastructure.database.models.payment import PaymentModel
 from src.infrastructure.database.models.publication_service import (
     PublicationServiceModel,
 )
 from src.infrastructure.database.models.region import RegionModel
-from src.infrastructure.database.models.slot import SlotConvertedModel
 from src.infrastructure.database.models.user import UserModel
 
 
@@ -290,6 +291,25 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
             bool,
         ]
     ]:
+        is_paid_slot = (
+            exists().where(
+                PaymentModel.purpose == PaymentPurpose.SLOT,
+                PaymentModel.status == PaymentStatus.PAID,
+                cast(PaymentModel.meta["return_data"]["ad_id"].astext, Integer)
+                == PublicationModel.ad_id,
+                cast(
+                    PaymentModel.meta["return_data"]["slot"]["slot_day"].astext,
+                    Date,
+                )
+                == PublicationModel.slot_day,
+                cast(
+                    PaymentModel.meta["return_data"]["slot"]["slot_time"].astext,
+                    Time,
+                )
+                == PublicationModel.slot_time,
+            )
+        ).label("is_paid")
+
         rows = (
             await self._session.execute(
                 select(
@@ -299,19 +319,11 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                     AdModel.username,
                     UserModel.tg_id,
                     AdModel.shop_name,
-                    SlotConvertedModel.id.isnot(None).label("is_paid"),
+                    is_paid_slot,
                 )
                 .select_from(PublicationModel)
                 .join(AdModel, PublicationModel.ad_id == AdModel.id)
                 .join(UserModel, AdModel.user_id == UserModel.id)
-                .outerjoin(
-                    SlotConvertedModel,
-                    and_(
-                        SlotConvertedModel.region_id == PublicationModel.region_id,
-                        SlotConvertedModel.slot_day == PublicationModel.slot_day,
-                        SlotConvertedModel.slot_time == PublicationModel.slot_time,
-                    ),
-                )
                 .where(
                     PublicationModel.region_id == region_id,
                     PublicationModel.publish_at_utc >= from_utc,
