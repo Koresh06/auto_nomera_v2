@@ -83,19 +83,6 @@ class ExecuteMailingUseCase(UseCase[ExecuteMailingRequest, None]):
             logger.exception(f"Mailing failed: {e}")
             await self._notify_admin_error(command, e)
 
-    async def _notify_admin_result(
-        self,
-        command: ExecuteMailingRequest,
-        result: dict,
-    ) -> None:
-        await self.notification_service.notify_admins(
-            text=(
-                f"✅ Рассылка <b>{command.mail_type.label()}</b> завершена\n"
-                f"📬 Успешно: <b>{result['success']}</b>\n"
-                f"❌ Ошибок: <b>{result['fail']}</b>"
-            ),
-        )
-
     async def _notify_admin_error(
         self,
         command: ExecuteMailingRequest,

@@ -91,6 +91,7 @@ def register_taskiq_tasks(broker, *, container):
     ) -> None:
         async with container() as request_container:
             notifications = await request_container.get(NotificationService)
+            redis = await request_container.get(Redis)
             result = await notifications.broadcast_copy(
                 chat_ids=chat_ids,
                 from_chat_id=from_chat_id,
@@ -102,7 +103,6 @@ def register_taskiq_tasks(broker, *, container):
                 f"failed={result['failed']}"
             )
 
-            redis = await request_container.get(Redis)
             key = f"mailing_result:{mailing_id}"
 
             await redis.hincrby(key, "success", result["success"])
