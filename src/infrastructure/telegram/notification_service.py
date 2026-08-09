@@ -168,7 +168,7 @@ class AiogramNotificationService(NotificationService):
         message_id: int,
         throttle_seconds: float = 0.05,
     ) -> dict:
-        success, fail = 0, 0
+        success, blocked, failed = 0, 0, 0
 
         for chat_id in chat_ids:
             try:
@@ -189,12 +189,19 @@ class AiogramNotificationService(NotificationService):
                         message_id=message_id,
                     )
                     success += 1
+                except TelegramForbiddenError:
+                    blocked += 1
                 except Exception:
-                    fail += 1
+                    failed += 1
             except TelegramForbiddenError:
-                fail += 1
+                blocked += 1
             except Exception as e:
                 logger.error(f"broadcast_copy to {chat_id} failed: {e}")
-                fail += 1
+                failed += 1
 
-        return {"success": success, "fail": fail}
+        return {
+            "success": success,
+            "blocked": blocked,
+            "failed": failed,
+            "fail": blocked + failed,
+        }

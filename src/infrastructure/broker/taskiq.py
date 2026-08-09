@@ -1,6 +1,7 @@
 import logging
 
 from aiogram.exceptions import TelegramForbiddenError
+from redis.asyncio import Redis
 
 from src.application.mediator import Mediator
 from src.application.services.notification.notification_service import (
@@ -86,6 +87,7 @@ def register_taskiq_tasks(broker, *, container):
         batch_num: int,
         total_batches: int,
         mail_type_label: str,
+        mailing_id: str,
     ) -> None:
         async with container() as request_container:
             notifications = await request_container.get(NotificationService)
@@ -95,16 +97,46 @@ def register_taskiq_tasks(broker, *, container):
                 message_id=message_id,
             )
             logger.info(
-                f"[MailingBatch {batch_num}/{total_batches}] "
-                f"success={result['success']} fail={result['fail']}"
+                f"[MailingBatch {batch_num}/{total_batches}] mailing_id={mailing_id} "
+                f"success={result['success']} blocked={result['blocked']} "
+                f"failed={result['failed']}"
             )
-            if batch_num == total_batches:
+
+            redis = await request_container.get(Redis)
+            key = f"mailing_result:{mailing_id}"
+
+            await redis.hincrby(key, "success", result["success"])
+            await redis.hincrby(key, "blocked", result["blocked"])
+            await redis.hincrby(key, "failed", result["failed"])
+            done = await redis.hincrby(key, "done_batches", 1)
+            await redis.expire(key, 3600)
+
+            if done >= total_batches:
+                raw = await redis.hgetall(key)
+
+                def _get(field: str) -> int:
+                    val = raw.get(field)
+                    if val is None:
+                        val = raw.get(field.encode())
+                    if val is None:
+                        return 0
+                    return int(val)
+
+                success = _get("success")
+                blocked = _get("blocked")
+                failed = _get("failed")
+                total = success + blocked + failed
+
                 await notifications.notify_admins(
                     text=(
-                        f"✅ Рассылка <b>{mail_type_label}</b> завершена "
-                        f"({total_batches} батчей отправлено)"
+                        f"✅ Рассылка <b>{mail_type_label}</b> завершена\n\n"
+                        f"📬 Доставлено: <b>{success}</b>\n"
+                        f"🚫 Заблокировали бота: <b>{blocked}</b>\n"
+                        f"❌ Другие ошибки: <b>{failed}</b>\n"
+                        f"👥 Всего: <b>{total}</b>"
                     ),
                 )
+                await redis.delete(key)
 
     @broker.task(name="send_ad_draft_reminder")
     async def send_ad_draft_reminder(tg_id: int) -> None:

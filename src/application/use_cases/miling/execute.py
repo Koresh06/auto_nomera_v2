@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+import uuid
 
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.tasks.task_queue import TaskQueue
@@ -57,6 +58,7 @@ class ExecuteMailingUseCase(UseCase[ExecuteMailingRequest, None]):
                 for i in range(0, len(chat_ids), BATCH_SIZE)
             ]
             total_batches = len(batches)
+            mailing_id = uuid.uuid4().hex
 
             for idx, batch in enumerate(batches, start=1):
                 await self.task_queue.enqueue(
@@ -68,6 +70,7 @@ class ExecuteMailingUseCase(UseCase[ExecuteMailingRequest, None]):
                         idx,
                         total_batches,
                         command.mail_type.label(),
+                        mailing_id,
                     ),
                 )
 
