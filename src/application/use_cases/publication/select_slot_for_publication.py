@@ -131,6 +131,8 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             run_at_utc=publish_at_utc,
         )
 
+        publication = await self.publication_repo.get_by_id(publication.id)
+
         await self._schedule_pre_publication_notification(
             ad_id=command.ad_id,
             publish_at_utc=publish_at_utc,

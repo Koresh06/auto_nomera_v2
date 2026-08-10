@@ -33,9 +33,6 @@ class AutopublishStrategy:
             base_day = local_dt.date()
             base_time = local_dt.time()
 
-        # Услугу могли докупить к СТАРОЙ публикации (слот родителя в прошлом).
-        # Тогда серия должна идти от сегодняшнего дня вперёд, а не от прошедшей
-        # даты родителя — иначе все слоты окажутся в прошлом и опубликуются разом.
         if base_day < today_local:
             base_day = today_local
 
@@ -50,8 +47,6 @@ class AutopublishStrategy:
                 slot=next_slot,
             )
 
-            # Страховка: никогда не создаём публикацию с прошедшим временем
-            # (иначе taskiq выполнит её немедленно — залп постов вне слота).
             if publish_at_utc <= now_utc:
                 continue
 
@@ -67,6 +62,8 @@ class AutopublishStrategy:
                 publication_id=created.id,
                 run_at_utc=publish_at_utc,
             )
+
+            created = await context.publication_repo.get_by_id(created.id)
 
             notify_at = publish_at_utc - timedelta(
                 hours=context.pre_publication_window_hours

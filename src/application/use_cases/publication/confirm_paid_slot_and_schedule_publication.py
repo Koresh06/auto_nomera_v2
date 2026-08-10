@@ -72,6 +72,12 @@ class ConfirmPaidSlotAndSchedulePublicationUseCase(
             run_at_utc=publication.publish_at_utc,
         )
 
+        # schedule_publication commits its own transaction and sets scheduler_job_id
+        # via a separate entity instance. Reload so the entity below carries the
+        # freshly-written scheduler_job_id; otherwise the subsequent save() inside
+        # _schedule_pre_publication_notification overwrites scheduler_job_id to None.
+        publication = await self.publication_repo.get_by_id(publication.id)
+
         await self._schedule_pre_publication_notification(
             ad_id=command.ad_id,
             publish_at_utc=publication.publish_at_utc,
