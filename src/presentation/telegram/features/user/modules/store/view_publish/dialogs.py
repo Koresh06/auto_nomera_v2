@@ -1,6 +1,6 @@
 from aiogram import F
 from aiogram.enums.button_style import ButtonStyle
-from aiogram_dialog import Dialog, Window
+from aiogram_dialog import Dialog, StartMode, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import (
     Column,
@@ -161,6 +161,7 @@ store_view_publish_dialog = Dialog(
                 id="menu",
                 state=UserMenuSG.menu,
                 style=Style(style=ButtonStyle.PRIMARY),
+                mode=StartMode.RESET_STACK,
             ),
         ),
         state=StoreViewPublishSG.finish,

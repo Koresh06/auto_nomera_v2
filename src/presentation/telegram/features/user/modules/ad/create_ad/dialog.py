@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram.types import ContentType
 from aiogram.enums.button_style import ButtonStyle
-from aiogram_dialog import Dialog, Window
+from aiogram_dialog import Dialog, StartMode, Window
 from aiogram_dialog.widgets.text import Const, Format, Multi
 from aiogram_dialog.widgets.input import TextInput, MessageInput
 from aiogram_dialog.widgets.media import DynamicMedia
@@ -353,6 +353,7 @@ create_ad_dialog = Dialog(
                 id="menu",
                 state=UserMenuSG.menu,
                 style=Style(style=ButtonStyle.PRIMARY),
+                mode=StartMode.RESET_STACK,
             ),
         ),
         state=CreateAdSG.finish,
@@ -370,6 +371,7 @@ create_ad_dialog = Dialog(
             id="main_menu",
             state=UserMenuSG.menu,
             style=Style(style=ButtonStyle.PRIMARY),
+            mode=StartMode.RESET_STACK,
         ),
         state=CreateAdSG.urgent_done,
     ),

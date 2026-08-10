@@ -1,5 +1,5 @@
 from aiogram.enums import ButtonStyle
-from aiogram_dialog import Dialog, Window
+from aiogram_dialog import Dialog, StartMode, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, Start, Column, Back
@@ -96,6 +96,7 @@ store_add_items_dialog = Dialog(
                 id="menu",
                 state=UserMenuSG.menu,
                 style=Style(style=ButtonStyle.PRIMARY),
+                mode=StartMode.RESET_STACK,
             ),
         ),
         getter=add_items_getter,

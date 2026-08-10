@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 from aiogram_dialog import DialogManager
 
-from src.application.dtos.ad import AdDTO
 from src.core.config import settings
+from src.application.dtos.ad import AdDTO
 from src.domain.enums.ad import AdType
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.application.dtos.region import RegionDTO
@@ -21,14 +21,15 @@ from src.presentation.telegram.utils.build_media import build_media_attachment
 
 
 @inject
-async def getter_urgent_catalog(
+async def getter_catalog_list(
     dialog_manager: DialogManager,
     mediator: FromDishka[Mediator],
     **kwargs,
 ) -> dict:
     tg_id = dialog_manager.event.from_user.id
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
-    dialog_manager.dialog_data["region_id"] = user.region_id
+    region_id = user.region_id
+    dialog_manager.dialog_data["region_id"] = region_id
 
     has_subscription = (
         user.pre_publication_expires_at is not None
@@ -37,13 +38,53 @@ async def getter_urgent_catalog(
 
     if not has_subscription:
         return {
-            "has_subscription": False,
-            "has_ads": False,
-            "card": None,
-            "current_media": None,
-            "is_admin": tg_id in settings.telegram.admin_ids,
             "pre_publication_window_hours": settings.app.pre_publication_window_hours,
         }
+
+    scroll = dialog_manager.find("catalog_scroll")
+    current_page = await scroll.get_page() if scroll else 0
+
+    items: list[CatalogItem] = await mediator.handle(
+        GetCatalogDeferredPublicationsRequest(region_id=region_id)
+    )
+
+    buttons = []
+    for idx, item in enumerate(items):
+        ad = item.ad
+        prefix = "👉 " if idx == current_page else ""
+        marker = "🚨" if item.is_urgent else "🕐"
+
+        if ad.ad_type == AdType.STORE and ad.store_content:
+            sc = ad.store_content
+            label = f"{prefix}{marker} 🏦 {sc.shop_name} • {len(sc.items)} шт."
+        elif ad.content:
+            c = ad.content
+            label = (
+                f"{prefix}{marker} {c.plate_number} • "
+                f"{ad.ad_type.display} • {c.price.display}"
+            )
+        else:
+            continue
+
+        buttons.append((label, str(idx)))
+
+    return {
+        "catalog_buttons": buttons,
+        "has_ads": len(buttons) > 0,
+        "pre_publication_window_hours": settings.app.pre_publication_window_hours,
+        "has_subscription": has_subscription,
+    }
+
+
+@inject
+async def getter_urgent_catalog(
+    dialog_manager: DialogManager,
+    mediator: FromDishka[Mediator],
+    **kwargs,
+) -> dict:
+    tg_id = dialog_manager.event.from_user.id
+    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
+    dialog_manager.dialog_data["region_id"] = user.region_id
 
     region_dto: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
     region = region_dto.to_entity()
@@ -100,49 +141,4 @@ async def getter_urgent_catalog(
         "current_media": current_media,
         "card": card,
         "is_admin": tg_id in settings.telegram.admin_ids,
-        "pre_publication_window_hours": settings.app.pre_publication_window_hours,
-    }
-
-
-@inject
-async def getter_catalog_list(
-    dialog_manager: DialogManager,
-    mediator: FromDishka[Mediator],
-    **kwargs,
-) -> dict:
-    tg_id = dialog_manager.event.from_user.id
-    user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
-    region_id = user.region_id
-    dialog_manager.dialog_data["region_id"] = region_id
-
-    scroll = dialog_manager.find("catalog_scroll")
-    current_page = await scroll.get_page() if scroll else 0
-
-    items: list[CatalogItem] = await mediator.handle(
-        GetCatalogDeferredPublicationsRequest(region_id=region_id)
-    )
-
-    buttons = []
-    for idx, item in enumerate(items):
-        ad = item.ad
-        prefix = "👉 " if idx == current_page else ""
-        marker = "🚨" if item.is_urgent else "🕐"
-
-        if ad.ad_type == AdType.STORE and ad.store_content:
-            sc = ad.store_content
-            label = f"{prefix}{marker} 🏦 {sc.shop_name} • {len(sc.items)} шт."
-        elif ad.content:
-            c = ad.content
-            label = (
-                f"{prefix}{marker} {c.plate_number} • "
-                f"{ad.ad_type.display} • {c.price.display}"
-            )
-        else:
-            continue
-
-        buttons.append((label, str(idx)))
-
-    return {
-        "catalog_buttons": buttons,
-        "has_ads": len(buttons) > 0,
     }
