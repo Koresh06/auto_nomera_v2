@@ -329,6 +329,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                     PublicationModel.publish_at_utc >= from_utc,
                     PublicationModel.publish_at_utc < to_utc,
                     PublicationModel.is_child.is_(False),
+                    AdModel.ad_type != AdType.URGENT_BUYOUT,
                     PublicationModel.status.in_(
                         [
                             PublicationStatus.SCHEDULED,

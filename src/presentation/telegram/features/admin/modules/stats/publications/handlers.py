@@ -72,5 +72,5 @@ async def on_catalog_item_selected(
     idx = int(item_id)
     scroll = dialog_manager.find("catalog_scroll")
     if scroll:
-        await scroll.set_page(callback, idx, dialog_manager)
+        await scroll.set_page(idx)
     await dialog_manager.back()
