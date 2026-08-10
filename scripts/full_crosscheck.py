@@ -158,6 +158,35 @@ async def main() -> int:
                 f"и taskiq вот-вот/уже их исполнил (естественный дрейф)."
             )
 
+        # ---------- 5. Точечная проверка: старые pub без флага, но реально без notify в Redis ----------
+        redis_notify_ad_id_set = set(redis_notify_ad_ids.keys())
+        genuinely_missing = []
+        for r in rows:
+            if not r.publish_at_utc or r.publish_at_utc <= now:
+                continue
+            if r.notify_scheduled:
+                continue  # уже учтены как flagged_true
+            notify_at = r.publish_at_utc - timedelta(hours=window_hours)
+            if notify_at <= now:
+                continue  # окно уже прошло, notify и не должен был ставиться
+            if r.ad_id not in redis_notify_ad_id_set:
+                genuinely_missing.append((r.id, r.ad_id, notify_at))
+
+        print(
+            "\n=== Точечная проверка: реально пропущенные notify (не просто нехватка флага) ==="
+        )
+        if genuinely_missing:
+            print(
+                f"  [!] НАЙДЕНО {len(genuinely_missing)} публикаций без единой notify-задачи в Redis для их ad_id:"
+            )
+            for pid, ad_id, notify_at in genuinely_missing:
+                print(f"      pub_id={pid} ad_id={ad_id} notify_at={notify_at}")
+        else:
+            print(
+                "  OK: для всех публикаций с ещё не наступившим notify_at задача в Redis найдена "
+                "(даже если флаг notify_scheduled не проставлен — это старые записи до миграции)."
+            )
+
     finally:
         await redis.aclose()
         await container.close()
