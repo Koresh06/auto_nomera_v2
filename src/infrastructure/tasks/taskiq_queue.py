@@ -7,7 +7,6 @@ from taskiq_redis import RedisScheduleSource
 
 from src.application.ports.tasks.task_queue import TaskQueue
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -29,15 +28,19 @@ class TaskiqTaskQueue(TaskQueue):
         return getattr(job, "task_id", None)
 
     async def schedule(
-        self, *, task_name: str, args: tuple[Any, ...], run_at_utc: datetime
+        self,
+        *,
+        task_name: str,
+        args: tuple[Any, ...],
+        run_at_utc: datetime,
     ) -> str | None:
         task = self._get_task(task_name)
-        job = (
-            await task.kicker()
-            .with_schedule_id(str(uuid.uuid4()))
+        schedule_id = str(uuid.uuid4())
+        await (
+            task.kicker()
+            .with_schedule_id(schedule_id)
             .schedule_by_time(self._schedule_source, run_at_utc, *args)
         )
-        schedule_id = getattr(job, "schedule_id", None)
         return schedule_id
 
     async def cancel(self, *, job_id: str) -> None:
