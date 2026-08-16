@@ -14,6 +14,7 @@ class ScheduleSlotDTO:
     owner_tg_id: int
     owner_username: str | None
     is_paid: bool = False
+    is_child: bool = False
 
     @property
     def type_emoji(self) -> str:
@@ -41,6 +42,10 @@ class ScheduleSlotDTO:
     @property
     def paid_emoji(self) -> str:
         return "💰" if self.is_paid else ""
+
+    @property
+    def child_emoji(self) -> str:
+        return "🔁" if self.is_child else ""
 
 
 @dataclass(frozen=True, slots=True)

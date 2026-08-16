@@ -33,8 +33,11 @@ class InMemoryBookingRepo(SlotBookingRepository):
     async def is_booked(self, slot: SlotKey) -> bool:
         return slot in self._booked
 
-    async def book(self, slot: SlotKey, *, ad_id: int, user_id: int) -> None:
+    async def book(self, slot: SlotKey, *, ad_id: int, user_id: int) -> bool:
+        if slot in self._booked:
+            return False
         self._booked.add(slot)
+        return True
 
 
 class InMemoryConvertedRepo(SlotConvertedRepository):
@@ -44,8 +47,9 @@ class InMemoryConvertedRepo(SlotConvertedRepository):
     async def is_converted(self, slot: SlotKey) -> bool:
         return slot in self._converted
 
-    async def mark_converted(self, slot: SlotKey, *, user_id: int, ad_id: int) -> None:
+    async def mark_converted(self, slot: SlotKey, *, user_id: int, ad_id: int) -> bool:
         self._converted.add(slot)
+        return True
 
 
 @pytest.mark.asyncio

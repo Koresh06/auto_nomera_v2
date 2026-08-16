@@ -66,6 +66,7 @@ class PublicationRepository(Protocol):
             int | None,
             str | None,
             bool,
+            bool,
         ]
     ]: ...
 

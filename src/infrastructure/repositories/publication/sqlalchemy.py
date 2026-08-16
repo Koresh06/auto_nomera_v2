@@ -289,6 +289,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
             int | None,
             str | None,
             bool,
+            bool,
         ]
     ]:
         is_paid_slot = (
@@ -320,6 +321,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                     UserModel.tg_id,
                     AdModel.shop_name,
                     is_paid_slot,
+                    PublicationModel.is_child,
                 )
                 .select_from(PublicationModel)
                 .join(AdModel, PublicationModel.ad_id == AdModel.id)
@@ -328,7 +330,6 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                     PublicationModel.region_id == region_id,
                     PublicationModel.publish_at_utc >= from_utc,
                     PublicationModel.publish_at_utc < to_utc,
-                    PublicationModel.is_child.is_(False),
                     AdModel.ad_type != AdType.URGENT_BUYOUT,
                     PublicationModel.status.in_(
                         [
@@ -351,6 +352,7 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
                 r.tg_id,
                 r.shop_name,
                 r.is_paid,
+                r.is_child,
             )
             for r in rows
         ]

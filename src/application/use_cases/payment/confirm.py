@@ -194,11 +194,20 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                     local_day=date.fromisoformat(slot_dict["slot_day"]),
                     local_time=time.fromisoformat(slot_dict["slot_time"]),
                 )
-                await self.reservation_service.converted_repo.mark_converted(
-                    slot=slot,
-                    user_id=payment.user_id,
-                    ad_id=None,
+                converted = (
+                    await self.reservation_service.converted_repo.mark_converted(
+                        slot=slot,
+                        user_id=payment.user_id,
+                        ad_id=None,
+                    )
                 )
+                if not converted:
+                    logger.error(
+                        f"[ConfirmPayment:slot_conflict] payment_id={payment.id} "
+                        f"user_id={payment.user_id} slot={slot.local_day} {slot.local_time} "
+                        "already taken by another user after external payment was collected; "
+                        "needs manual review/refund"
+                    )
                 extra["slot_text"] = f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
                 logger.info(
                     f"[ConfirmPayment:slot_converted] user_id={payment.user_id} "

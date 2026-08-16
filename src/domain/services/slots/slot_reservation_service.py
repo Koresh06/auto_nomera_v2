@@ -115,7 +115,9 @@ class SlotReservationService:
                 raise SlotHoldOwnerMismatch()
 
         # фиксируем booking в БД
-        await self.booking_repo.book(slot, ad_id=ad_id, user_id=user_id)
+        booked = await self.booking_repo.book(slot, ad_id=ad_id, user_id=user_id)
+        if not booked:
+            raise SlotAlreadyBooked()
 
         # снимаем hold, если он есть (неважно чей, но лучше аккуратно — снимем только если совпадает)
         existing = await self.hold_store.get(slot)

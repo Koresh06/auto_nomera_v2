@@ -18,6 +18,10 @@ from src.application.use_cases.publication.finalize_and_schedule_existing_ad imp
 from src.application.use_cases.ad.cancel_ad_draft_reminder import (
     CancelAdDraftReminderRequest,
 )
+from src.domain.exceptions.slot_reservation import (
+    SlotAlreadyBooked,
+    SlotAlreadyConverted,
+)
 from .states import StoreViewPublishSG
 
 
@@ -61,14 +65,22 @@ async def on_confirm_publish(
         await dialog_manager.switch_to(StoreViewPublishSG.calendar)
         return
 
-    pub: PublicationDTO = await mediator.handle(
-        FinalizeAndScheduleExistingAdRequest(
-            ad_id=ad_id,
-            slot=slot,
-            user_id=user.id,
-            payment_confirmed=data.get("is_paid", False),
+    try:
+        pub: PublicationDTO = await mediator.handle(
+            FinalizeAndScheduleExistingAdRequest(
+                ad_id=ad_id,
+                slot=slot,
+                user_id=user.id,
+                payment_confirmed=data.get("is_paid", False),
+            )
         )
-    )
+    except (SlotAlreadyConverted, SlotAlreadyBooked):
+        await callback.answer(
+            "⛔ Этот слот только что заняли. Выберите другой.",
+            show_alert=True,
+        )
+        await dialog_manager.switch_to(StoreViewPublishSG.calendar)
+        return
     logger.info(f"[FinalizeAndScheduleExistingAd:done] pub_id={pub.id}")
 
     data["publication_id"] = pub.id

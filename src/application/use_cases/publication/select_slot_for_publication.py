@@ -16,6 +16,7 @@ from src.application.ports.publication.scheduler import Scheduler
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.region import RegionNotFoundException
+from src.domain.exceptions.slot_reservation import SlotAlreadyConverted
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
 logger = logging.getLogger(__name__)
@@ -113,14 +114,22 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             logger.info(f"[SelectSlot:awaiting_payment] pub_id={publication.id}")
             return
 
-        publication.schedule(slot=command.slot, publish_at_utc=publish_at_utc)
-        await self.publication_repo.save(publication)
-
-        await self.reservation_service.converted_repo.mark_converted(
+        converted = await self.reservation_service.converted_repo.mark_converted(
             slot=command.slot,
             user_id=command.user_id,
             ad_id=command.ad_id,
         )
+        if not converted:
+            logger.info(
+                f"[SelectSlot:conflict] pub_id={publication.id} "
+                f"slot={command.slot.local_day} {command.slot.local_time} "
+                f"user_id={command.user_id} already taken by someone else"
+            )
+            raise SlotAlreadyConverted()
+
+        publication.schedule(slot=command.slot, publish_at_utc=publish_at_utc)
+        await self.publication_repo.save(publication)
+
         logger.info(
             f"[SelectSlot:converted] slot={command.slot.local_day} "
             f"{command.slot.local_time} user_id={command.user_id} ad_id={command.ad_id}"

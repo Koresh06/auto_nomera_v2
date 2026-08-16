@@ -24,17 +24,23 @@ class SQLAlchemySlotBookingRepo(SlotBookingRepository):
         )
         return result.scalar_one_or_none() is not None
 
-    async def book(self, slot: SlotKey, *, ad_id: int, user_id: int) -> None:
-        model = SlotBookingModel(
-            region_id=slot.region_id,
-            slot_day=slot.local_day,
-            slot_time=slot.local_time,
-            ad_id=ad_id,
-            user_id=user_id,
+    async def book(self, slot: SlotKey, *, ad_id: int, user_id: int) -> bool:
+        stmt = (
+            insert(SlotBookingModel)
+            .values(
+                region_id=slot.region_id,
+                slot_day=slot.local_day,
+                slot_time=slot.local_time,
+                ad_id=ad_id,
+                user_id=user_id,
+            )
+            .on_conflict_do_nothing(
+                index_elements=["region_id", "slot_day", "slot_time"],
+            )
+            .returning(SlotBookingModel.id)
         )
-        self._session.add(model)
-        await self._session.flush()
-        await self._session.refresh(model)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none() is not None
 
     async def get_booked_set(self, slots: Iterable[SlotKey]) -> set[SlotKey]:
         slots_list = list(slots)
@@ -82,7 +88,7 @@ class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
         *,
         user_id: int,
         ad_id: int | None = None,
-    ) -> None:
+    ) -> bool:
         stmt = (
             insert(SlotConvertedModel)
             .values(
@@ -95,10 +101,12 @@ class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
             .on_conflict_do_update(
                 index_elements=["region_id", "slot_day", "slot_time"],
                 set_={"ad_id": ad_id, "user_id": user_id},
+                where=(SlotConvertedModel.user_id == user_id),
             )
+            .returning(SlotConvertedModel.id)
         )
-
-        await self._session.execute(stmt)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none() is not None
 
     async def unmark_converted(self, slot: SlotKey, user_id: int) -> None:
         await self._session.execute(

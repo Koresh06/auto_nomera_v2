@@ -6,6 +6,7 @@ from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.domain.exceptions.slot_reservation import SlotAlreadyConverted
 from src.domain.value_objects.slot_key import SlotKey
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
@@ -36,10 +37,20 @@ class ConfirmPaidSlotFromBalanceUseCase(
         user.charge(command.amount)
         await self.user_repo.save(user)
 
-        await self.converted_repo.mark_converted(
+        converted = await self.converted_repo.mark_converted(
             slot=command.slot,
             user_id=command.user_id,
         )
+        if not converted:
+            user.top_up(command.amount)
+            await self.user_repo.save(user)
+            await self.transaction_manager.commit()
+            logger.info(
+                f"[ConfirmPaidSlotFromBalance:conflict] user_id={command.user_id} "
+                f"slot={command.slot.local_day} {command.slot.local_time} "
+                f"amount refunded={command.amount}"
+            )
+            raise SlotAlreadyConverted()
 
         await self.transaction_manager.commit()
         logger.info(

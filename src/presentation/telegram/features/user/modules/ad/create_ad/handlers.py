@@ -41,6 +41,10 @@ from src.application.use_cases.publication.create_ad_publication import (
     CreateAndScheduleAdRequest,
 )
 from src.application.use_cases.user.update import UpdateUserRequest
+from src.domain.exceptions.slot_reservation import (
+    SlotAlreadyBooked,
+    SlotAlreadyConverted,
+)
 from src.presentation.telegram.features.user.modules.ad.create_ad.states import (
     CreateAdSG,
 )
@@ -306,14 +310,22 @@ async def on_confirm_ad(
     if data.get("from_existing_draft"):
         ad_id: int = data["ad_id"]
 
-        pub_dto: PublicationDTO = await mediator.handle(
-            FinalizeAndScheduleExistingAdRequest(
-                ad_id=ad_id,
-                slot=slot,
-                user_id=user.id,
-                payment_confirmed=data.get("is_paid", False),
+        try:
+            pub_dto: PublicationDTO = await mediator.handle(
+                FinalizeAndScheduleExistingAdRequest(
+                    ad_id=ad_id,
+                    slot=slot,
+                    user_id=user.id,
+                    payment_confirmed=data.get("is_paid", False),
+                )
             )
-        )
+        except (SlotAlreadyConverted, SlotAlreadyBooked):
+            await callback.answer(
+                "⛔ Этот слот только что заняли. Выберите другой.",
+                show_alert=True,
+            )
+            await dialog_manager.switch_to(CreateAdSG.calendar)
+            return
 
         data["publication_id"] = pub_dto.id
 
@@ -337,33 +349,41 @@ async def on_confirm_ad(
         await dialog_manager.switch_to(CreateAdSG.calendar)
         return
 
-    if data.get("reuse_ad"):
-        ad_id: int = data["existing_ad_id"]
-        pub: PublicationDTO = await mediator.handle(
-            ReuseAdAndScheduleRequest(
-                ad_id=ad_id,
-                slot=slot,
-                user_id=user.id,
+    try:
+        if data.get("reuse_ad"):
+            ad_id: int = data["existing_ad_id"]
+            pub: PublicationDTO = await mediator.handle(
+                ReuseAdAndScheduleRequest(
+                    ad_id=ad_id,
+                    slot=slot,
+                    user_id=user.id,
+                )
             )
-        )
-    else:
-        pub: PublicationDTO = await mediator.handle(
-            CreateAndScheduleAdRequest(
-                user_id=user.id,
-                region_id=region_id,
-                ad_type=ad_type,
-                plate=plate,
-                city=city,
-                price=price,
-                contacts=contacts,
-                image_file_id=(
-                    media.file_id.file_id if media and media.file_id else None
-                ),
-                slot=slot,
-                chat_id=tg_id,
-                payment_confirmed=data.get("is_paid", False),
+        else:
+            pub: PublicationDTO = await mediator.handle(
+                CreateAndScheduleAdRequest(
+                    user_id=user.id,
+                    region_id=region_id,
+                    ad_type=ad_type,
+                    plate=plate,
+                    city=city,
+                    price=price,
+                    contacts=contacts,
+                    image_file_id=(
+                        media.file_id.file_id if media and media.file_id else None
+                    ),
+                    slot=slot,
+                    chat_id=tg_id,
+                    payment_confirmed=data.get("is_paid", False),
+                )
             )
+    except (SlotAlreadyConverted, SlotAlreadyBooked):
+        await callback.answer(
+            "⛔ Этот слот только что заняли. Выберите другой.",
+            show_alert=True,
         )
+        await dialog_manager.switch_to(CreateAdSG.calendar)
+        return
 
     data["ad_id"] = pub.ad_id
     data["publication_id"] = pub.id
