@@ -1,5 +1,5 @@
 import logging
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram_dialog import DialogManager, StartMode
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
-@router.message(CommandStart())
+@router.message(CommandStart(), F.chat.type == "private")
 @inject
 async def process_start_command(
     message: Message,

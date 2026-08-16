@@ -13,7 +13,7 @@ class PaymentDetailItemDTO:
     username: str | None
     amount: Decimal
     method_value: str
-    paid_at: datetime
+    paid_at: datetime | None
 
     @property
     def owner_link(self) -> str:
@@ -22,6 +22,8 @@ class PaymentDetailItemDTO:
 
     @property
     def paid_at_msk_display(self) -> str:
+        if self.paid_at is None:
+            return "—"
         local_dt = self.paid_at.astimezone(MOSCOW_TZ)
         return local_dt.strftime("%d.%m.%Y %H:%M:%S")
 

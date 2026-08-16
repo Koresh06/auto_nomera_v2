@@ -8,6 +8,8 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.api.exceptions import UnknownIntent, OutdatedIntent
 
+from src.application.exceptions.user import UserNotFoundException
+
 
 async def on_input_error(
     message: Message,
@@ -20,36 +22,6 @@ async def on_input_error(
 
 logger = logging.getLogger(__name__)
 router = Router()
-
-
-# @router.errors()
-# async def on_region_disabled_error(
-#     event: ErrorEvent,
-#     dialog_manager: DialogManager,
-# ) -> bool:
-#     if not isinstance(event.exception, RegionDisabledError):
-#         return False
-
-#     update = event.update
-#     if update.message:
-#         user_id = update.message.from_user.id
-#     elif update.callback_query:
-#         user_id = update.callback_query.from_user.id
-#     else:
-#         return False
-
-#     bot: Bot = dialog_manager.middleware_data["bot"]
-#     await bot.send_message(
-#         chat_id=user_id,
-#         text="🚫 <b>Регион временно отключён администратором.</b>\n\nВыберите другой регион через /start",
-#     )
-
-#     try:
-#         await dialog_manager.reset_stack()
-#     except Exception:
-#         pass
-
-#     return True
 
 
 async def handle_error(
@@ -75,9 +47,35 @@ async def handle_error(
 
         logger.info(
             "[UnknownIntent] stale dialog interaction user_id=%s",
-            update.callback_query.from_user.id
-            if update.callback_query
-            else (update.message.from_user.id if update.message else None),
+            (
+                update.callback_query.from_user.id
+                if update.callback_query
+                else (update.message.from_user.id if update.message else None)
+            ),
+        )
+        return
+
+    if isinstance(exc, UserNotFoundException):
+        try:
+            if update.callback_query:
+                await update.callback_query.answer(
+                    "⚠️ Произошла ошибка. Попробуйте ещё раз или вернитесь в главное меню, или отправьте боту команду: /start",
+                    show_alert=True,
+                )
+            elif update.message:
+                await update.message.answer(
+                    "⚠️ Произошла ошибка. Попробуйте ещё раз или вернитесь в главное меню, или отправьте боту команду: /start",
+                )
+        except Exception:
+            logger.exception("[UserNotFound] не удалось ответить пользователю")
+
+        logger.info(
+            "[UserNotFound] незарегистрированный юзер user_id=%s",
+            (
+                update.callback_query.from_user.id
+                if update.callback_query
+                else (update.message.from_user.id if update.message else None)
+            ),
         )
         return
 
