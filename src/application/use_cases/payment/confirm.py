@@ -194,46 +194,12 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                     local_day=date.fromisoformat(slot_dict["slot_day"]),
                     local_time=time.fromisoformat(slot_dict["slot_time"]),
                 )
-                converted = (
-                    await self.reservation_service.converted_repo.mark_converted(
-                        slot=slot,
-                        user_id=payment.user_id,
-                        ad_id=None,
-                    )
+
+                await self.reservation_service.converted_repo.mark_converted(
+                    slot=slot,
+                    user_id=payment.user_id,
+                    ad_id=None,
                 )
-                if not converted:
-                    # Слот заняли раньше, чем дошёл вебхук оплаты. Деньги через
-                    # внешнего провайдера (YooKassa) уже списаны с юзера, но
-                    # услугу оказать нельзя — компенсируем сразу на внутренний
-                    # баланс, чтобы юзер не остался ни с чем. Полноценный возврат
-                    # через YooKassa Refund API можно оформить дополнительно,
-                    # если требуется вернуть именно на карту, а не на баланс бота.
-                    user.top_up(payment.amount)
-                    await self.user_repo.save(user)
-                    logger.error(
-                        f"[ConfirmPayment:slot_conflict] payment_id={payment.id} "
-                        f"user_id={payment.user_id} slot={slot.local_day} {slot.local_time} "
-                        f"already taken by another user after external payment was collected; "
-                        f"compensated {payment.amount} to internal balance"
-                    )
-                    await self.transaction_manager.commit()
-
-                    try:
-                        await self.payment_notifier.notify_user(
-                            payment,
-                            extra={
-                                "slot_conflict": True,
-                                "slot_text": f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}",
-                                "compensated_amount": payment.amount,
-                            },
-                        )
-                    except Exception as e:
-                        logger.warning(
-                            f"[ConfirmPayment] slot_conflict notify failed: {e}"
-                        )
-
-                    return
-
                 extra["slot_text"] = f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
                 logger.info(
                     f"[ConfirmPayment:slot_converted] user_id={payment.user_id} "

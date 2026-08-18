@@ -190,6 +190,7 @@ async def on_pick_slot(
                     amount=amount,
                 )
             )
+
             dialog_manager.dialog_data["region_id"] = slot.region_id
             dialog_manager.dialog_data["slot_day"] = slot.local_day.isoformat()
             dialog_manager.dialog_data["slot_time"] = slot.local_time.strftime("%H:%M")
