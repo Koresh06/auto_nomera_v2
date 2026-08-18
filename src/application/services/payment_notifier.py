@@ -34,6 +34,23 @@ class PaymentNotifier:
     @staticmethod
     def _build_user_text(payment: Payment, extra: dict | None = None) -> str:
         extra = extra or {}
+
+        # Особый случай: конфликт слота после успешной внешней оплаты —
+        # деньги списаны, но услуга не оказана, компенсировано на баланс.
+        # Это НЕ "успешная оплата услуги", текст должен быть другим,
+        # без праздничного заголовка.
+        if extra.get("slot_conflict"):
+            slot_text = extra.get("slot_text", "")
+            amount = extra.get("compensated_amount", payment.amount)
+            suffix = f" ({slot_text})" if slot_text else ""
+            return (
+                "⚠️ <b>Слот только что заняли раньше вас</b>\n\n"
+                f"К сожалению, выбранный слот{suffix} успели забронировать "
+                f"буквально за секунды до вас.\n"
+                f"Оплаченные <b>{amount} руб.</b> зачислены на ваш баланс в боте — "
+                f"вы можете использовать их для другого слота или услуги."
+            )
+
         header = "🎉 <b>Оплата прошла успешно!</b>"
 
         match payment.purpose:
