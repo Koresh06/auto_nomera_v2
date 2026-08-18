@@ -211,6 +211,7 @@ async def on_field_input(
             )
 
         elif field == "price":
+            value = value.replace(" ", "").replace("\xa0", "")
             validate_price(value)
         elif field == "phone":
             value = validate_phone_number(value)

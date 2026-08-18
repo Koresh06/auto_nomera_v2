@@ -261,7 +261,7 @@ async def _start_slot_payment(
             media = await mediator.handle(
                 EnsureAdImageRefRequest(
                     plate=plate,
-                    channel_username=data["channel_username"],
+                    channel_username=region.channel_username,
                     chat_id=callback.from_user.id,
                 )
             )
