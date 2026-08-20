@@ -24,10 +24,9 @@ class PublishTimeResolver:
 
         return local_aware.astimezone(timezone.utc)
 
-    def resolve_unpin_time(self, now_utc: datetime, params: dict) -> datetime:
+    def resolve_unpin_time(self, published_at_utc: datetime, params: dict) -> datetime:
         if "hours" in params:
-            return now_utc + timedelta(hours=int(params["hours"]))
+            return published_at_utc + timedelta(hours=int(params["hours"]))
         if "days" in params:
-            return now_utc + timedelta(days=int(params["days"]))
-        # дефолт: 24 часа
-        return now_utc + timedelta(hours=24)
+            return published_at_utc + timedelta(days=int(params["days"]))
+        return published_at_utc + timedelta(days=7)

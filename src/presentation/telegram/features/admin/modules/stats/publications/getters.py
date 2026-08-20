@@ -159,6 +159,7 @@ async def getter_admin_catalog(
 
         dialog_manager.dialog_data["current_pub_id"] = pub.id
         dialog_manager.dialog_data["current_user_id"] = ad.user_id
+        dialog_manager.dialog_data["owner_tg_id"] = owner_tg_id
 
         pub_time = None
         if pub and pub.slot:

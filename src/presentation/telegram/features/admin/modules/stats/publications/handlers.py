@@ -55,7 +55,7 @@ async def on_delete_deferred(
     await mediator.handle(
         CancelPublicationByAdminRequest(
             publication_id=data["current_pub_id"],
-            owner_tg_id=dialog_manager.event.from_user.id,
+            owner_tg_id=data["owner_tg_id"],
             label=data["current_label"],
         )
     )

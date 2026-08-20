@@ -22,21 +22,45 @@ class AutopublishStrategy:
 
         region_tz = ZoneInfo(context.region.timezone.value)
         now_utc = datetime.now(timezone.utc)
-        today_local = now_utc.astimezone(region_tz).date()
+        now_local = now_utc.astimezone(region_tz)
+        today_local = now_local.date()
 
-        # база отсчёта серии
+        # Время серии — всегда слот-время родителя (или фактическое время
+        # выхода, если слота нет).
         if publication.slot is not None:
-            base_day = publication.slot.local_day
             base_time = publication.slot.local_time
+        elif publication.published_at_utc is not None:
+            base_time = (
+                publication.published_at_utc.astimezone(region_tz)
+                .time()
+                .replace(second=0, microsecond=0)
+            )
         else:
-            local_dt = (publication.published_at_utc or now_utc).astimezone(region_tz)
-            base_day = local_dt.date()
-            base_time = local_dt.time()
+            base_time = now_local.time().replace(second=0, microsecond=0)
 
-        if base_day < today_local:
+        # База отсчёта:
+        # 1) Родитель уже фактически вышел (в т.ч. через PRIORITY_PUBLISH) —
+        #    считаем от дня фактической публикации.
+        # 2) Иначе — от планового слота.
+        if publication.published_at_utc is not None:
+            base_day = publication.published_at_utc.astimezone(region_tz).date()
+        elif publication.slot is not None:
+            base_day = publication.slot.local_day
+        else:
             base_day = today_local
 
-        for i in range(1, days):
+        # Докупка к старой публикации (база в прошлом): отсчёт от момента
+        # покупки. Если слот-время сегодня ещё впереди — первый пост сегодня,
+        # иначе — с завтрашнего дня. Сдвигаем базу так, чтобы base + 1 день
+        # дал нужный первый пост.
+        if base_day < today_local:
+            if now_local.time() < base_time:
+                base_day = today_local - timedelta(days=1)  # первый пост сегодня
+            else:
+                base_day = today_local  # первый пост завтра
+
+        # days постов: дни +1 ... +days от базы
+        for i in range(1, days + 1):
             next_slot = SlotKey(
                 region_id=publication.region_id,
                 local_day=base_day + timedelta(days=i),

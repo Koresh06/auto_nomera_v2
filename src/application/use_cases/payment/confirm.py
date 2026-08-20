@@ -41,7 +41,6 @@ from src.domain.services.slots.slot_reservation_service import SlotReservationSe
 from src.domain.value_objects.slot_key import SlotKey
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -104,21 +103,24 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             await self.user_repo.save(user)
 
         elif payment.purpose == PaymentPurpose.PUBLICATION_SERVICE:
-            logger.info("[ConfirmPayment:branch] PUBLICATION_SERVICE")
-            definition = await self.service_def_repo.get_by_type(
-                PublicationServiceType(payment.meta["service_type"])
-            )
-            if not payment.purpose_id:
+            service_type_raw = payment.meta.get("service_type")
+            if not service_type_raw:
                 raise PaymnetNotFountPurposeException(command.external_id)
+            service_type = PublicationServiceType(service_type_raw)
 
             publication = await self.publication_repo.get_by_id(payment.purpose_id)
             if publication is None:
                 raise PublicationNotFoundException(payment.purpose_id)
 
+            definition = await self.service_def_repo.get_by_type(service_type)
+            default_params = (
+                {"days": definition.duration_days} if definition.duration_days else {}
+            )
+
             service = PublicationService(
-                type=definition.type,
-                price_paid=definition.price,
-                params=payment.meta.get("params", {}),
+                type=service_type,
+                price_paid=int(payment.amount),
+                params=default_params,
             )
             publication.add_service(service)
             await self.publication_repo.save(publication)
