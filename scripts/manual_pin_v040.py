@@ -20,6 +20,12 @@ MESSAGE_ID = 2946
 
 async def main() -> int:
     container = make_async_container(*make_base_providers())
+
+    from src.infrastructure.broker.instance import broker
+    from src.infrastructure.broker.taskiq import register_taskiq_tasks
+
+    register_taskiq_tasks(broker, container=container)
+
     try:
         async with container() as rc:
             queue = await rc.get(TaskQueue)
