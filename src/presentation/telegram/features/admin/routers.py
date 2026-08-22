@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram_dialog import DialogManager, StartMode
@@ -16,7 +16,8 @@ router = Router()
 
 
 @router.message(
-    Command("admin"), AdminFilter(settings.telegram.admin_ids), F.chat.type == "private"
+    Command("admin"),
+    AdminFilter(settings.telegram.admin_ids),
 )
 async def process_command_admin(
     message: Message,

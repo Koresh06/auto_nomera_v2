@@ -1,6 +1,6 @@
 import orjson
 from dishka import Provider, provide, Scope
-from aiogram import Bot, Dispatcher
+from aiogram import F, Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.default import DefaultBotProperties
@@ -46,6 +46,9 @@ class TelegramProvider(Provider):
     @provide
     def dispatcher(self, bot: Bot, fsm_storage: RedisStorage) -> Dispatcher:
         dp = Dispatcher(bot=bot, storage=fsm_storage)
+
+        dp.message.filter(F.chat.type == "private")
+        dp.callback_query.filter(F.message.chat.type == "private")
 
         dp.include_routers(*get_all_routers())
         dp.include_routers(*get_all_dialogs())
