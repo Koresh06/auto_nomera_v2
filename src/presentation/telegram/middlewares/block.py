@@ -15,6 +15,15 @@ class BlockCheckMiddleware(BaseMiddleware):
         if user is None:
             return await handler(event, data)
 
+        chat = None
+        if isinstance(event, Update):
+            if event.message:
+                chat = event.message.chat
+            elif event.callback_query and event.callback_query.message:
+                chat = event.callback_query.message.chat
+        if chat is not None and chat.type != "private":
+            return
+
         tg_id = user.id
         container: AsyncContainer = data["dishka_container"]
         cache: BlockCache = await container.get(BlockCache)
