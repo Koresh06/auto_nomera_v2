@@ -210,13 +210,17 @@ async def getter_confirm(
         contacts = Contacts.from_user(username=user.username, phone=phone).display
         price = Price.format(price_raw)
 
-        media: MediaAttachment = await mediator.handle(
-            EnsureAdImageRefRequest(
-                plate=plate,
-                channel_username=channel_username,
-                chat_id=tg_id,
+        photo = data.get("photo")
+        if photo:
+            media = build_media_attachment(photo["file_id"])
+        else:
+            media = await mediator.handle(
+                EnsureAdImageRefRequest(
+                    plate=plate,
+                    channel_username=channel_username,
+                    chat_id=tg_id,
+                )
             )
-        )
         data["media_file_id"] = (
             media.file_id.file_id if media and media.file_id else None
         )
