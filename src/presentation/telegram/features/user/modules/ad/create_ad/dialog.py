@@ -191,7 +191,15 @@ create_ad_dialog = Dialog(
             "➡️ <code>1000</code>\n"
             "➡️ <code>100000</code>\n"
             "➡️ <code>1000000</code>",
-            when=F["dialog_data"]["ad_type"].in_({AdType.SALE, AdType.BUY}),
+            when=F["dialog_data"]["ad_type"] == AdType.SALE,
+        ),
+        Const(
+            "💰 <b>Укажите стоимость номера, за которую хотите купить, или нажмите на кнопку «Договорная».</b>\n\n"
+            "📌 <b>Примеры:</b>\n\n"
+            "➡️ <code>1000</code>\n"
+            "➡️ <code>100000</code>\n"
+            "➡️ <code>1000000</code>",
+            when=F["dialog_data"]["ad_type"] == AdType.BUY,
         ),
         Const(
             "⚠️ <b>Объявления, в которых не указана сумма, не принимаются.</b>\n\n"
