@@ -6,7 +6,6 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.widgets.kbd import Select
 from aiogram_dialog.widgets.kbd.select import OnItemClick
-from aiogram_dialog.api.entities import MediaAttachment
 
 from dishka.integrations.aiogram_dialog import inject, FromDishka
 
@@ -72,6 +71,7 @@ from src.presentation.telegram.features.user.modules.payment.helpers import (
     PaymentStartParams,
     start_payment,
 )
+from src.presentation.telegram.utils.build_media import build_media_attachment
 
 logger = logging.getLogger(__name__)
 
@@ -257,12 +257,14 @@ async def _start_slot_payment(
         phone: str = data.get("phone") or data.get("current_phone", "")
         contacts = Contacts.from_user(username=user.username, phone=phone)
 
-        media: MediaAttachment = data.get("media")
-        if not media:
+        photo = data.get("photo")
+        if photo:
+            media = build_media_attachment(photo["file_id"])
+        else:
             media = await mediator.handle(
                 EnsureAdImageRefRequest(
                     plate=plate,
-                    channel_username=region.channel_username,
+                    channel_username=data["channel_username"],
                     chat_id=callback.from_user.id,
                 )
             )

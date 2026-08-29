@@ -154,8 +154,8 @@ async def getter_finish(
     is_auto_pub = any(
         s.type == PublicationServiceType.PRIORITY_PUBLISH for s in active_services
     )
-    media_file_id = data.get("media_file_id") or (
-        ad.content.image_file_id if ad.content else None
+    media_file_id = (ad.content.image_file_id if ad.content else None) or data.get(
+        "media_file_id"
     )
 
     return {
