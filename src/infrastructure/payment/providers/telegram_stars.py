@@ -1,10 +1,16 @@
+import logging
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_CEILING
 from aiogram import Bot
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import LabeledPrice
 
+from src.application.exceptions.payment import PaymentAmountInvalidException
 from src.application.ports.payment.provider import PaymentProvider
 from src.domain.entities.payment import Payment
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -26,13 +32,22 @@ class TelegramStarsProvider(PaymentProvider):
             (amount / self.xtr_to_rub_rate).to_integral_value(rounding=ROUND_CEILING)
         )
 
-        invoice_link = await self.bot.create_invoice_link(
-            title=description or "Оплата",
-            description=description or "Оплата через Telegram Stars",
-            payload=external_id,
-            currency="XTR",
-            prices=[LabeledPrice(label="XTR", amount=stars)],
-        )
+        if stars < 1:
+            raise PaymentAmountInvalidException(stars=stars)
+
+        try:
+            invoice_link = await self.bot.create_invoice_link(
+                title=description or "Оплата",
+                description=description or "Оплата через Telegram Stars",
+                payload=external_id,
+                currency="XTR",
+                prices=[LabeledPrice(label="XTR", amount=stars)],
+            )
+        except TelegramBadRequest as e:
+            logger.warning(
+                f"[TelegramStars] invoice creation failed: stars={stars} amount={amount} error={e}"
+            )
+            raise PaymentAmountInvalidException(stars=stars) from e
 
         return {
             "invoice_link": invoice_link,

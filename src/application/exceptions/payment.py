@@ -27,3 +27,13 @@ class PaymnetNotFountPurposeException(DomainException):
     def __init__(self, purpose: str | None = None):
         msg = f"Платеж с purpose={purpose} не найден" if purpose else self.message
         super().__init__(msg)
+
+
+class PaymentAmountInvalidException(Exception):
+    def __init__(self, *, stars: int, reason: str = ""):
+        self.stars = stars
+        self.reason = reason
+        message = f"Stars amount {stars} was rejected by Telegram"
+        if reason:
+            message += f": {reason}"
+        super().__init__(message)

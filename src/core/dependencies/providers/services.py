@@ -92,7 +92,8 @@ class ServicesProvider(Provider):
         registry.register(
             PaymentMethod.TELEGRAM_STARS,
             TelegramStarsProvider(
-                bot=bot, xtr_to_rub_rate=settings.payment.telegram_stars.xtr_to_rub_rate
+                bot=bot,
+                xtr_to_rub_rate=settings.payment.telegram_stars.xtr_to_rub_rate,
             ),
         )
         registry.register(

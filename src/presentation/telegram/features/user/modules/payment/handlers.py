@@ -6,6 +6,7 @@ from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
 
 from src.application.dtos.user import UpdateUserDTO, UserDTO
+from src.application.exceptions.payment import PaymentAmountInvalidException
 from src.application.exceptions.user import (
     PaymentBlockedException,
 )
@@ -84,6 +85,13 @@ async def _create_payment_and_route(
         return
     except PaymentPhoneRequiredException:
         await dialog_manager.switch_to(PaymentSG.waiting_phone)
+        return
+    except PaymentAmountInvalidException:
+        await callback.answer(
+            "⚠️ Эта сумма недоступна для оплаты через Telegram Stars. "
+            "Выберите другой способ оплаты.",
+            show_alert=True,
+        )
         return
 
     if method == PaymentMethod.TELEGRAM_STARS:
