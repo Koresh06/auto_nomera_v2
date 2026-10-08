@@ -28,7 +28,7 @@ class CancelPublicationByAdminUseCase(UseCase[CancelPublicationByAdminRequest, N
     notification_service: NotificationService
     transaction_manager: TransactionManager
 
-    async def __call__(self, command) -> None:
+    async def __call__(self, command: CancelPublicationByAdminRequest) -> None:
         pub = await self.publication_repo.get_by_id(command.publication_id)
         if pub is None:
             raise PublicationNotFoundException(command.publication_id)
