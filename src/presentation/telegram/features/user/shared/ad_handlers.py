@@ -76,6 +76,14 @@ from src.presentation.telegram.utils.build_media import build_media_attachment
 logger = logging.getLogger(__name__)
 
 
+def resolve_service_return_state(ad_type: AdType) -> str:
+    """Куда вернуть пользователя после оплаты платной услуги — зависит от
+    типа объявления (магазин используют свой диалог)."""
+    if ad_type == AdType.STORE:
+        return "StoreViewPublishSG:publication_service"
+    return "CreateAdSG:publication_service"
+
+
 @inject
 async def on_start_dialog(
     start_data: dict,
@@ -385,13 +393,7 @@ async def on_service_paid_selected(
     pub_id: int = dialog_manager.dialog_data.get("publication_id") or start_data.get(
         "publication_id"
     )
-    ad_type: AdType = dialog_manager.dialog_data.get("ad_type")
     service_type = PublicationServiceType(item_id)
-
-    if ad_type == AdType.STORE.value:
-        return_state = "StoreViewPublishSG:publication_service"
-    else:
-        return_state = "CreateAdSG:publication_service"
 
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=callback.from_user.id))
 
@@ -402,6 +404,15 @@ async def on_service_paid_selected(
     pub: PublicationDTO = await mediator.handle(
         GetPublicationByIdRequest(publication_id=pub_id)
     )
+
+    # AUD-15: ad_type раньше брался из dialog_data, который телепорт после
+    # оплаты (AiogramDialogTeleporter.start) стартует с пустым dialog_data —
+    # второй раз через этот хендлер для того же pub_id ad_type терялся, и
+    # пользователя заносило в диалог создания обычного объявления вместо
+    # магазина. ad_id из уже загруженной публикации — надёжный источник.
+    ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=pub.ad_id))
+    return_state = resolve_service_return_state(ad.ad_type)
+
     bought_types = {
         s.type
         for s in pub.services
