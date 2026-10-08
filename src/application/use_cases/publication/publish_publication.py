@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
@@ -63,8 +64,15 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         )
 
         if pub is None:
-            logger.warning(
-                "[Publish] publication_id=%s not found, skipping",
+            for _ in range(3):
+                await asyncio.sleep(1)
+                pub = await self.publication_repo.get_by_id(command.publication_id)
+                if pub is not None:
+                    break
+
+        if pub is None:
+            logger.error(
+                "[Publish] publication_id=%s not found after retries",
                 command.publication_id,
             )
             return

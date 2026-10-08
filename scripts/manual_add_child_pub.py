@@ -11,31 +11,22 @@
 
 import argparse
 import asyncio
-from datetime import datetime, time as dtime, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
 
 from dishka import make_async_container
-from sqlalchemy import select
 
 from src.core.dependencies.providers import make_base_providers
 from src.application.ports.tasks.task_queue import TaskQueue
 from src.infrastructure.database.models.publication import PublicationModel
-from src.infrastructure.database.models.region import RegionModel
 from src.infrastructure.database.sqlalchemy.connection import async_session_maker
 from src.domain.enums.publication import PublicationStatus
 
 
 async def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ad-id", type=int, required=True)
-    parser.add_argument("--region-id", type=int, required=True)
-    parser.add_argument("--time", required=True, help="HH:MM local")
-    parser.add_argument("--dates", nargs="+", required=True, help="YYYY-MM-DD ...")
+    parser.add_argument("--pub-ids", type=int, nargs="+", required=True)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
-    dry = not args.apply
-
-    slot_time = dtime.fromisoformat(args.time)
 
     container = make_async_container(*make_base_providers())
     from src.infrastructure.broker.instance import broker
@@ -47,66 +38,29 @@ async def main() -> int:
         async with container() as rc:
             queue = await rc.get(TaskQueue)
             async with async_session_maker() as session:
-                region = await session.get(RegionModel, args.region_id)
-                tz = ZoneInfo(
-                    region.timezone.value
-                    if hasattr(region.timezone, "value")
-                    else region.timezone
-                )
-
-                for d_raw in args.dates:
-                    d = datetime.fromisoformat(d_raw).date()
-                    publish_at_utc = datetime.combine(d, slot_time, tz).astimezone(
-                        timezone.utc
-                    )
-
-                    # защита от дубля: уже есть публикация этого ad на этот день?
-                    existing = (
-                        await session.execute(
-                            select(PublicationModel.id).where(
-                                PublicationModel.ad_id == args.ad_id,
-                                PublicationModel.slot_day == d,
-                                PublicationModel.status.in_(
-                                    [
-                                        PublicationStatus.SCHEDULED,
-                                        PublicationStatus.PUBLISHED,
-                                    ]
-                                ),
-                            )
-                        )
-                    ).scalar_one_or_none()
-                    if existing:
-                        print(f"[SKIP] {d}: уже есть публикация id={existing}")
+                for pid in args.pub_ids:
+                    model = await session.get(PublicationModel, pid)
+                    if model is None or model.status != PublicationStatus.SCHEDULED:
+                        print(f"[SKIP] {pid}: нет или статус не SCHEDULED")
                         continue
-
+                    if model.scheduler_job_id:
+                        print(f"[SKIP] {pid}: job уже есть {model.scheduler_job_id}")
+                        continue
+                    run_at = datetime.now(timezone.utc) + timedelta(seconds=15)
                     print(
-                        f"[{'DRY' if dry else 'CREATE'}] {d} {slot_time} -> {publish_at_utc}"
+                        f"[{'CREATE' if args.apply else 'DRY'}] pub={pid} run_at={run_at}"
                     )
-                    if dry:
+                    if not args.apply:
                         continue
-
-                    model = PublicationModel(
-                        ad_id=args.ad_id,
-                        region_id=args.region_id,
-                        status=PublicationStatus.SCHEDULED,
-                        slot_day=d,
-                        slot_time=slot_time,
-                        publish_at_utc=publish_at_utc,
-                        is_child=True,
-                    )
-                    session.add(model)
-                    await session.flush()
-
+                    model.publish_at_utc = run_at
                     job_id = await queue.schedule(
                         task_name="publish_publication",
-                        args=(model.id,),
-                        run_at_utc=publish_at_utc,
+                        args=(pid,),
+                        run_at_utc=run_at,
                     )
                     model.scheduler_job_id = job_id
-                    print(f"  pub_id={model.id} job={job_id}")
-
-                if not dry:
                     await session.commit()
+                    print(f"  job={job_id}")
     finally:
         await container.close()
     return 0

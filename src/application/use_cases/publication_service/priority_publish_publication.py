@@ -47,6 +47,7 @@ class PriorityPublishPublicationUseCase(
         if publication.status == PublicationStatus.SCHEDULED:
             await self.scheduler.cancel_publication(publication_id=publication.id)
             await self.scheduler.schedule_publish_now(publication_id=publication.id)
+            await self.transaction_manager.commit()
 
         elif publication.status == PublicationStatus.PUBLISHED:
             new_pub = Publication(
@@ -55,17 +56,19 @@ class PriorityPublishPublicationUseCase(
                 is_child=True,
             )
             new_pub.schedule_immediate(publish_at_utc=datetime.now(timezone.utc))
-
             new_pub = await self.publication_repo.create(new_pub)
-            await self.scheduler.schedule_publish_now(publication_id=new_pub.id)
 
             if service:
                 service.mark_used()
                 await self.publication_repo.save(publication)
 
+            # СНАЧАЛА коммит, потом очередь
+            await self.transaction_manager.commit()
+
+            await self.scheduler.schedule_publish_now(publication_id=new_pub.id)
+            await self.transaction_manager.commit()
+
         else:
             raise InvalidPublicationState(
                 f"PRIORITY_PUBLISH нельзя применить к публикации в статусе {publication.status}"
             )
-
-        await self.transaction_manager.commit()
