@@ -40,7 +40,12 @@ async def main() -> int:
                     )
                     if not args.apply:
                         continue
+                    # AUD-17: commit ДО постановки задачи в очередь — иначе
+                    # при сбое между schedule() и commit() в Redis остаётся
+                    # задача, ссылающаяся на publish_at_utc, которого ещё
+                    # нет в БД (откатится вместе со всей транзакцией).
                     model.publish_at_utc = run_at
+                    await session.commit()
                     job_id = await queue.schedule(
                         task_name="publish_publication",
                         args=(pid,),

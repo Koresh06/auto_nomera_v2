@@ -96,6 +96,12 @@ async def main() -> int:
                     )
                     session.add(model)
                     await session.flush()
+                    # AUD-17: коммитим публикацию ДО постановки задачи в
+                    # очередь — иначе при сбое между schedule() и финальным
+                    # commit() (который раньше был один на все даты) в Redis
+                    # остаются задачи-сироты, ссылающиеся на publication_id,
+                    # которых в БД нет (откатились вместе со всем циклом).
+                    await session.commit()
 
                     job_id = await queue.schedule(
                         task_name="publish_publication",
@@ -103,10 +109,8 @@ async def main() -> int:
                         run_at_utc=publish_at_utc,
                     )
                     model.scheduler_job_id = job_id
-                    print(f"  pub_id={model.id} job={job_id}")
-
-                if not dry:
                     await session.commit()
+                    print(f"  pub_id={model.id} job={job_id}")
     finally:
         await container.close()
     return 0
