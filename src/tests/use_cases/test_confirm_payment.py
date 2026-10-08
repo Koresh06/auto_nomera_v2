@@ -19,10 +19,12 @@ from src.application.use_cases.payment.confirm import (
     ConfirmPaymentRequest,
     ConfirmPaymentUseCase,
 )
+from src.domain.entities.ad import Ad
 from src.domain.entities.payment import Payment
 from src.domain.entities.publication import Publication
 from src.domain.entities.service_definition import ServiceDefinition
 from src.domain.entities.user import User
+from src.domain.enums.ad import AdStatus, AdType
 from src.domain.enums.payment import PaymentMethod, PaymentPurpose, PaymentStatus
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceType
@@ -76,6 +78,16 @@ class FakePublicationRepo:
 
     async def save(self, publication: Publication) -> None:
         self.saved.append(publication)
+
+
+class FakeAdRepo:
+    def __init__(self, ad: Ad | None = None) -> None:
+        self._ad = ad
+
+    async def get_by_id(self, ad_id: int) -> Ad | None:
+        if self._ad and self._ad.id == ad_id:
+            return self._ad
+        return None
 
 
 class FakeServiceDefRepo:
@@ -180,6 +192,7 @@ def make_use_case(
     payment: Payment,
     user: User,
     publication: Publication | None = None,
+    ad: Ad | None = None,
     service_def: ServiceDefinition | None = None,
     confirm_paid_slot=None,
     apply_service_to_published=None,
@@ -189,6 +202,15 @@ def make_use_case(
     payment_repo = FakePaymentRepo(payment)
     user_repo = FakeUserRepo(user)
     publication_repo = FakePublicationRepo(publication)
+    if ad is None and publication is not None:
+        ad = Ad(
+            id=publication.ad_id,
+            user_id=user.id,
+            region_id=publication.region_id,
+            ad_type=AdType.SALE,
+            status=AdStatus.PUBLISHED,
+        )
+    ad_repo = FakeAdRepo(ad)
     service_def_repo = FakeServiceDefRepo(
         service_def
         or ServiceDefinition(
@@ -212,6 +234,7 @@ def make_use_case(
         payment_repo=payment_repo,
         user_repo=user_repo,
         publication_repo=publication_repo,
+        ad_repo=ad_repo,
         service_def_repo=service_def_repo,
         confirm_paid_slot=confirm_paid_slot or NoOpUseCase(),
         apply_service_to_published=apply_service_to_published or NoOpUseCase(),
@@ -378,3 +401,41 @@ async def test_confirm_payment_slot_without_publication_conflict_compensates_bal
     assert user.balance == Decimal("199")
     _, extra = ctx["notifier"].user_notifications[0]
     assert extra["slot_conflict"] is True
+
+
+async def test_confirm_payment_highlight_for_store_compensates_balance():
+    """AUD-19: paying for HIGHLIGHT externally (YooKassa/Stars) for a STORE
+    ad must not silently apply a no-op service — compensate to balance and
+    notify, same pattern as the slot-conflict case."""
+    publication = Publication(
+        id=5, ad_id=1, region_id=1, status=PublicationStatus.PUBLISHED
+    )
+    payment = make_payment(
+        purpose=PaymentPurpose.PUBLICATION_SERVICE,
+        purpose_id=5,
+        amount=Decimal("150"),
+        meta={"service_type": PublicationServiceType.HIGHLIGHT.value},
+    )
+    user = make_user(balance=Decimal("0"))
+    store_ad = Ad(
+        id=1, user_id=1, region_id=1, ad_type=AdType.STORE, status=AdStatus.READY
+    )
+    definition = ServiceDefinition(
+        id=1, title="Выделение", type=PublicationServiceType.HIGHLIGHT, price=150
+    )
+
+    use_case, ctx = make_use_case(
+        payment=payment,
+        user=user,
+        publication=publication,
+        ad=store_ad,
+        service_def=definition,
+    )
+
+    await use_case(ConfirmPaymentRequest(external_id="ext-123"))
+
+    assert user.balance == Decimal("150")
+    assert len(publication.services) == 0
+    _, extra = ctx["notifier"].user_notifications[0]
+    assert extra["service_not_allowed"] is True
+    assert extra["compensated_amount"] == Decimal("150")

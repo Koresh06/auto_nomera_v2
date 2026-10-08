@@ -8,8 +8,10 @@ from src.application.exceptions.payment import (
     PaymentNotFoundByExternalException,
     PaymnetNotFountPurposeException,
 )
+from src.application.exceptions.ad import AdNotFoundException
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.user import UserNotFoundException
+from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
@@ -39,9 +41,13 @@ from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.payment import PaymentPurpose
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceType
+from src.domain.exceptions.publication import ServiceNotAllowed
 from src.domain.exceptions.slot_reservation import (
     SlotAlreadyBooked,
     SlotAlreadyConverted,
+)
+from src.domain.services.publication.service_eligibility import (
+    ensure_service_allowed_for_ad_type,
 )
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.domain.value_objects.slot_key import SlotKey
@@ -61,6 +67,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
     payment_repo: PaymentRepository
     user_repo: UserRepository
     publication_repo: PublicationRepository
+    ad_repo: AdRepository
     service_def_repo: ServiceDefinitionRepository
     confirm_paid_slot: ConfirmPaidSlotAndSchedulePublicationUseCase
     apply_service_to_published: ApplyServiceToPublishedUseCase
@@ -123,6 +130,37 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             publication = await self.publication_repo.get_by_id(payment.purpose_id)
             if publication is None:
                 raise PublicationNotFoundException(payment.purpose_id)
+
+            ad = await self.ad_repo.get_by_id(publication.ad_id)
+            if ad is None:
+                raise AdNotFoundException(publication.ad_id)
+
+            try:
+                ensure_service_allowed_for_ad_type(
+                    service_type=service_type, ad_type=ad.ad_type
+                )
+            except ServiceNotAllowed as e:
+                # AUD-19: внешний платёж уже реально поступил — money's in,
+                # отказать на этом этапе не вариант. Компенсируем на баланс,
+                # как и при конфликте слота (см. ветку SLOT ниже).
+                logger.error(
+                    f"[ConfirmPayment:service_not_allowed] payment_id={payment.id} "
+                    f"pub_id={publication.id} service_type={service_type}: {e} "
+                    f"— компенсируем {payment.amount} руб. на баланс"
+                )
+                sentry_sdk.capture_exception(e)
+                user.top_up(payment.amount)
+                await self.user_repo.save(user)
+                await self.transaction_manager.commit()
+                await self.payment_notifier.notify_user(
+                    payment,
+                    extra={
+                        "service_not_allowed": True,
+                        "compensated_amount": payment.amount,
+                    },
+                )
+                await self._teleport_back(payment)
+                return
 
             definition = await self.service_def_repo.get_by_type(service_type)
             default_params = (

@@ -23,6 +23,9 @@ from src.domain.enums.publication_service import (
 from src.domain.exceptions.publication import InvalidPublicationState
 from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
+from src.domain.services.publication.service_eligibility import (
+    ensure_service_allowed_for_ad_type,
+)
 from src.application.services.publication.context import ServiceContext
 from src.application.services.publication.registry import STRATEGIES
 from src.infrastructure.database.transaction_manager.base import TransactionManager
@@ -65,6 +68,13 @@ class ApplyServiceToPublishedUseCase(UseCase[ApplyServiceToPublishedRequest, Non
         ad = await self.ad_repo.get_by_id(publication.ad_id)
         if ad is None:
             raise AdNotFoundException(publication.ad_id)
+
+        # AUD-19: та же защита, что уже есть в publish_publication.py для
+        # HIGHLIGHT, но здесь — для пути "применить услугу к уже
+        # опубликованному объявлению".
+        ensure_service_allowed_for_ad_type(
+            service_type=command.service_type, ad_type=ad.ad_type
+        )
 
         region = await self.region_repo.get_by_id(publication.region_id)
         if region is None:

@@ -442,12 +442,14 @@ class UseCasesProvider(Provider):
         self,
         user_repo: UserRepository,
         publication_repo: PublicationRepository,
+        ad_repo: AdRepository,
         service_def_repo: ServiceDefinitionRepository,
         transaction_manager: TransactionManager,
     ) -> BuyPublicationServiceUseCase:
         return BuyPublicationServiceUseCase(
             user_repo=user_repo,
             publication_repo=publication_repo,
+            ad_repo=ad_repo,
             service_def_repo=service_def_repo,
             transaction_manager=transaction_manager,
         )
@@ -659,6 +661,7 @@ class UseCasesProvider(Provider):
         payment_repo: PaymentRepository,
         user_repo: UserRepository,
         publication_repo: PublicationRepository,
+        ad_repo: AdRepository,
         service_def_repo: ServiceDefinitionRepository,
         confirm_paid_slot: ConfirmPaidSlotAndSchedulePublicationUseCase,
         apply_service_to_published: ApplyServiceToPublishedUseCase,
@@ -673,6 +676,7 @@ class UseCasesProvider(Provider):
             payment_repo=payment_repo,
             user_repo=user_repo,
             publication_repo=publication_repo,
+            ad_repo=ad_repo,
             service_def_repo=service_def_repo,
             confirm_paid_slot=confirm_paid_slot,
             apply_service_to_published=apply_service_to_published,
