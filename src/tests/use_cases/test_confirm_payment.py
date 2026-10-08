@@ -113,17 +113,29 @@ class FakeTransactionManager:
 
 
 class FakeTeleporter:
-    def __init__(self) -> None:
+    def __init__(self, *, fail: bool = False) -> None:
         self.started: list[dict] = []
+        self._fail = fail
 
     async def start(self, *, user_id, chat_id, state_key, data=None) -> None:
+        if self._fail:
+            raise RuntimeError("teleport boom")
         self.started.append(
             {"user_id": user_id, "chat_id": chat_id, "state_key": state_key}
         )
 
 
 class FakeNotificationService:
-    pass
+    def __init__(self) -> None:
+        self.notified_users: list[tuple[int, str]] = []
+
+    async def notify_user(self, *, tg_id: int, text: str, reply_markup=None) -> None:
+        self.notified_users.append((tg_id, text))
+
+    async def notify_admins(
+        self, *, text: str, photo_id=None, reply_markup=None
+    ) -> None:
+        pass
 
 
 @dataclass
@@ -198,6 +210,7 @@ def make_use_case(
     apply_service_to_published=None,
     priority_publish=None,
     reservation_service: SlotReservationService | None = None,
+    teleporter_fails: bool = False,
 ) -> tuple[ConfirmPaymentUseCase, dict]:
     payment_repo = FakePaymentRepo(payment)
     user_repo = FakeUserRepo(user)
@@ -221,8 +234,9 @@ def make_use_case(
         )
     )
     tx = FakeTransactionManager()
-    teleporter = FakeTeleporter()
+    teleporter = FakeTeleporter(fail=teleporter_fails)
     notifier = FakePaymentNotifier()
+    notification_service = FakeNotificationService()
     reservation = reservation_service or SlotReservationService(
         booking_repo=InMemorySlotBookingRepo(),
         converted_repo=InMemorySlotConvertedRepo(),
@@ -241,7 +255,7 @@ def make_use_case(
         priority_publish=priority_publish or NoOpUseCase(),
         reservation_service=reservation,
         teleporter=teleporter,
-        notification_service=FakeNotificationService(),
+        notification_service=notification_service,
         payment_notifier=notifier,
         transaction_manager=tx,
     )
@@ -252,6 +266,7 @@ def make_use_case(
         "tx": tx,
         "teleporter": teleporter,
         "notifier": notifier,
+        "notification_service": notification_service,
     }
     return use_case, ctx
 
@@ -439,3 +454,26 @@ async def test_confirm_payment_highlight_for_store_compensates_balance():
     _, extra = ctx["notifier"].user_notifications[0]
     assert extra["service_not_allowed"] is True
     assert extra["compensated_amount"] == Decimal("150")
+
+
+async def test_confirm_payment_teleport_failure_sends_fallback_notification():
+    """AUD-22: if teleporting the user back fails, they must still get a
+    fallback message telling them the payment succeeded — not nothing."""
+    payment = make_payment(
+        purpose=PaymentPurpose.BALANCE_TOPUP,
+        amount=Decimal("300"),
+        meta={
+            "return_to": {"user_id": 1001, "chat_id": 1001},
+            "return_state": "SomeSG:state",
+        },
+    )
+    user = make_user(balance=Decimal("0"))
+    use_case, ctx = make_use_case(payment=payment, user=user, teleporter_fails=True)
+
+    await use_case(ConfirmPaymentRequest(external_id="ext-123"))
+
+    assert ctx["teleporter"].started == []
+    assert len(ctx["notification_service"].notified_users) == 1
+    tg_id, text = ctx["notification_service"].notified_users[0]
+    assert tg_id == 1001
+    assert "/start" in text

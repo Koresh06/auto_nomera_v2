@@ -214,7 +214,11 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                 await self.payment_notifier.notify_admins(payment, user)
                 logger.info(f"[ConfirmPayment:admin_notified] payment_id={payment.id}")
             except Exception as e:
-                logger.warning(f"[ConfirmPayment] admin notify failed: {e}")
+                # AUD-22/28: деньги реально списаны/услуга применена — сбой
+                # уведомления админа не должен быть виден только в обычных
+                # логах, если никто их не читает в реальном времени.
+                logger.error(f"[ConfirmPayment] admin notify failed: {e}")
+                sentry_sdk.capture_exception(e)
             logger.info(
                 f"[ConfirmPayment:before_teleport] payment_id={payment.id} meta={payment.meta}"
             )
@@ -329,7 +333,8 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             await self.payment_notifier.notify_admins(payment, user)
             logger.info(f"[ConfirmPayment:admin_notified] payment_id={payment.id}")
         except Exception as e:
-            logger.warning(f"[ConfirmPayment] admin notify failed: {e}")
+            logger.error(f"[ConfirmPayment] admin notify failed: {e}")
+            sentry_sdk.capture_exception(e)
         logger.info(
             f"[ConfirmPayment:before_teleport] payment_id={payment.id} meta={payment.meta}"
         )
@@ -366,4 +371,23 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             )
             logger.info(f"[ConfirmPayment:teleport_success] state_key={return_state}")
         except Exception as e:
-            logger.warning(f"[ConfirmPayment:teleport_failed] {e}")
+            # AUD-22: это происходит ПОСЛЕ того, как пользователю уже
+            # отправили "оплата прошла" — если он не вернётся в прежний
+            # диалог, он должен хотя бы узнать, что сама оплата точно
+            # прошла и что делать дальше. WARNING без Sentry был бы не виден
+            # никому, кто не читает логи в реальном времени.
+            logger.error(f"[ConfirmPayment:teleport_failed] {e}")
+            sentry_sdk.capture_exception(e)
+            try:
+                await self.notification_service.notify_user(
+                    tg_id=return_to["user_id"],
+                    text=(
+                        "✅ Оплата прошла успешно.\n"
+                        "Чтобы продолжить, откройте главное меню: /start"
+                    ),
+                )
+            except Exception:
+                logger.exception(
+                    f"[ConfirmPayment:teleport_fallback_notify_failed] "
+                    f"payment_id={payment.id}"
+                )
