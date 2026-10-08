@@ -102,3 +102,34 @@ class YooKassaProvider(PaymentProvider):
         obj = payload.get("object", {})
         metadata = obj.get("metadata", {})
         return metadata.get("external_id")
+
+    async def verify_payment(
+        self, *, yookassa_payment_id: str
+    ) -> PaymentResponse | None:
+        """Серверная сверка статуса платежа напрямую через YooKassa API
+        (авторизовано нашим secret_key), а НЕ доверие телу webhook-запроса.
+
+        YooKassa не подписывает тело webhook'а, поэтому любой, кто знает
+        payment_id/external_id (например, свой собственный из return_url),
+        мог бы просто сам отправить POST с {"event": "payment.succeeded"} —
+        без этой проверки платёж подтвердился бы без реального поступления
+        денег. Здесь мы запрашиваем актуальный статус у самой YooKassa и
+        доверяем только этому ответу.
+        """
+        try:
+            response: PaymentResponse = await asyncio.wait_for(
+                asyncio.to_thread(YooKassaPayment.find_one, yookassa_payment_id),
+                timeout=15,
+            )
+        except asyncio.TimeoutError:
+            logger.exception(
+                "[YooKassa:verify_timeout] payment_id=%s", yookassa_payment_id
+            )
+            return None
+        except Exception:
+            logger.exception(
+                "[YooKassa:verify_error] payment_id=%s", yookassa_payment_id
+            )
+            return None
+
+        return response
