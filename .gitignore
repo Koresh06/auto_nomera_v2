@@ -92,4 +92,3 @@ ngrok.yml
 my_database.db
 .env/
 README-logic.md
-tests

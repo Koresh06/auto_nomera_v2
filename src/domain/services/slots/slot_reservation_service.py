@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -5,6 +6,8 @@ from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.domain.exceptions.slot_reservation import (
+    SlotAlreadyBooked,
+    SlotAlreadyConverted,
     SlotAlreadyHeld,
     SlotHoldNotFound,
     SlotHoldOwnerMismatch,
@@ -13,6 +16,8 @@ from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.value_objects.hold_owner import HoldOwner
 from src.domain.value_objects.slot_key import SlotKey
 from src.utils.get_datetime_utc_now import get_datetime_utc_now
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -53,7 +58,11 @@ class SlotReservationService:
             is_converted = await self.booking_repo.is_booked(slot)
 
         hold_until = now + self.hold_ttl
-        await self.hold_store.set(slot, owner, self.hold_ttl)
+        acquired = await self.hold_store.set(slot, owner, self.hold_ttl)
+        if not acquired:
+            # Кто-то успел захватить слот между нашим get() и set() —
+            # атомарный SET NX/owner-check в хранилище отказал.
+            raise SlotAlreadyHeld()
 
         pricing_policy = SlotPricingPolicy(system_paid_count=system_paid_slots_count)
         is_system_paid = pricing_policy.is_system_paid(
@@ -103,11 +112,40 @@ class SlotReservationService:
             if existing != owner:
                 raise SlotHoldOwnerMismatch()
 
-        await self.booking_repo.book(slot, ad_id=ad_id, user_id=user_id)
+        booked = await self.booking_repo.book(slot, ad_id=ad_id, user_id=user_id)
+        if not booked:
+            booking_owner = await self.booking_repo.get_booking_owner(slot)
+            if booking_owner != user_id:
+                logger.error(
+                    "[book_after_payment] slot=%s %s already booked by user_id=%s, "
+                    "payment was for user_id=%s ad_id=%s — требуется ручная проверка/возврат",
+                    slot.local_day,
+                    slot.local_time,
+                    booking_owner,
+                    user_id,
+                    ad_id,
+                )
+                raise SlotAlreadyBooked()
+            # тот же пользователь уже забронировал этот слот ранее — идемпотентный повтор
 
-        await self.converted_repo.mark_converted(
+        converted = await self.converted_repo.mark_converted(
             slot=slot, user_id=user_id, ad_id=ad_id
         )
+        if not converted:
+            converted_owner = await self.converted_repo.get_converted_owner_and_ad(slot)
+            owner_user_id = converted_owner[0] if converted_owner else None
+            if owner_user_id != user_id:
+                logger.error(
+                    "[book_after_payment] slot=%s %s already converted by user_id=%s, "
+                    "payment was for user_id=%s ad_id=%s — требуется ручная проверка/возврат",
+                    slot.local_day,
+                    slot.local_time,
+                    owner_user_id,
+                    user_id,
+                    ad_id,
+                )
+                raise SlotAlreadyConverted()
+            # тот же пользователь уже сконвертировал этот слот ранее — идемпотентный повтор
 
         existing = await self.hold_store.get(slot)
         if existing == owner:

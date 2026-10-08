@@ -67,6 +67,17 @@ class SQLAlchemySlotBookingRepo(SlotBookingRepository):
             if (slot.region_id, slot.local_day, slot.local_time) in booked
         }
 
+    async def get_booking_owner(self, slot: SlotKey) -> int | None:
+        result = await self._session.execute(
+            select(SlotBookingModel.user_id).where(
+                SlotBookingModel.region_id == slot.region_id,
+                SlotBookingModel.slot_day == slot.local_day,
+                SlotBookingModel.slot_time == slot.local_time,
+            )
+        )
+        row = result.scalar_one_or_none()
+        return row
+
 
 class SQLAlchemySlotConvertedRepo(SlotConvertedRepository):
     def __init__(self, session: AsyncSession) -> None:

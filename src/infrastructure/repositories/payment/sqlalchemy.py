@@ -35,6 +35,16 @@ class SQLAlchemyPaymentRepo(PaymentRepository):
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
 
+    async def get_by_external_id_for_update(self, external_id: str) -> Payment | None:
+        query = (
+            select(PaymentModel)
+            .where(PaymentModel.external_id == external_id)
+            .with_for_update()
+        )
+        result = await self.session.execute(query)
+        model = result.scalar_one_or_none()
+        return model.to_entity() if model else None
+
     async def save(self, payment: Payment) -> None:
         query = select(PaymentModel).where(PaymentModel.id == payment.id)
         result = await self.session.execute(query)

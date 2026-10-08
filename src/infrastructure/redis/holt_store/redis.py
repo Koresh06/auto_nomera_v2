@@ -7,10 +7,29 @@ from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.domain.value_objects.hold_owner import HoldOwner
 from src.domain.value_objects.slot_key import SlotKey
 
+# Атомарный захват hold'а: ставим значение, только если ключа ещё нет,
+# либо если ключ уже принадлежит тому же user_id (переиспользование/продление
+# своего же hold'а). Если ключ занят ДРУГИМ user_id — отказываем.
+# Выполняется одним EVAL, поэтому гонка "GET потом SET" невозможна.
+_ACQUIRE_HOLD_SCRIPT = """
+local current = redis.call('GET', KEYS[1])
+if current then
+    local ok, obj = pcall(cjson.decode, current)
+    if ok and obj and obj['user_id'] == tonumber(ARGV[2]) then
+        redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3])
+        return 1
+    end
+    return 0
+end
+redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3])
+return 1
+"""
+
 
 class RedisSlotHoldStore(SlotHoldStore):
     def __init__(self, redis: Redis) -> None:
         self._redis = redis
+        self._acquire_script = redis.register_script(_ACQUIRE_HOLD_SCRIPT)
 
     def _k(self, slot: SlotKey) -> str:
         return f"hold:{slot.region_id}:{slot.local_day.isoformat()}:{slot.local_time.strftime('%H:%M')}"
@@ -22,9 +41,13 @@ class RedisSlotHoldStore(SlotHoldStore):
         payload = json.loads(data)
         return HoldOwner(user_id=payload["user_id"])
 
-    async def set(self, slot: SlotKey, owner: HoldOwner, ttl: timedelta) -> None:
+    async def set(self, slot: SlotKey, owner: HoldOwner, ttl: timedelta) -> bool:
         payload = json.dumps({"user_id": owner.user_id})
-        await self._redis.set(self._k(slot), payload, ex=int(ttl.total_seconds()))
+        result = await self._acquire_script(
+            keys=[self._k(slot)],
+            args=[payload, owner.user_id, int(ttl.total_seconds())],
+        )
+        return bool(result)
 
     async def delete(self, slot: SlotKey) -> None:
         await self._redis.delete(self._k(slot))

@@ -13,7 +13,10 @@ class SlotHoldStore(Protocol):
         slot: SlotKey,
         owner: HoldOwner,
         ttl: timedelta,
-    ) -> None: ...
+    ) -> bool:
+        """Атомарно захватывает hold. True — захвачен (свободен был или уже мой);
+        False — уже удерживается другим владельцем, захват не произошёл."""
+        ...
 
     async def delete(self, slot: SlotKey) -> None: ...
 

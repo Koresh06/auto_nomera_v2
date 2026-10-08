@@ -27,7 +27,7 @@ class CheckHoldUseCase(UseCase[CheckHoldRequest, bool]):
             return True
 
         # слот может быть уже оплачен и сконвертирован этим юзером
-        converted_owner_id = await self.converted_repo.get_converted_owner_and_ad(
+        converted_owner = await self.converted_repo.get_converted_owner_and_ad(
             command.slot
         )
-        return converted_owner_id == command.user_id
+        return converted_owner is not None and converted_owner[0] == command.user_id

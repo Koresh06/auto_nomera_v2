@@ -2,6 +2,8 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timezone
 
+import sentry_sdk
+
 from src.application.exceptions.payment import (
     PaymentNotFoundByExternalException,
     PaymnetNotFountPurposeException,
@@ -37,6 +39,10 @@ from src.domain.entities.publication_service import PublicationService
 from src.domain.enums.payment import PaymentPurpose
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceType
+from src.domain.exceptions.slot_reservation import (
+    SlotAlreadyBooked,
+    SlotAlreadyConverted,
+)
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.domain.value_objects.slot_key import SlotKey
 from src.infrastructure.database.transaction_manager.base import TransactionManager
@@ -69,7 +75,13 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
         logger.info(f"[ConfirmPayment:start] external_id={command.external_id}")
         now = command.now_utc or datetime.now(timezone.utc)
 
-        payment = await self.payment_repo.get_by_external_id(command.external_id)
+        # FOR UPDATE: блокируем строку платежа до конца транзакции, чтобы
+        # повторный webhook / повторная доставка задачи confirm_payment для
+        # того же external_id не смогли обработаться параллельно и задвоить
+        # начисление баланса/услуги.
+        payment = await self.payment_repo.get_by_external_id_for_update(
+            command.external_id
+        )
         if payment is None:
             logger.warning(
                 f"[ConfirmPayment:not_found] external_id={command.external_id}"
@@ -129,20 +141,31 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                 f"[ConfirmPayment:service_applied] pub_id={publication.id} type={definition.type}"
             )
 
-            if definition.type == PublicationServiceType.PRIORITY_PUBLISH:
-                await self.priority_publish(
-                    PriorityPublishPublicationRequest(publication_id=publication.id)
-                )
-                logger.info(
-                    f"[ConfirmPayment:priority_published] pub_id={publication.id}"
-                )
-            elif publication.status == PublicationStatus.PUBLISHED:
-                await self.apply_service_to_published(
-                    ApplyServiceToPublishedRequest(
-                        publication_id=publication.id,
-                        service_type=definition.type,
+            try:
+                if definition.type == PublicationServiceType.PRIORITY_PUBLISH:
+                    await self.priority_publish(
+                        PriorityPublishPublicationRequest(publication_id=publication.id)
                     )
+                    logger.info(
+                        f"[ConfirmPayment:priority_published] pub_id={publication.id}"
+                    )
+                elif publication.status == PublicationStatus.PUBLISHED:
+                    await self.apply_service_to_published(
+                        ApplyServiceToPublishedRequest(
+                            publication_id=publication.id,
+                            service_type=definition.type,
+                        )
+                    )
+            except Exception as e:
+                # Деньги списаны и услуга уже ACTIVE (закоммичено выше) — если
+                # применение эффекта падает, НЕ роняем весь confirm_payment:
+                # пользователь должен получить уведомление и вернуться в диалог,
+                # а инцидент должен быть громко виден для ручной проверки.
+                logger.error(
+                    f"[ConfirmPayment:apply_effect_failed] pub_id={publication.id} "
+                    f"service_type={definition.type} payment_id={payment.id}: {e}"
                 )
+                sentry_sdk.capture_exception(e)
 
             logger.info(f"[ConfirmPayment:before_notify] payment_id={payment.id}")
             await self.payment_notifier.notify_user(
@@ -179,16 +202,33 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                 if publication is None:
                     raise PublicationNotFoundException(payment.purpose_id)
 
-                await self.confirm_paid_slot(
-                    ConfirmPaidSlotAndSchedulePublicationRequest(
-                        publication_id=publication.id,
-                        user_id=payment.user_id,
-                        ad_id=publication.ad_id,
+                try:
+                    await self.confirm_paid_slot(
+                        ConfirmPaidSlotAndSchedulePublicationRequest(
+                            publication_id=publication.id,
+                            user_id=payment.user_id,
+                            ad_id=publication.ad_id,
+                        )
                     )
-                )
-                extra["slot_text"] = (
-                    f"{publication.publish_at_utc:%d.%m}-{publication.publish_at_utc:%H:%M}"
-                )
+                    extra["slot_text"] = (
+                        f"{publication.publish_at_utc:%d.%m}-{publication.publish_at_utc:%H:%M}"
+                    )
+                except (SlotAlreadyBooked, SlotAlreadyConverted) as e:
+                    # Слот оказался занят другим пользователем в результате
+                    # гонки ПОСЛЕ того, как деньги уже реально получены (внешний
+                    # платёж). Денег не теряем: компенсируем их на баланс —
+                    # ровно под этот случай уже есть готовый текст в
+                    # PaymentNotifier._build_user_text (extra["slot_conflict"]).
+                    logger.error(
+                        f"[ConfirmPayment:slot_conflict] payment_id={payment.id} "
+                        f"pub_id={publication.id} user_id={payment.user_id}: {e} "
+                        f"— компенсируем {payment.amount} руб. на баланс"
+                    )
+                    sentry_sdk.capture_exception(e)
+                    user.top_up(payment.amount)
+                    await self.user_repo.save(user)
+                    extra["slot_conflict"] = True
+                    extra["compensated_amount"] = payment.amount
             elif "slot" in return_data:
                 slot_dict = return_data["slot"]
                 slot = SlotKey(
@@ -197,16 +237,47 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                     local_time=time.fromisoformat(slot_dict["slot_time"]),
                 )
 
-                await self.reservation_service.converted_repo.mark_converted(
-                    slot=slot,
-                    user_id=payment.user_id,
-                    ad_id=None,
+                converted = (
+                    await self.reservation_service.converted_repo.mark_converted(
+                        slot=slot,
+                        user_id=payment.user_id,
+                        ad_id=None,
+                    )
                 )
-                extra["slot_text"] = f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
-                logger.info(
-                    f"[ConfirmPayment:slot_converted] user_id={payment.user_id} "
-                    f"slot={slot.local_day} {slot.local_time}"
-                )
+                owner_user_id: int | None = payment.user_id
+                if not converted:
+                    owner = await self.reservation_service.converted_repo.get_converted_owner_and_ad(
+                        slot
+                    )
+                    owner_user_id = owner[0] if owner else None
+
+                if owner_user_id != payment.user_id:
+                    logger.error(
+                        f"[ConfirmPayment:slot_conflict] payment_id={payment.id} "
+                        f"user_id={payment.user_id} slot={slot.local_day} "
+                        f"{slot.local_time} already_owned_by={owner_user_id} — "
+                        f"компенсируем {payment.amount} руб. на баланс"
+                    )
+                    sentry_sdk.capture_message(
+                        f"Slot payment conflict: payment_id={payment.id}, "
+                        f"slot already owned by user {owner_user_id}",
+                        level="error",
+                    )
+                    user.top_up(payment.amount)
+                    await self.user_repo.save(user)
+                    extra["slot_conflict"] = True
+                    extra["compensated_amount"] = payment.amount
+                    extra["slot_text"] = (
+                        f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
+                    )
+                else:
+                    extra["slot_text"] = (
+                        f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
+                    )
+                    logger.info(
+                        f"[ConfirmPayment:slot_converted] user_id={payment.user_id} "
+                        f"slot={slot.local_day} {slot.local_time}"
+                    )
             else:
                 raise PaymnetNotFountPurposeException(command.external_id)
 

@@ -117,19 +117,31 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
             logger.info(f"[SelectSlot:awaiting_payment] pub_id={publication.id}")
             return
 
-        if (
-            not command.payment_confirmed
-            and await self.reservation_service.booking_repo.is_booked(command.slot)
-        ):
-            raise SlotAlreadyBooked()
+        if await self.reservation_service.booking_repo.is_booked(command.slot):
+            booking_owner = (
+                await self.reservation_service.booking_repo.get_booking_owner(
+                    command.slot
+                )
+            )
+            if booking_owner != command.user_id:
+                # Слот реально занят другим пользователем — это конфликт
+                # независимо от payment_confirmed. Раньше payment_confirmed=True
+                # полностью глушил эту проверку, даже когда владелец другой.
+                raise SlotAlreadyBooked()
 
         converted = await self.reservation_service.converted_repo.mark_converted(
             slot=command.slot,
             user_id=command.user_id,
             ad_id=command.ad_id,
         )
-        if not converted and not command.payment_confirmed:
-            raise SlotAlreadyConverted()
+        if not converted:
+            converted_owner = await self.reservation_service.converted_repo.get_converted_owner_and_ad(
+                command.slot
+            )
+            owner_user_id = converted_owner[0] if converted_owner else None
+            if owner_user_id != command.user_id:
+                raise SlotAlreadyConverted()
+            # тот же пользователь уже сконвертировал слот ранее — идемпотентный повтор
 
         publication.schedule(slot=command.slot, publish_at_utc=publish_at_utc)
         await self.publication_repo.save(publication)

@@ -46,10 +46,15 @@ class InMemorySlotHoldStore(SlotHoldStore):
 
         return entry.owner
 
-    async def set(self, slot: SlotKey, owner: HoldOwner, ttl: timedelta) -> None:
+    async def set(self, slot: SlotKey, owner: HoldOwner, ttl: timedelta) -> bool:
         key = self._k(slot)
         now_utc = self._now()
+        entry = self._holds.get(key)
+        if entry is not None and not self._purge_if_expired(key, entry, now_utc):
+            if entry.owner.user_id != owner.user_id:
+                return False
         self._holds[key] = _HoldEntry(owner=owner, expires_at_utc=now_utc + ttl)
+        return True
 
     async def delete(self, slot: SlotKey) -> None:
         self._holds.pop(self._k(slot), None)
@@ -68,3 +73,7 @@ class InMemorySlotHoldStore(SlotHoldStore):
             held.add(slot)
 
         return held
+
+    async def exists_for_user(self, slot: SlotKey, user_id: int) -> bool:
+        owner = await self.get(slot)
+        return owner is not None and owner.user_id == user_id

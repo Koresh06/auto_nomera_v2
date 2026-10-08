@@ -10,6 +10,13 @@ class PaymentRepository(Protocol):
 
     async def get_by_external_id(self, external_id: str) -> Payment | None: ...
 
+    async def get_by_external_id_for_update(self, external_id: str) -> Payment | None:
+        """Как get_by_external_id, но блокирует строку (SELECT ... FOR UPDATE)
+        до конца транзакции — используется только там, где платёж подтверждается,
+        чтобы два параллельных подтверждения одного external_id не выполнились
+        одновременно (повтор webhook'а, повторная доставка задачи)."""
+        ...
+
     async def save(self, payment: Payment) -> None: ...
 
     async def get_stats(
