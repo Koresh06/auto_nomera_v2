@@ -23,3 +23,36 @@ jobs:
 
       - name: Run ruff format check
         run: uv run ruff format --check src/
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run pytest
+        run: uv run pytest src/tests -q
+
+  typecheck:
+    runs-on: ubuntu-latest
+    # mypy сейчас не блокирует merge: в репозитории накоплен большой долг
+    # предупреждений (не связанных с текущими правками), накопленный за
+    # время, когда mypy не входил в CI вовсе. Джоба здесь, чтобы новые ошибки
+    # были видны в PR, а не чтобы блокировать прохождение CI до полной чистки.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run mypy
+        run: uv run mypy src/
