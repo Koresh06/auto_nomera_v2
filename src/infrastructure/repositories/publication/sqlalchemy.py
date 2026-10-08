@@ -30,6 +30,25 @@ from src.infrastructure.database.models.user import UserModel
 MOSCOW_TZ = ZoneInfo("Europe/Moscow")
 
 
+def is_within_regional_today(
+    publish_at_utc: datetime, *, tz_name: str | None, now_utc: datetime
+) -> bool:
+    """True, если publish_at_utc попадает в "сегодня" по локальному времени
+    региона (а не по московскому, как было раньше — AUD-11). Вынесена в
+    чистую функцию, чтобы её можно было протестировать для разных таймзон
+    без интеграционного теста с реальной БД."""
+    region_tz = ZoneInfo(tz_name) if tz_name else MOSCOW_TZ
+    now_local = now_utc.astimezone(region_tz)
+    today_start_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end_local = today_start_local + timedelta(days=1)
+    today_start_utc = today_start_local.astimezone(timezone.utc)
+    today_end_utc = today_end_local.astimezone(timezone.utc)
+
+    if publish_at_utc.tzinfo is None:
+        publish_at_utc = publish_at_utc.replace(tzinfo=timezone.utc)
+    return today_start_utc <= publish_at_utc < today_end_utc
+
+
 class SQLAlchemyPublicationRepo(PublicationRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -422,14 +441,14 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
     async def list_overdue_scheduled_today(
         self, now_utc: datetime
     ) -> list[tuple[Publication, str | None, AdType, str | None, int, str | None, str]]:
-        now_moscow = now_utc.astimezone(MOSCOW_TZ)
-        today_start_moscow = now_moscow.replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        today_end_moscow = today_start_moscow + timedelta(days=1)
-
-        today_start_utc = today_start_moscow.astimezone(timezone.utc)
-        today_end_utc = today_end_moscow.astimezone(timezone.utc)
+        # AUD-11: "сегодня" раньше всегда считалось по московскому времени,
+        # независимо от реальной таймзоны региона публикации — для региона с
+        # заметным отличием от МСК окно могло не покрывать его настоящее
+        # "сегодня" (или прихватывать соседний день). SQL здесь берёт широкий
+        # запас (+/- 1 день от UTC), а точная граница "сегодня" считается в
+        # Python персонально для таймзоны каждого региона.
+        query_start_utc = now_utc - timedelta(days=1)
+        query_end_utc = now_utc + timedelta(days=1)
 
         query = (
             select(
@@ -446,8 +465,8 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
             .join(RegionModel, RegionModel.id == PublicationModel.region_id)
             .where(
                 PublicationModel.status == PublicationStatus.SCHEDULED,
-                PublicationModel.publish_at_utc >= today_start_utc,
-                PublicationModel.publish_at_utc < today_end_utc,
+                PublicationModel.publish_at_utc >= query_start_utc,
+                PublicationModel.publish_at_utc < query_end_utc,
                 PublicationModel.is_child.is_(False),
             )
             .order_by(PublicationModel.publish_at_utc.asc())
@@ -455,6 +474,13 @@ class SQLAlchemyPublicationRepo(PublicationRepository):
         result = await self._session.execute(query)
         rows = []
         for pub_model, plate, ad_type, username, tg_id, shop_name, tz in result.all():
+            if pub_model.publish_at_utc is None:
+                continue
+            if not is_within_regional_today(
+                pub_model.publish_at_utc, tz_name=tz, now_utc=now_utc
+            ):
+                continue
+
             rows.append(
                 (pub_model.to_entity(), plate, ad_type, username, tg_id, shop_name, tz)
             )

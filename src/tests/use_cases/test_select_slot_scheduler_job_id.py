@@ -24,7 +24,6 @@ from src.domain.entities.region import Region
 from src.domain.enums.publication import PublicationStatus
 from src.domain.services.slots.calendar_builder import CalendarBuilder
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
-from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.domain.value_objects.region_metadata import RegionMetadata
 from src.domain.value_objects.region_settings import RegionSettings
@@ -170,7 +169,14 @@ async def test_scheduler_job_id_not_overwritten_by_notify_scheduled_save() -> No
         channel_id=-1001234567,
         channel_username="testchannel",
         metadata=RegionMetadata(),
-        settings=RegionSettings(),
+        # system_paid_slots_count=0: этот тест проверяет персистентность
+        # scheduler_job_id, а не прайсинг слотов. С count>0 тест был
+        # чувствителен к времени суток запуска (today 10:00 мог попасть в
+        # "первые N платных" слотов региона и уйти в ветку AWAITING_PAYMENT,
+        # вообще не вызывая schedule_publication). pricing теперь берётся из
+        # region.settings внутри use case (см. AUD-10), а не из отдельного
+        # DI-параметра, поэтому настраиваем это здесь.
+        settings=RegionSettings(system_paid_slots_count=0),
     )
 
     reservation_service = SlotReservationService(
@@ -193,11 +199,6 @@ async def test_scheduler_job_id_not_overwritten_by_notify_scheduled_save() -> No
         calendar_builder=CalendarBuilder(),
         time_resolver=PublishTimeResolver(),
         reservation_service=reservation_service,
-        # system_paid_count=0: этот тест проверяет персистентность
-        # scheduler_job_id, а не прайсинг слотов. С count>0 тест был чувствителен
-        # к времени суток запуска (today 10:00 мог попасть в "первые N бесплатных"
-        # и уйти в ветку AWAITING_PAYMENT, вообще не вызывая schedule_publication).
-        pricing_policy=SlotPricingPolicy(system_paid_count=0),
         task_queue=fake_queue,
         settings=settings,
         transaction_manager=fake_tx,

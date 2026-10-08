@@ -177,7 +177,6 @@ from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.region.region_guard import RegionGuard
 from src.domain.services.slots.calendar_builder import CalendarBuilder
-from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 from src.presentation.telegram.common.custom_message_manager import CustomMessageManager
@@ -315,7 +314,6 @@ class UseCasesProvider(Provider):
         calendar_builder: CalendarBuilder,
         time_resolver: PublishTimeResolver,
         reservation_service: SlotReservationService,
-        pricing_policy: SlotPricingPolicy,
         task_queue: TaskQueue,
         settings: AppSettings,
         transaction_manager: TransactionManager,
@@ -327,7 +325,6 @@ class UseCasesProvider(Provider):
             calendar_builder=calendar_builder,
             time_resolver=time_resolver,
             reservation_service=reservation_service,
-            pricing_policy=pricing_policy,
             task_queue=task_queue,
             settings=settings,
             transaction_manager=transaction_manager,

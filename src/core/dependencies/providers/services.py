@@ -18,7 +18,6 @@ from src.domain.services.ad.ad_text_renderer import AdTextRenderer
 from src.domain.services.publication.publish_time_resolver import PublishTimeResolver
 from src.domain.services.region.region_guard import RegionGuard
 from src.domain.services.slots.calendar_builder import CalendarBuilder
-from src.domain.services.slots.slot_pricing_policy import SlotPricingPolicy
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.infrastructure.payment.providers.cryptomus import CryptomusProvider
 from src.infrastructure.payment.providers.manual_card import ManualCardProvider
@@ -36,10 +35,6 @@ class ServicesProvider(Provider):
     @provide(scope=Scope.APP)
     def calendar_builder(self) -> CalendarBuilder:
         return CalendarBuilder()
-
-    @provide(scope=Scope.APP)
-    def slot_pricing_policy(self) -> SlotPricingPolicy:
-        return SlotPricingPolicy(system_paid_count=3)
 
     @provide(scope=Scope.APP)
     def publish_time_resolver(self) -> PublishTimeResolver:

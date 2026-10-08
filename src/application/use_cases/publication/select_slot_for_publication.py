@@ -43,7 +43,6 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
     calendar_builder: CalendarBuilder
     time_resolver: PublishTimeResolver
     reservation_service: SlotReservationService
-    pricing_policy: SlotPricingPolicy
     task_queue: TaskQueue
     settings: AppSettings
     transaction_manager: TransactionManager
@@ -82,7 +81,16 @@ class SelectSlotForPublicationUseCase(UseCase[SelectSlotForPublicationRequest, N
                 slot=command.slot,
             )
 
-        is_system_paid = self.pricing_policy.is_system_paid(
+        # AUD-10: раньше здесь использовалась инжектированная глобальная
+        # SlotPricingPolicy(system_paid_count=3) — хардкод, игнорирующий
+        # индивидуальную настройку region.settings.system_paid_slots_count
+        # (hold_slot/calendar_builder её учитывают корректно). Из-за этого
+        # предпросмотр и подтверждение слота могли расходиться в цене для
+        # регионов с нестандартным значением.
+        pricing_policy = SlotPricingPolicy(
+            system_paid_count=region.settings.system_paid_slots_count
+        )
+        is_system_paid = pricing_policy.is_system_paid(
             ordered_future_slots=ordered_future_slots,
             slot=command.slot,
         )
