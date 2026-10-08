@@ -3,8 +3,15 @@ from zoneinfo import ZoneInfo
 
 from src.domain.entities.publication import Publication
 from src.domain.entities.publication_service import PublicationService
+from src.domain.enums.publication import PublicationStatus
 from src.application.services.publication.context import ServiceContext
 from src.domain.value_objects.slot_key import SlotKey
+
+_ABANDONED_STATUSES = (
+    PublicationStatus.CANCELED,
+    PublicationStatus.FAILED,
+    PublicationStatus.REPLACED,
+)
 
 
 class AutopublishStrategy:
@@ -59,6 +66,21 @@ class AutopublishStrategy:
             else:
                 base_day = today_local  # первый пост завтра
 
+        # AUD-21: если apply() прервался на середине серии (крэш/повторный
+        # вызов после сбоя) и был вызван снова, service.params/status всё
+        # ещё ACTIVE (mark_used() — в самом конце), и без этой проверки цикл
+        # просто создал бы дубли уже существующих дочерних публикаций на те
+        # же дни. Собираем уже занятые (день, время) для этого ad_id,
+        # пропускаем создание для них.
+        existing = await context.publication_repo.list_scheduled_by_ad(
+            publication.ad_id
+        )
+        occupied_slots = {
+            (p.slot.local_day, p.slot.local_time)
+            for p in existing
+            if p.slot is not None and p.status not in _ABANDONED_STATUSES
+        }
+
         # days постов: дни +1 ... +days от базы
         for i in range(1, days + 1):
             next_slot = SlotKey(
@@ -66,6 +88,10 @@ class AutopublishStrategy:
                 local_day=base_day + timedelta(days=i),
                 local_time=base_time,
             )
+
+            if (next_slot.local_day, next_slot.local_time) in occupied_slots:
+                continue
+
             publish_at_utc = context.time_resolver.resolve_publish_at_utc(
                 tz=context.region.timezone,
                 slot=next_slot,
