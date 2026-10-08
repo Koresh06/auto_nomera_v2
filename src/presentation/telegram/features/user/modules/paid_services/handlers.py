@@ -118,7 +118,11 @@ async def on_confirm_buy_pre_publication(
     )
 
     try:
-        await mediator.handle(BuyPrePublicationServiceRequest(user_id=user_id))
+        await mediator.handle(
+            BuyPrePublicationServiceRequest(
+                user_id=user_id, days=definition.duration_days or 30
+            )
+        )
         action_text = "продлена" if was_active else "подключена"
         await callback.answer(
             f"✅ Подписка {action_text} на {definition.duration_days} дн.!",

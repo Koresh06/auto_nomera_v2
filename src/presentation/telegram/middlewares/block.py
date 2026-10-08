@@ -21,6 +21,12 @@ class BlockCheckMiddleware(BaseMiddleware):
                 chat = event.message.chat
             elif event.callback_query and event.callback_query.message:
                 chat = event.callback_query.message.chat
+            elif event.my_chat_member:
+                chat = event.my_chat_member.chat
+            elif event.chat_member:
+                chat = event.chat_member.chat
+            elif event.chat_join_request:
+                chat = event.chat_join_request.chat
         if chat is not None and chat.type != "private":
             return
 

@@ -1,7 +1,18 @@
+import re
+
+
+def _digits_only(value: str) -> str:
+    # Убирает любые не-цифровые символы, включая неразрывный пробел (U+00A0)
+    # и узкий неразрывный пробел (U+202F), которые обычный .replace(" ", "")
+    # не ловит — такие пробелы часто вставляются мобильными клавиатурами при
+    # копировании форматированных чисел вида "1 550 000".
+    return re.sub(r"[^\d]", "", value)
+
+
 def validate_price(value: str) -> int:
     """Валидирует и форматирует цену. Возвращает округлённое значение."""
-    value = value.strip().replace(" ", "")
-    if not value.isdigit():
+    value = _digits_only(value)
+    if not value:
         raise ValueError("Введите корректное число")
 
     num = int(value)
@@ -15,8 +26,8 @@ def validate_price(value: str) -> int:
 
 
 def validate_price_urgent_buyout(value: str) -> int:
-    value = value.strip().replace(" ", "")
-    if not value.isdigit():
+    value = _digits_only(value)
+    if not value:
         raise ValueError("Введите корректное число (только цифры).")
 
     num = int(value)
