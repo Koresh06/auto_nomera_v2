@@ -18,3 +18,11 @@ class ServiceNotAllowed(PublicationDomainError):
     """Сервис не разрешен."""
 
     pass
+
+
+class SchedulerCancellationFailed(PublicationDomainError):
+    """Не удалось гарантированно отменить запланированную задачу — старая
+    задача может ещё выстрелить, продолжать (например, ставить новую задачу
+    поверх) небезопасно."""
+
+    pass

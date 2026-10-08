@@ -43,9 +43,14 @@ class TaskiqTaskQueue(TaskQueue):
         )
         return schedule_id
 
-    async def cancel(self, *, job_id: str) -> None:
+    async def cancel(self, *, job_id: str) -> bool:
         try:
             await self._schedule_source.delete_schedule(job_id)
             logger.info(f"[cancel] deleted schedule {job_id}")
+            return True
         except Exception as e:
-            logger.warning(f"[cancel] failed to delete schedule {job_id}: {e}")
+            # Не глушим это тихо: вызывающий код (TaskQueueScheduler.cancel_publication)
+            # обязан узнать, что отмена НЕ гарантирована, и не считать старую
+            # задачу безопасно устранённой (иначе возможен дубль публикации).
+            logger.error(f"[cancel] failed to delete schedule {job_id}: {e}")
+            return False

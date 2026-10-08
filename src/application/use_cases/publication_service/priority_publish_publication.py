@@ -47,6 +47,11 @@ class PriorityPublishPublicationUseCase(
         if publication.status == PublicationStatus.SCHEDULED:
             await self.scheduler.cancel_publication(publication_id=publication.id)
             await self.scheduler.schedule_publish_now(publication_id=publication.id)
+
+            if service:
+                service.mark_used()
+                await self.publication_repo.save(publication)
+
             await self.transaction_manager.commit()
 
         elif publication.status == PublicationStatus.PUBLISHED:
