@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 def register_taskiq_tasks(broker, *, container):
 
-    @broker.task(name="publish_publication")
+    @broker.task(name="publish_publication", retry_on_error=True, max_retries=3)
     async def publish_publication(publication_id: int) -> None:
         async with container() as request_container:
             mediator = await request_container.get(Mediator)

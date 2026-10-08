@@ -87,9 +87,6 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
             )
             return
 
-        pub.mark_publishing()
-        await self.publication_repo.save(pub)
-
         ad = await self.ad_repo.get_by_id(pub.ad_id)
         if ad is None:
             raise AdNotFoundException(pub.ad_id)
@@ -132,6 +129,19 @@ class PublishPublicationUseCase(UseCase[PublishPublicationRequest, None]):
         if priority_svc is not None:
             priority_svc.mark_used()
             await self.publication_repo.save(pub)
+
+        # AUD-08: коммитим переход в PUBLISHING здесь — прямо перед вызовом
+        # Telegram API, а не в самом конце метода. mark_publishing() требует
+        # status==SCHEDULED: если сообщение было доставлено повторно
+        # (at-least-once брокер) или два воркера дёрнули одну задачу
+        # параллельно, второй заход увидит уже закоммиченный PUBLISHING и
+        # упадёт на этой же проверке, а не отправит дублирующийся пост в
+        # канал. Коммит максимально отложен (после всех lookup'ов и
+        # HIGHLIGHT), чтобы транзиентный сбой ДО этой точки откатывался
+        # целиком в SCHEDULED и был безопасен для повторной попытки.
+        pub.mark_publishing()
+        await self.publication_repo.save(pub)
+        await self.transaction_manager.commit()
 
         # 2) публикация в канал
         if ad.ad_type == AdType.STORE:
