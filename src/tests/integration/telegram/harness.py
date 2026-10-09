@@ -395,3 +395,35 @@ async def settle(rounds: int = 20) -> None:
         if not pending:
             return
         await asyncio.wait(pending, timeout=0.5)
+
+
+async def forge_click(u: "TgUser", widget_data: str) -> None:
+    """Нажатие, которого нет на экране: модифицированный клиент Telegram
+    может прислать любой callback_data для сообщения бота. Берём intent
+    текущего диалога из видимой кнопки и подставляем свой widget/item."""
+    sent = next(m for m in reversed(u.messages) if m.buttons)
+    data = next(b.callback_data for b in sent.buttons if b.callback_data)
+    intent = data.split("\x1d", 1)[0]
+    await u._feed(
+        callback_query=CallbackQuery(
+            id=str(next(u._update_ids)),
+            from_user=u.user,
+            chat_instance="ci",
+            message=sent.message,
+            data=f"{intent}\x1d{widget_data}",
+        )
+    )
+
+
+async def forge_raw_callback(u: "TgUser", data: str) -> None:
+    """Callback с произвольными данными (не диалоговый) на сообщение бота."""
+    sent = u.last
+    await u._feed(
+        callback_query=CallbackQuery(
+            id=str(next(u._update_ids)),
+            from_user=u.user,
+            chat_instance="ci",
+            message=sent.message,
+            data=data,
+        )
+    )

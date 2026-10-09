@@ -48,6 +48,11 @@ class BuyPublicationServiceUseCase(UseCase[BuyPublicationServiceRequest, None]):
         ad = await self.ad_repo.get_by_id(publication.ad_id)
         if ad is None:
             raise AdNotFoundException(publication.ad_id)
+        # id публикации приходит из callback_data, который клиент может
+        # подделать: без этой проверки можно было купить «Вне очереди» для
+        # чужого объявления и выпустить его в обход выбранного владельцем слота.
+        if ad.user_id != command.user_id:
+            raise PublicationNotFoundException(command.publication_id)
 
         # AUD-19: проверяем ДО списания денег — иначе пользователь платит за
         # услугу, которая не может быть применена к этому типу объявления.

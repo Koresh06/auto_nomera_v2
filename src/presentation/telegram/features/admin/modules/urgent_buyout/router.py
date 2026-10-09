@@ -10,6 +10,8 @@ from src.application.exceptions.ad import (
     AdNotFoundException,
 )
 from src.application.mediator import Mediator
+from src.core.config import settings
+from src.presentation.telegram.features.admin.modules.menu.filter import AdminFilter
 from src.application.use_cases.ad.approve_urgent_buyout import (
     ApproveUrgentBuyoutRequest,
 )
@@ -24,6 +26,10 @@ logger = logging.getLogger(__name__)
 
 
 router = Router()
+# Кнопки модерации приходят админам в личку, но callback_data может прислать
+# кто угодно (модифицированный клиент) — без фильтра любой пользователь мог
+# одобрить свою заявку или отклонить чужую.
+router.callback_query.filter(AdminFilter(settings.telegram.admin_ids))
 
 
 @router.callback_query(

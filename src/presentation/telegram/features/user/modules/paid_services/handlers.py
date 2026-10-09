@@ -15,6 +15,7 @@ from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.exceptions.user import InsufficientBalance
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.service_definition import ServiceDefinitionDTO
+from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.mediator import Mediator
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
 from src.application.use_cases.publication_service.apply_service import (
@@ -84,6 +85,10 @@ async def on_confirm_buy_service(
                 )
             )
         await callback.answer("✅ Услуга подключена!", show_alert=True)
+        await dialog_manager.done()
+    except PublicationNotFoundException:
+        # публикацию успели удалить — или id подделан (чужая публикация)
+        await callback.answer("⚠️ Объявление не найдено.", show_alert=True)
         await dialog_manager.done()
     except InsufficientBalance:
         await start_payment(

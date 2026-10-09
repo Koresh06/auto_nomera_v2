@@ -17,7 +17,7 @@ from sqlalchemy.pool import NullPool
 
 from src.application.mediator import Mediator
 from src.application.ports.tasks.task_queue import TaskQueue
-from src.core.config import settings
+from src.core.config import AppSettings, settings
 from src.core.dependencies.providers import make_base_providers
 from src.infrastructure.seeds.runner import run_seeds
 from src.presentation.telegram.middlewares.setup import setup_middlewares
@@ -78,6 +78,16 @@ class _TestOverrides(Provider):
     @provide(scope=Scope.REQUEST)
     def task_queue(self) -> TaskQueue:
         return self._tasks
+
+    @provide(scope=Scope.APP)
+    def app_settings(self) -> AppSettings:
+        """Как в проде, независимо от локального .env разработчика
+        (там DEBUG=True сжимает окна уведомлений до минут)."""
+        s = AppSettings()
+        s.app.debug = False
+        s.app.pre_publication_window_hours = 2
+        s.app.hold_slots_time = 300
+        return s
 
 
 @pytest_asyncio.fixture(scope="session")

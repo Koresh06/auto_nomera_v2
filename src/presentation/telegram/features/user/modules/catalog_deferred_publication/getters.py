@@ -17,7 +17,17 @@ from src.application.use_cases.catalog.get_catalog_deferred_publications import 
     CatalogItem,
     GetCatalogDeferredPublicationsRequest,
 )
+from src.presentation.telegram.features.admin.modules.menu.filter import (
+    is_admin_user,
+)
 from src.presentation.telegram.utils.build_media import build_media_attachment
+
+
+def has_active_pre_publication(user: UserDTO) -> bool:
+    return (
+        user.pre_publication_expires_at is not None
+        and user.pre_publication_expires_at > datetime.now(timezone.utc)
+    )
 
 
 @inject
@@ -31,10 +41,7 @@ async def getter_catalog_list(
     region_id = user.region_id
     dialog_manager.dialog_data["region_id"] = region_id
 
-    has_subscription = (
-        user.pre_publication_expires_at is not None
-        and user.pre_publication_expires_at > datetime.now(timezone.utc)
-    )
+    has_subscription = has_active_pre_publication(user)
 
     if not has_subscription:
         return {
@@ -85,6 +92,20 @@ async def getter_urgent_catalog(
     tg_id = dialog_manager.event.from_user.id
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=tg_id))
     dialog_manager.dialog_data["region_id"] = user.region_id
+
+    # Окно карточек открывается из списка, доступного только подписчикам,
+    # но попасть сюда можно и подделанным нажатием скрытой кнопки — платный
+    # контент (контакты продавцов) отдаём только при активной подписке.
+    if not has_active_pre_publication(user):
+        return {
+            "has_subscription": False,
+            "has_ads": False,
+            "count_page": 0,
+            "current_page_display": 0,
+            "current_media": None,
+            "card": None,
+            "is_admin": False,
+        }
 
     region_dto: RegionDTO = await mediator.handle(IdRegionRequest(user.region_id))
     region = region_dto.to_entity()
@@ -140,5 +161,5 @@ async def getter_urgent_catalog(
         "current_page_display": current_page + 1,
         "current_media": current_media,
         "card": card,
-        "is_admin": tg_id in settings.telegram.admin_ids,
+        "is_admin": await is_admin_user(tg_id, mediator),
     }

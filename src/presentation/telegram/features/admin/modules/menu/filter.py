@@ -36,3 +36,15 @@ class AdminFilter(BaseFilter):
         **kwargs,
     ) -> bool:
         return await self.is_admin(event.from_user.id, mediator)
+
+
+async def is_admin_user(tg_id: int, mediator: Mediator) -> bool:
+    """Проверка прав администратора для хендлеров вне админского роутера.
+
+    Видимость кнопки (``when=``) в aiogram-dialog НЕ является защитой:
+    скрытые кнопки всё равно обрабатывают callback, а callback_data
+    модифицированный клиент может прислать любую. Поэтому действия с
+    правами проверяются здесь, на сервере."""
+    from src.core.config import settings
+
+    return await AdminFilter(settings.telegram.admin_ids).is_admin(tg_id, mediator)
