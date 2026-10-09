@@ -93,3 +93,5 @@ my_database.db
 .env/
 README-logic.md
 .claude
+.coverage
+htmlcov/
