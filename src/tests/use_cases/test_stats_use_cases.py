@@ -260,3 +260,44 @@ async def test_get_region_schedule_skips_publications_without_publish_at():
     result = await use_case(GetRegionScheduleRequest(region_id=1))
 
     assert result.days[0].count == 0
+
+
+async def test_region_schedule_days_follow_region_local_date(monkeypatch):
+    """«Сегодня» в расписании — по местной дате региона, а не по UTC.
+    09.10 22:00 UTC = 10.10 08:00 во Владивостоке: первый день расписания
+    10.10, утренняя публикация 10.10 — в нём, а не в «следующем» дне."""
+    from src.application.use_cases.stats import region_schedule as module
+
+    fixed_now = datetime(2026, 10, 9, 22, 0, tzinfo=timezone.utc)
+
+    class FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return fixed_now.astimezone(tz) if tz else fixed_now
+
+    monkeypatch.setattr(module, "datetime", FrozenDatetime)
+
+    region = make_region(
+        timezone=TimezoneName("Asia/Vladivostok"),
+        settings=RegionSettings(days_range=2),
+    )
+    pub_repo = FakePublicationRepo()
+    morning = Publication(
+        id=1,
+        ad_id=1,
+        region_id=1,
+        status=PublicationStatus.SCHEDULED,
+        # 10.10 10:00 по Владивостоку
+        publish_at_utc=datetime(2026, 10, 10, 0, 0, tzinfo=timezone.utc),
+    )
+    pub_repo.schedule_rows = [
+        (morning, "А001АА77", AdType.SALE, None, 1, None, False, False)
+    ]
+    use_case = GetRegionScheduleUseCase(
+        publication_repo=pub_repo, region_repo=FakeRegionRepo(region)
+    )
+
+    result = await use_case(GetRegionScheduleRequest(region_id=1))
+
+    assert [d.date for d in result.days] == ["10.10.2026", "11.10.2026"]
+    assert [s.time for s in result.days[0].slots] == ["10:00"]

@@ -1,6 +1,6 @@
 """Админ-панель (/admin) — сквозные сценарии через бота."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytest
@@ -439,8 +439,12 @@ async def test_overdue_publications_can_be_published_by_admin(world, session):
     from src.domain.value_objects.slot_key import SlotKey
 
     ad = await make_ad(session, target)
-    publish_at = datetime.now(timezone.utc) - timedelta(minutes=30)
-    local = publish_at.astimezone(ZoneInfo("Europe/Moscow"))
+    # «просрочена сегодня» по местному времени: середина между местной
+    # полуночью и текущим моментом (тест не должен зависеть от времени суток)
+    now_local = datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Moscow"))
+    midnight = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    local = midnight + (now_local - midnight) / 2
+    publish_at = local.astimezone(timezone.utc)
     overdue = await make_publication(
         session,
         ad,

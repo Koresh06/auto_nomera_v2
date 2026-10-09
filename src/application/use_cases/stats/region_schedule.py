@@ -32,12 +32,17 @@ class GetRegionScheduleUseCase(UseCase[GetRegionScheduleRequest, RegionScheduleD
         tz = ZoneInfo(region.timezone.value)
         days_range = region.settings.days_range
 
-        now = datetime.now(timezone.utc)
-        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        to_utc = today + timedelta(days=days_range)
+        # «Сегодня» — по местной дате региона: публикации ниже группируются
+        # по местной дате, а раньше окно и подписи дней считались от полуночи
+        # UTC — у восточных регионов расписание каждые сутки на несколько
+        # часов съезжало на вчерашний день (тот же класс ошибки, что AUD-11).
+        now_local = datetime.now(timezone.utc).astimezone(tz)
+        today = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+        from_utc = today.astimezone(timezone.utc)
+        to_utc = (today + timedelta(days=days_range)).astimezone(timezone.utc)
 
         rows = await self.publication_repo.list_scheduled_by_region(
-            command.region_id, today, to_utc
+            command.region_id, from_utc, to_utc
         )
 
         by_date: dict[str, list[ScheduleSlotDTO]] = {}
