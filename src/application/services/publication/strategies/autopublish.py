@@ -75,10 +75,16 @@ class AutopublishStrategy:
         existing = await context.publication_repo.list_scheduled_by_ad(
             publication.ad_id
         )
+        # Сам родитель не занимает будущий день серии: если он вышел раньше
+        # своего слота (PRIORITY_PUBLISH), отсчёт идёт от дня выхода, и первый
+        # пост серии совпадает с исходным слотом родителя — без этого
+        # исключения он пропускался, и за 7 оплаченных дней выходило 6 постов.
         occupied_slots = {
             (p.slot.local_day, p.slot.local_time)
             for p in existing
-            if p.slot is not None and p.status not in _ABANDONED_STATUSES
+            if p.slot is not None
+            and p.status not in _ABANDONED_STATUSES
+            and p.id != publication.id
         }
 
         # days постов: дни +1 ... +days от базы

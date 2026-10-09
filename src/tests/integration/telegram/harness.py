@@ -35,6 +35,7 @@ from aiogram.methods import (
     EditMessageReplyMarkup,
     EditMessageText,
     GetChat,
+    GetFile,
     GetChatMember,
     GetMe,
     SendMediaGroup,
@@ -45,6 +46,7 @@ from aiogram.types import (
     Chat,
     ChatMemberMember,
     Contact,
+    File,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
@@ -101,8 +103,15 @@ class FakeTelegramSession(BaseSession):
     async def close(self) -> None:  # pragma: no cover - нечего закрывать
         pass
 
-    async def stream_content(self, *a, **kw):  # pragma: no cover
-        yield b""
+    async def stream_content(self, *a, **kw):
+        """Скачивание файла по file_path — отдаём настоящий JPEG."""
+        from io import BytesIO
+
+        from PIL import Image
+
+        buf = BytesIO()
+        Image.new("RGB", (64, 32), (200, 200, 200)).save(buf, format="JPEG")
+        yield buf.getvalue()
 
     # --- helpers ---------------------------------------------------------
 
@@ -112,11 +121,12 @@ class FakeTelegramSession(BaseSession):
                 return sent
         return None
 
-    def _photo(self) -> list[PhotoSize]:
+    def _photo(self, source: Any = None) -> list[PhotoSize]:
+        """file_id отправленного фото: тот же, если слали по file_id
+        (как в Telegram), иначе — новый, как после загрузки файла."""
         n = next(self._ids)
-        return [
-            PhotoSize(file_id=f"photo-{n}", file_unique_id=f"u{n}", width=1, height=1)
-        ]
+        file_id = source if isinstance(source, str) else f"photo-{n}"
+        return [PhotoSize(file_id=file_id, file_unique_id=f"u{n}", width=1, height=1)]
 
     def _new_message(self, chat_id: int, **fields: Any) -> Message:
         markup = fields.get("reply_markup")
@@ -146,6 +156,12 @@ class FakeTelegramSession(BaseSession):
             return User(id=BOT_ID, is_bot=True, first_name="Bot", username="test_bot")
         if isinstance(method, GetChat):
             return Chat(id=int(method.chat_id), type="private")
+        if isinstance(method, GetFile):
+            return File(
+                file_id=method.file_id,
+                file_unique_id=method.file_id,
+                file_path=f"photos/{method.file_id}.jpg",
+            )
         if isinstance(method, GetChatMember):
             return ChatMemberMember(
                 user=User(id=method.user_id, is_bot=False, first_name="U")
@@ -200,7 +216,7 @@ class FakeTelegramSession(BaseSession):
                 if value is not None:
                     fields[name] = value
             if hasattr(method, "photo"):
-                fields["photo"] = self._photo()
+                fields["photo"] = self._photo(method.photo)
             if hasattr(method, "title") and hasattr(method, "prices"):
                 fields["text"] = f"<invoice {method.title}>"
             return self._new_message(int(method.chat_id), **fields)

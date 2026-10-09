@@ -49,6 +49,17 @@ class PriorityPublishPublicationUseCase(
             await self.scheduler.schedule_publish_now(publication_id=publication.id)
 
             if service:
+                # Планировщик сохранил новый scheduler_job_id через свою копию
+                # публикации. Сохранение нашей (загруженной до отмены) копии
+                # вернуло бы в БД id уже отменённой задачи — и последующая
+                # отмена публикации не сняла бы реальную немедленную задачу.
+                publication = await self.publication_repo.get_by_id(publication.id)
+                service = next(
+                    s
+                    for s in publication.services
+                    if s.type == PublicationServiceType.PRIORITY_PUBLISH
+                    and s.status == PublicationServiceStatus.ACTIVE
+                )
                 service.mark_used()
                 await self.publication_repo.save(publication)
 
