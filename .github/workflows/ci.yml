@@ -1,10 +1,17 @@
 name: CI
 
+# Тесты и линтер на каждый push в любую ветку и на каждый PR.
+# Этот же workflow вызывается из deploy.yml (workflow_call): образ не
+# собирается и не выкатывается, пока тесты не прошли.
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
-    branches: [main]
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_call' }}
 
 jobs:
   lint:
@@ -14,9 +21,11 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --dev --locked
 
       - name: Run ruff check
         run: uv run ruff check src/
@@ -26,17 +35,23 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --dev --locked
 
+      # Интеграционные тесты поднимают встроенный PostgreSQL 16 (pgserver)
+      # и fakeredis — внешние сервисы и секреты не нужны. Реальный Telegram,
+      # ЮKassa и Sentry в тестах не используются.
       - name: Run pytest
-        run: uv run pytest src/tests -q
+        run: uv run pytest src/tests -q -p no:cacheprovider --cov --cov-report=term:skip-covered
 
   typecheck:
     runs-on: ubuntu-latest
@@ -50,9 +65,11 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --dev --locked
 
       - name: Run mypy
         run: uv run mypy src/

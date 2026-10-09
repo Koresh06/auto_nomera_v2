@@ -5,3 +5,15 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+
+  # Полный прогон тестов перед `git push` (на каждый commit — слишком долго,
+  # ~1 минута). Установка: pre-commit install --hook-type pre-push
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest (all tests)
+        entry: uv run pytest src/tests -q -x -p no:cacheprovider
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
