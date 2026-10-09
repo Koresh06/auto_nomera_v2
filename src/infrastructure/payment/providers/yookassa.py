@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 from yookassa import Configuration, Payment as YooKassaPayment
+from yookassa.client import ApiClient
 from yookassa.domain.response import PaymentResponse
 
 from src.application.exceptions.payment import PaymentProviderUnavailableException
@@ -19,6 +20,24 @@ from src.domain.exceptions.payment import PaymentPhoneRequiredException
 
 logger = logging.getLogger(__name__)
 
+_ORIGINAL_GET_SESSION = ApiClient.get_session
+
+
+def _route_yookassa_http(proxy: str | None) -> None:
+    """SDK ЮKassa создаёт requests.Session с trust_env=True, то есть берёт
+    прокси из HTTP(S)_PROXY окружения. На машине разработчика это прокси
+    для других целей, который до api.yookassa.ru не достучался (502) —
+    создание платежа падало. Ходим в ЮKassa напрямую, а прокси — только
+    если он явно задан в настройках (APP_CONFIG__PAYMENT__YOOKASSA__PROXY)."""
+
+    def get_session(client: ApiClient):
+        session = _ORIGINAL_GET_SESSION(client)
+        session.trust_env = False
+        session.proxies = {"https": proxy, "http": proxy} if proxy else {}
+        return session
+
+    ApiClient.get_session = get_session  # type: ignore[method-assign]
+
 
 @dataclass
 class YooKassaProvider(PaymentProvider):
@@ -29,6 +48,7 @@ class YooKassaProvider(PaymentProvider):
     def __post_init__(self) -> None:
         Configuration.account_id = self.account_id
         Configuration.secret_key = self.secret_key
+        _route_yookassa_http(self.settings.proxy or None)
 
     async def create_invoice(
         self,

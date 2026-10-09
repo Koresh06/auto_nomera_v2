@@ -15,6 +15,9 @@ class YooKassaSettings(BaseSettings):
     account_id: int = 0
     secret_key: str = ""
     return_url: str = ""
+    # Прокси только для запросов к API ЮKassa. Пусто — напрямую: системные
+    # HTTP(S)_PROXY для ЮKassa намеренно игнорируются (см. yookassa.py).
+    proxy: str = ""
 
 
 class CryptomusSettings(BaseSettings):

@@ -201,3 +201,38 @@ async def test_instructions_and_webhook_helpers(provider):
         == "z"
     )
     assert await provider.handle_webhook({}) is None
+
+
+def test_yookassa_ignores_system_proxy_by_default(monkeypatch):
+    from yookassa.client import ApiClient
+
+    monkeypatch.setenv("HTTPS_PROXY", "http://broken-proxy:1")
+    monkeypatch.setenv("https_proxy", "http://broken-proxy:1")
+    monkeypatch.setattr(ApiClient, "get_session", ApiClient.get_session)  # откат
+    YooKassaProvider(account_id=1, secret_key="s", settings=YooKassaSettings())
+
+    session = ApiClient().get_session()
+
+    assert session.trust_env is False
+    assert session.proxies == {}
+    assert (
+        session.merge_environment_settings(
+            "https://api.yookassa.ru/v3/payments", {}, None, None, None
+        )["proxies"]
+        == {}
+    )
+
+
+def test_yookassa_uses_explicit_proxy_from_settings(monkeypatch):
+    from yookassa.client import ApiClient
+
+    monkeypatch.setattr(ApiClient, "get_session", ApiClient.get_session)  # откат
+    YooKassaProvider(
+        account_id=1,
+        secret_key="s",
+        settings=YooKassaSettings(proxy="http://yk-proxy:3128"),
+    )
+
+    session = ApiClient().get_session()
+
+    assert session.proxies["https"] == "http://yk-proxy:3128"
