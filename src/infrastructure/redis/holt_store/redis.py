@@ -53,8 +53,10 @@ class RedisSlotHoldStore(SlotHoldStore):
         await self._redis.delete(self._k(slot))
 
     async def get_held_set(self, slots: Iterable[SlotKey]) -> Set[SlotKey]:
-        keys = [self._k(slot) for slot in slots]
+        # Сначала материализуем: генератор нельзя пройти дважды, иначе
+        # zip ниже получит пустой список и занятые слоты "станут" свободными.
         slots_list = list(slots)
+        keys = [self._k(slot) for slot in slots_list]
         if not keys:
             return set()
 
