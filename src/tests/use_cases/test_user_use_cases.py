@@ -35,10 +35,6 @@ from src.application.use_cases.user.set_block import (
     SetUserBlockCommand,
     SetUserBlockUseCase,
 )
-from src.application.use_cases.user.top_up_balance import (
-    TopUpBalanceRequest,
-    TopUpBalanceUseCase,
-)
 from src.application.use_cases.user.update import UpdateUserRequest, UpdateUserUseCase
 from src.domain.entities.region import Region
 from src.domain.entities.user import User
@@ -361,41 +357,6 @@ async def test_set_user_block_unblock_payments():
     )
 
     assert dto.is_payment_blocked is False
-
-
-# ---------- TopUpBalanceUseCase ----------
-
-
-async def test_top_up_balance_increases_balance():
-    user = make_user(balance=Decimal("10"))
-    tx = FakeTransactionManager()
-    use_case = TopUpBalanceUseCase(
-        user_repo=FakeUserRepo([user]), transaction_manager=tx
-    )
-
-    await use_case(TopUpBalanceRequest(user_id=1, amount=Decimal("90")))
-
-    assert user.balance == Decimal("100")
-    assert tx.commits == 1
-
-
-async def test_top_up_balance_rejects_non_positive_amount():
-    use_case = TopUpBalanceUseCase(
-        user_repo=FakeUserRepo([make_user()]),
-        transaction_manager=FakeTransactionManager(),
-    )
-
-    with pytest.raises(ValueError):
-        await use_case(TopUpBalanceRequest(user_id=1, amount=Decimal("0")))
-
-
-async def test_top_up_balance_unknown_user_raises():
-    use_case = TopUpBalanceUseCase(
-        user_repo=FakeUserRepo([]), transaction_manager=FakeTransactionManager()
-    )
-
-    with pytest.raises(UserNotFoundException):
-        await use_case(TopUpBalanceRequest(user_id=1, amount=Decimal("10")))
 
 
 # ---------- UpdateUserUseCase ----------

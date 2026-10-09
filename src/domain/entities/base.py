@@ -2,7 +2,6 @@ from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
 
-# from src.utils.uuid_v7 import uuid7
 from src.utils.get_datetime_utc_now import get_datetime_utc_now
 
 
