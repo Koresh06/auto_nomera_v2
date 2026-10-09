@@ -211,8 +211,11 @@ async def on_field_input(
             )
 
         elif field == "price":
-            value = value.replace(" ", "").replace("\xa0", "")
-            validate_price(value)
+            # Те же правила, что при создании объявления: результат
+            # validate_price (цифры без разделителей, 1..999 -> тысячи), а не
+            # сырой ввод — иначе "150" сохранялось как 150 ₽ вместо 150 000 ₽,
+            # а "1.200.000" роняло int() ниже.
+            value = str(validate_price(value))
         elif field == "phone":
             value = validate_phone_number(value)
     except ValueError as e:

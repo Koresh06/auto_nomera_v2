@@ -115,6 +115,9 @@ class FakePublicationRepo:
         self.saved.append(publication)
         self._store[publication.id] = publication
 
+    async def list_scheduled_by_ad(self, ad_id: int) -> list[Publication]:
+        return [p for p in self._store.values() if p.ad_id == ad_id]
+
 
 class FakeRegionRepo:
     def __init__(self, region: Region | None) -> None:
