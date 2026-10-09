@@ -6,6 +6,7 @@ from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.domain.exceptions.slot_reservation import SlotAlreadyConverted
 from src.domain.value_objects.slot_key import SlotKey
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
@@ -33,13 +34,25 @@ class ConfirmPaidSlotFromBalanceUseCase(
         if user is None:
             raise UserNotFoundException(command.user_id)
 
-        user.charge(command.amount)
-        await self.user_repo.save(user)
-
-        await self.converted_repo.mark_converted(
+        # Проверяем ДО списания средств: тот же класс бага, что уже был
+        # исправлен в book_after_payment/select_slot_for_publication/
+        # ConfirmPaymentUseCase — слот мог достаться другому пользователю
+        # буквально секунду раньше, и charge() без этой проверки списал бы
+        # деньги без какого-либо эффекта.
+        converted = await self.converted_repo.mark_converted(
             slot=command.slot,
             user_id=command.user_id,
         )
+        if not converted:
+            owner = await self.converted_repo.get_converted_owner_and_ad(command.slot)
+            owner_user_id = owner[0] if owner else None
+            if owner_user_id != command.user_id:
+                raise SlotAlreadyConverted()
+            # тот же пользователь уже сконвертировал слот ранее — идемпотентно
+
+        user.charge(command.amount)
+        await self.user_repo.save(user)
+
         await self.transaction_manager.commit()
         logger.info(
             f"[ConfirmPaidSlotFromBalance:done] user_id={command.user_id} "
