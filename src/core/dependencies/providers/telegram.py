@@ -16,6 +16,7 @@ from src.presentation.telegram.common.custom_message_manager import CustomMessag
 from src.presentation.telegram.features import get_all_dialogs, get_all_routers
 from src.presentation.telegram.features.router import fallback_router
 from src.presentation.telegram.features.error_handlers import handle_error
+from src.presentation.telegram.utils.dialog_ids import install as install_dialog_ids
 
 
 class TelegramProvider(Provider):
@@ -45,6 +46,7 @@ class TelegramProvider(Provider):
 
     @provide
     def dispatcher(self, bot: Bot, fsm_storage: RedisStorage) -> Dispatcher:
+        install_dialog_ids()
         dp = Dispatcher(bot=bot, storage=fsm_storage)
 
         dp.message.filter(F.chat.type == "private")

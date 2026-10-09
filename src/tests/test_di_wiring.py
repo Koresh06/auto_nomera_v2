@@ -76,7 +76,13 @@ def _requests_sent_by_code() -> set[str]:
 
 @pytest.mark.parametrize("kind", ["bot", "web", "worker"])
 def test_production_container_wires_every_sent_request(kind):
-    env = {**os.environ, "APP_CONFIG__APP__SENTRY_DSN": ""}
+    env = {
+        **os.environ,
+        "APP_CONFIG__APP__SENTRY_DSN": "",
+        # фиктивный токен корректного формата: в CI нет .env, а реальный
+        # токен проверке не нужен (сеть не используется)
+        "APP_CONFIG__TELEGRAM__BOT_TOKEN": "42:TEST",
+    }
     proc = subprocess.run(
         [sys.executable, "-c", _SCRIPT, kind],
         cwd=ROOT,
