@@ -15,6 +15,7 @@ from src.presentation.telegram.features.admin.modules.region.create.states impor
     CreateRegionSG,
 )
 from src.presentation.telegram.features.admin.modules.region.create.validators import (
+    validate_region_title,
     validate_channel_id,
     validate_channel_username,
     validate_timezone,
@@ -29,8 +30,9 @@ create_region_dialog = Dialog(
         Const("Введите название региона"),
         TextInput(
             id="title",
-            type_factory=str,
+            type_factory=validate_region_title,
             on_success=Next(),
+            on_error=on_input_error,
         ),
         Cancel(
             Const("⬅️ Назад"),

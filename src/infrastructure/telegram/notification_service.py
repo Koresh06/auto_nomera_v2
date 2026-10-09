@@ -111,8 +111,13 @@ class AiogramNotificationService(NotificationService):
                 logger.warning(f"Flood wait {e.retry_after}s")
                 await asyncio.sleep(e.retry_after)
                 try:
+                    # повтор — тем же сообщением: раньше фото терялось, и
+                    # подписчик получал объявление без картинки
                     await self._send(
-                        chat_id=user_id, text=text, reply_markup=reply_markup
+                        chat_id=user_id,
+                        text=text,
+                        photo_id=photo_id,
+                        reply_markup=reply_markup,
                     )
                 except Exception:
                     logger.exception(

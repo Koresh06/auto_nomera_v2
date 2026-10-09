@@ -3,6 +3,15 @@ from dataclasses import dataclass
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
+def validate_region_title(value: str) -> str:
+    title = value.strip()
+    if not title:
+        raise ValueError("Название не может быть пустым")
+    if len(title) > 64:  # regions.title — VARCHAR(64)
+        raise ValueError("Название не может быть длиннее 64 символов")
+    return title
+
+
 def validate_timezone(value: str) -> str:
     try:
         ZoneInfo(value.strip())
@@ -17,7 +26,7 @@ def validate_channel_id(value: str) -> int:
     except ValueError:
         raise ValueError("ID канала должен быть числом, например: -1001234567890")
 
-    if channel_id > 0:
+    if channel_id >= 0:
         raise ValueError(
             "ID канала должен быть отрицательным числом, например: -1001234567890"
         )
@@ -33,6 +42,9 @@ def validate_channel_username(value: str) -> str:
 
     if len(username) < 3:
         raise ValueError("Username слишком короткий, минимум 3 символа")
+
+    if len(username) > 32:  # максимум для username в Telegram
+        raise ValueError("Username слишком длинный, максимум 32 символа")
 
     if not username.replace("_", "").isalnum():
         raise ValueError("Username может содержать только буквы, цифры и подчёркивание")

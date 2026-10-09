@@ -1,3 +1,5 @@
+import logging
+
 from dishka.integrations.aiogram import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 from aiogram.types import CallbackQuery
@@ -7,6 +9,8 @@ from aiogram_dialog.widgets.kbd import Button
 from src.application.mediator import Mediator
 from src.application.use_cases.region.create import CreateRegionCommand
 from src.domain.value_objects.region_metadata import RegionMetadata
+
+logger = logging.getLogger(__name__)
 
 
 @inject
@@ -38,8 +42,13 @@ async def on_confirm_region(
                 ),
             )
         )
-    except Exception as e:
-        await callback.answer(str(e))
+    except Exception:
+        # Текст исключения (вплоть до SQL) не показываем: алерт Telegram
+        # ограничен 200 символами, длинный текст ронял сам ответ.
+        logger.exception("[CreateRegion] failed title=%r", title)
+        await callback.answer(
+            "⚠️ Не удалось создать регион. Проверьте данные.", show_alert=True
+        )
     else:
         await callback.answer("Регион успешно создан!")
 

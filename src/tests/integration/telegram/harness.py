@@ -26,6 +26,7 @@ from typing import Any
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.base import BaseSession
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import (
     AnswerCallbackQuery,
     CopyMessage,
@@ -151,6 +152,7 @@ class FakeTelegramSession(BaseSession):
 
     async def make_request(self, bot: Bot, method: TelegramMethod, timeout=None):
         self.calls.append(method)
+        _enforce_bot_api_limits(method)
 
         if isinstance(method, GetMe):
             return User(id=BOT_ID, is_bot=True, first_name="Bot", username="test_bot")
@@ -233,6 +235,41 @@ class FakeTelegramSession(BaseSession):
 
     def calls_of(self, method_type: type) -> list:
         return [c for c in self.calls if isinstance(c, method_type)]
+
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _visible_len(html_text: str | None) -> int:
+    """Длина так, как её считает Telegram: после разбора HTML-разметки."""
+    import html
+
+    return len(html.unescape(_TAG_RE.sub("", html_text or "")))
+
+
+def _enforce_bot_api_limits(method: TelegramMethod) -> None:
+    """Те же ограничения, что у настоящего Bot API: без них сценарий мог
+    бы пройти в тесте и упасть в проде с 400 Bad Request."""
+
+    def bad(message: str) -> None:
+        raise TelegramBadRequest(method=method, message=f"Bad Request: {message}")
+
+    text = getattr(method, "text", None)
+    if isinstance(method, AnswerCallbackQuery):
+        if text and len(text) > 200:
+            bad(f"MESSAGE_TOO_LONG (alert {len(text)} > 200)")
+    elif isinstance(text, str) and _visible_len(text) > 4096:
+        bad(f"message is too long ({_visible_len(text)} > 4096)")
+    caption = getattr(method, "caption", None)
+    if isinstance(caption, str) and _visible_len(caption) > 1024:
+        bad(f"message caption is too long ({_visible_len(caption)} > 1024)")
+    markup = getattr(method, "reply_markup", None)
+    if isinstance(markup, InlineKeyboardMarkup):
+        for row in markup.inline_keyboard:
+            for button in row:
+                data = button.callback_data
+                if data is not None and len(data.encode()) > 64:
+                    bad(f"BUTTON_DATA_INVALID ({data!r} > 64 bytes)")
 
 
 class RecordingTaskQueue:
