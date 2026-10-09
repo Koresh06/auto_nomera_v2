@@ -130,6 +130,6 @@ async def world(_bot_world: BotWorld, caplog, request) -> AsyncIterator[BotWorld
         r.getMessage()
         for r in caplog.get_records("call")
         if any(m in r.getMessage() for m in _SWALLOWED_MARKERS)
-        or (r.name.startswith("aiogram") and r.levelno >= logging.ERROR)
+        or r.levelno >= logging.ERROR
     ]
     assert not swallowed, "Бот проглотил ошибку:\n" + "\n\n".join(swallowed)

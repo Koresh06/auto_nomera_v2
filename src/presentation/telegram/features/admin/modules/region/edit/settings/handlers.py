@@ -1,4 +1,4 @@
-from decimal import Decimal, InvalidOperation
+from decimal import InvalidOperation
 from datetime import time
 
 from dishka.integrations.aiogram_dialog import inject, FromDishka
@@ -10,6 +10,7 @@ from aiogram_dialog.widgets.input import ManagedTextInput
 from src.application.mediator import Mediator
 from src.application.use_cases.region.update_settings import UpdateRegionSettingsCommand
 from src.domain.value_objects.region_settings import RegionSettings
+from src.presentation.telegram.utils.price_validators import parse_money
 from src.presentation.telegram.features.admin.modules.region.edit.states import (
     EditRegionSettingsSG,
 )
@@ -31,7 +32,7 @@ def _parse_field(widget_id: str, raw: str) -> tuple[str, object]:
         return "system_paid_slots_count", count
 
     if widget_id == "price_input":
-        price = Decimal(value.replace(",", "."))
+        price = parse_money(value)
         if price < 0:
             raise ValueError("Цена не может быть отрицательной")
         return "paid_slot_price", price

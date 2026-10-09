@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import itertools
 import re
 from dataclasses import dataclass, field
@@ -33,6 +34,8 @@ from aiogram.methods import (
     EditMessageMedia,
     EditMessageReplyMarkup,
     EditMessageText,
+    GetChat,
+    GetChatMember,
     GetMe,
     SendMediaGroup,
     TelegramMethod,
@@ -40,12 +43,15 @@ from aiogram.methods import (
 from aiogram.types import (
     CallbackQuery,
     Chat,
+    ChatMemberMember,
+    Contact,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
     MessageId,
     PhotoSize,
     ReplyKeyboardMarkup,
+    SuccessfulPayment,
     Update,
     User,
 )
@@ -138,6 +144,12 @@ class FakeTelegramSession(BaseSession):
 
         if isinstance(method, GetMe):
             return User(id=BOT_ID, is_bot=True, first_name="Bot", username="test_bot")
+        if isinstance(method, GetChat):
+            return Chat(id=int(method.chat_id), type="private")
+        if isinstance(method, GetChatMember):
+            return ChatMemberMember(
+                user=User(id=method.user_id, is_bot=False, first_name="U")
+            )
         if isinstance(method, AnswerCallbackQuery):
             self.alerts.append((method.text, bool(method.show_alert)))
             return True
@@ -194,6 +206,8 @@ class FakeTelegramSession(BaseSession):
             return self._new_message(int(method.chat_id), **fields)
         if returning is bool:
             return True
+        if returning is str:  # createInvoiceLink и т.п.
+            return f"https://t.me/$invoice-{next(self._ids)}"
         raise AssertionError(f"Симулятор не знает метод {type(method).__name__}")
 
     # --- запросы из тестов ----------------------------------------------
@@ -275,6 +289,29 @@ class TgUser:
     async def send(self, text: str) -> None:
         await self._feed(message=self._message(text=text))
 
+    async def send_contact(self, phone: str) -> None:
+        await self._feed(
+            message=self._message(
+                contact=Contact(
+                    phone_number=phone, first_name=self.first_name, user_id=self.id
+                )
+            )
+        )
+
+    async def pay_stars(self, *, payload: str, stars: int) -> None:
+        """Telegram присылает боту сообщение об успешной оплате инвойса."""
+        await self._feed(
+            message=self._message(
+                successful_payment=SuccessfulPayment(
+                    currency="XTR",
+                    total_amount=stars,
+                    invoice_payload=payload,
+                    telegram_payment_charge_id="tg-charge",
+                    provider_payment_charge_id="prov-charge",
+                )
+            )
+        )
+
     async def send_photo(self, file_id: str = "user-photo") -> None:
         await self._feed(
             message=self._message(
@@ -331,3 +368,14 @@ class TgUser:
                 data=button.callback_data,
             )
         )
+
+
+async def settle(rounds: int = 20) -> None:
+    """Дождаться фоновых задач (BgManager aiogram-dialog запускает
+    «телепорт» пользователя в диалог через asyncio.create_task)."""
+    current = asyncio.current_task()
+    for _ in range(rounds):
+        pending = [t for t in asyncio.all_tasks() if t is not current and not t.done()]
+        if not pending:
+            return
+        await asyncio.wait(pending, timeout=0.5)

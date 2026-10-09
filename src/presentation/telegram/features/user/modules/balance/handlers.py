@@ -1,10 +1,11 @@
 import logging
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from aiogram.types import Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.domain.enums.payment import PaymentPurpose
+from src.presentation.telegram.utils.price_validators import parse_money
 from src.presentation.telegram.features.user.modules.payment.helpers import (
     PaymentStartParams,
     start_payment,
@@ -24,10 +25,11 @@ async def on_amount_input_success(
     value: str,
 ) -> None:
     try:
-        amount = Decimal(value.strip())
-        if amount <= 0:
-            raise ValueError
-    except (ValueError, InvalidOperation):
+        amount = parse_money(value)
+    except ValueError as e:
+        await message.answer(f"⚠️ {e}")
+        return
+    if amount <= 0:
         await message.answer("⚠️ Введите корректную сумму, например 500")
         return
 

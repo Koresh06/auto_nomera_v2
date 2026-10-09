@@ -139,6 +139,23 @@ async def test_invalid_phone_and_price_are_rejected(world, session):
     assert "Выберите дату и время" in u.last.text
 
 
+async def test_huge_price_is_rejected_not_crashing(world, session):
+    """ads.price — INTEGER: цена > 2^31 раньше роняла подтверждение."""
+    await _setup(session)
+    u = world.user(700)
+    await u.send("/start")
+    await u.click("ПРОДАТЬ")
+    await u.send("А123ВС77")
+    await u.click("Пропустить")
+    await u.send("москва")
+    await u.send("+79991234567")
+
+    await u.send("5000000000")
+
+    assert any("Слишком большая сумма" in m.text for m in u.messages)
+    assert "Укажите стоимость" in u.last.text
+
+
 async def test_photo_is_attached_to_ad(world, session):
     await _setup(session)
     u = world.user(700)
