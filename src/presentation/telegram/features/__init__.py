@@ -107,6 +107,41 @@ def get_all_routers() -> list[Router]:
     ]
 
 
+def get_admin_dialogs() -> list[Dialog]:
+    """Диалоги, доступные только администраторам (см. AdminDialogGuardMiddleware)."""
+    return [
+        admin_menu_dialog,
+        main_region_dialog,
+        create_region_dialog,
+        edit_region_settings_dialog,
+        edit_region_metadata_dialog,
+        paid_service_admin_dialog,
+        admin_balance_dialog,
+        blocked_user_dialog,
+        admin_management_dialog,
+        mailing_dialog,
+        stats_replenishment_dialog,
+        publish_stats_dialog,
+        global_stats_dialog,
+        unpublished_publications_dialog,
+    ]
+
+
+def get_super_admin_dialogs() -> list[Dialog]:
+    """Разделы, которые в меню видны только админам из конфига
+    (is_super_admin в getter_admin_menu)."""
+    return [
+        main_region_dialog,
+        create_region_dialog,
+        edit_region_settings_dialog,
+        edit_region_metadata_dialog,
+        paid_service_admin_dialog,
+        admin_balance_dialog,
+        blocked_user_dialog,
+        admin_management_dialog,
+    ]
+
+
 def get_all_dialogs() -> list[Dialog]:
     return [
         user_menu_dialog,

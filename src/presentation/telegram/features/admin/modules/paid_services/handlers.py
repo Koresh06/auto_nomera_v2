@@ -6,6 +6,7 @@ from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.application.dtos.service_definition import ServiceDefinitionDTO
 from src.application.mediator import Mediator
+from src.presentation.telegram.utils.price_validators import MAX_MONEY_AMOUNT
 from src.application.use_cases.service_difinition.get_by_id import (
     GetByIdServiceDefinitionRequest,
 )
@@ -58,24 +59,35 @@ def _parse_field(widget_id: str, raw: str) -> tuple[str, object]:
     """Возвращает (имя_поля_команды, значение) или бросает ValueError с текстом ошибки."""
     value = raw.strip()
 
+    # Пределы — по колонкам service_definitions (price/duration — INTEGER,
+    # title — VARCHAR(128), description — VARCHAR(256)): без них большой
+    # ввод доходил до UPDATE и ронял обработчик.
     if widget_id == "price_input":
         price = int(value)
         if price < 0:
             raise ValueError("Введите целое неотрицательное число")
+        if price > MAX_MONEY_AMOUNT:
+            raise ValueError(f"Цена не может превышать {MAX_MONEY_AMOUNT:.0f} руб.")
         return "price", price
 
     if widget_id == "duration_input":
         days = int(value)
         if days <= 0:
             raise ValueError("Введите положительное целое число")
+        if days > 365:
+            raise ValueError("Длительность не может превышать 365 дней")
         return "duration_days", days
 
     if widget_id == "title_input":
         if not value:
             raise ValueError("Название не может быть пустым")
+        if len(value) > 128:
+            raise ValueError("Название не может быть длиннее 128 символов")
         return "title", value
 
     if widget_id == "description_input":
+        if len(value) > 256:
+            raise ValueError("Описание не может быть длиннее 256 символов")
         return "description", None if value == "-" else value
 
     raise ValueError("Неизвестное поле")

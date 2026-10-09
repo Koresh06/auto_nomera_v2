@@ -293,21 +293,20 @@ async def test_forged_click_cannot_register_into_disabled_region(world, session)
 
 @pytest.mark.allow_bot_errors  # use case отказывает исключением — это и защищает
 async def test_forged_click_cannot_publish_empty_store(world, session):
+    from .test_create_ad_flow import FREE_SLOT
     from .test_store_flow import _create_store, _new_user
 
     u = await _new_user(world, session)
     await _create_store(u)
     await u.click("Просмотр и Публикация")
+    assert not any("Публикация" in b for b in u.last.button_texts)
 
     await forge_click(u, "__next__")  # «✅ Публикация» скрыта без номеров
-    try:
-        from .test_create_ad_flow import FREE_SLOT
+    assert "Выберите дату" in u.last.text
+    await u.click(FREE_SLOT)
+    await u.click("Подтвердить")
 
-        await u.click(FREE_SLOT)
-        await u.click("Подтвердить")
-    except AssertionError:
-        pass  # до календаря/подтверждения не пустили — это и нужно
-
+    assert "Произошла ошибка" in u.last_alert
     q = select(PublicationModel).execution_options(populate_existing=True)
     assert (await session.execute(q)).scalars().all() == []
 
@@ -318,17 +317,17 @@ async def test_forged_click_cannot_create_second_store(world, session):
     u = await _new_user(world, session)
     await _create_store(u)
     await u.click("Главное меню")
+    assert "Выберите действие" in u.last.text
 
-    await forge_click(u, "create_store")
-    try:
-        await u.click("Да")
-        await u.send("Второй Магазин")
-        await u.send("москва")
-        await u.send("+79991112233")
-        await u.click("Подтвердить")
-    except AssertionError:
-        pass
+    await forge_click(u, "create_store")  # кнопка скрыта: магазин уже есть
+    assert "Создание Вашего магазина" in u.last.text
+    await u.click("Да")
+    await u.send("Второй Магазин")
+    await u.send("москва")
+    await u.send("+79991112233")
+    await u.click("Подтвердить")
 
+    assert u.last_alert == "⚠️ У вас уже есть магазин."
     q = (
         select(AdModel)
         .where(AdModel.ad_type == AdType.STORE)
