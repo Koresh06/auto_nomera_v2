@@ -5,6 +5,8 @@
 import asyncio
 from decimal import Decimal
 
+import pytest
+
 from sqlalchemy import select
 
 from src.domain.enums.publication import PublicationStatus
@@ -173,3 +175,84 @@ async def test_parallel_purchases_cannot_overdraw_balance(world, session):
     bought = [r for r in results if not isinstance(r, Exception)]
     assert len(bought) == 1, f"куплено {len(bought)} услуг, остаток {balance}"
     assert balance in (Decimal("1"), Decimal("201")), balance
+
+
+# второй тап приходит в уже закрытый диалог -> UnknownIntent (алерт «ошибка»)
+@pytest.mark.allow_bot_errors
+async def test_double_tap_buy_subscription_charges_once(world, session):
+    region = await make_region(session)
+    await make_user(session, region.id, tg_id=1031, balance=Decimal("5000"))
+    await session.commit()
+    u = world.user(1031)
+    await u.send("/start")
+    await u.click("Ранний доступ")
+    await u.click("Получить доступ")
+
+    await _two_taps(u, "Подключить подписку")
+
+    session.expire_all()
+    user = await SQLAlchemyUserRepo(session).get_by_tg_id(1031)
+    assert user.balance == Decimal("3001"), f"списано {Decimal('5000') - user.balance}"
+
+
+# второй тап приходит в уже закрытый диалог -> UnknownIntent (алерт «ошибка»)
+@pytest.mark.allow_bot_errors
+async def test_double_tap_admin_balance_confirm_applies_once(world, session):
+    from .conftest import ADMIN_TG_ID
+
+    region = await make_region(session)
+    await make_user(session, region.id, tg_id=ADMIN_TG_ID)
+    await make_user(session, region.id, tg_id=1032, balance=Decimal("0"))
+    await session.commit()
+    admin = world.admin()
+    await admin.send("/admin")
+    await admin.click("Баланс пользователей")
+    await admin.send("1032")
+    await admin.click("Изменить баланс")
+    await admin.send("+500")
+
+    await _two_taps(admin, "Подтвердить")
+
+    session.expire_all()
+    user = await SQLAlchemyUserRepo(session).get_by_tg_id(1032)
+    assert user.balance == Decimal("500"), f"начислено {user.balance}"
+
+
+async def test_double_tap_save_store_items_adds_once(world, session):
+    from .test_store_flow import _add_items, _create_store, _new_user, _store
+
+    u = await _new_user(world, session)
+    await _create_store(u)
+    await _add_items(u, "х111хх01-1000\nо100оо77-2000")
+
+    await _two_taps(u, "Сохранить")
+
+    store = await _store(session)
+    assert len(store.store_items) == 2, store.store_items
+
+
+# второй тап приходит в уже закрытый диалог -> UnknownIntent (алерт «ошибка»)
+@pytest.mark.allow_bot_errors
+async def test_double_tap_service_from_menu_charges_once(world, session):
+    from datetime import datetime, timedelta, timezone
+
+    from ..factories import make_ad, make_publication
+
+    region = await make_region(session)
+    me = await make_user(session, region.id, tg_id=1033, balance=Decimal("5000"))
+    ad = await make_ad(session, me, plate="А002АА77")
+    await make_publication(
+        session, ad, publish_at_utc=datetime.now(timezone.utc) + timedelta(days=2)
+    )
+    await session.commit()
+    u = world.user(1033)
+    await u.send("/start")
+    await u.click("Продать быстрее")
+    await u.click("Закрепление")
+    await u.click("А002АА77")
+
+    await _two_taps(u, "Подключить")
+
+    session.expire_all()
+    user = await SQLAlchemyUserRepo(session).get_by_tg_id(1033)
+    assert user.balance == Decimal("4501"), f"списано {Decimal('5000') - user.balance}"
