@@ -32,7 +32,7 @@ class TopUpBalanceUseCase(UseCase[TopUpBalanceRequest, None]):
         if command.amount <= Decimal("0"):
             raise ValueError("Amount must be positive")
 
-        user = await self.user_repo.get_by_id(command.user_id)
+        user = await self.user_repo.get_by_id_for_update(command.user_id)
         if user is None:
             raise UserNotFoundException(command.user_id)
 

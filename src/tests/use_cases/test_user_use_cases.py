@@ -66,6 +66,10 @@ class FakeUserRepo:
         self._by_tg[user.tg_id] = user
         return user
 
+    async def get_by_id_for_update(self, user_id):
+
+        return await self.get_by_id(user_id)
+
     async def get_by_id(self, user_id: int) -> User | None:
         return self._by_id.get(user_id)
 

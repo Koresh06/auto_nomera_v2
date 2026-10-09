@@ -69,6 +69,10 @@ class FakeUserRepo:
     def __init__(self, users: list[User] | None = None) -> None:
         self._store = {u.id: u for u in (users or [])}
 
+    async def get_by_id_for_update(self, user_id):
+
+        return await self.get_by_id(user_id)
+
     async def get_by_id(self, user_id: int) -> User | None:
         return self._store.get(user_id)
 

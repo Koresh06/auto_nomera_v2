@@ -31,7 +31,7 @@ class BuyPrePublicationServiceUseCase(UseCase[BuyPrePublicationServiceRequest, N
         if not definition.is_active:
             raise ServiceNotAvailableException()
 
-        user = await self.user_repo.get_by_id(command.user_id)
+        user = await self.user_repo.get_by_id_for_update(command.user_id)
         if user is None:
             raise UserNotFoundException
 

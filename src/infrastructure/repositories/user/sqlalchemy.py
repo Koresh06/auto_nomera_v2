@@ -31,6 +31,20 @@ class SQLAlchemyUserRepo(UserRepository):
         user_model = result.scalar_one_or_none()
         return user_model.to_entity() if user_model else None
 
+    async def get_by_id_for_update(self, user_id: int) -> User | None:
+        query = (
+            select(UserModel)
+            .where(UserModel.id == user_id)
+            .with_for_update()
+            # пользователь мог быть загружен в эту же сессию раньше (например,
+            # GetTgIdRequest в начале хендлера) — без populate_existing ORM
+            # вернул бы кэшированный объект с устаревшим балансом
+            .execution_options(populate_existing=True)
+        )
+        result = await self._session.execute(query)
+        user_model = result.scalar_one_or_none()
+        return user_model.to_entity() if user_model else None
+
     async def get_by_tg_id(self, tg_id: int) -> User | None:
         query = select(UserModel).where(UserModel.tg_id == tg_id)
         result = await self._session.execute(query)

@@ -11,6 +11,13 @@ class UserRepository(Protocol):
 
     async def get_by_id(self, user_id: int) -> User | None: ...
 
+    async def get_by_id_for_update(self, user_id: int) -> User | None:
+        """Загрузить пользователя с блокировкой строки до конца транзакции.
+        Обязательно для любых изменений баланса/подписки: они пишутся как
+        абсолютное значение, и без блокировки параллельные операции теряют
+        друг друга (lost update)."""
+        ...
+
     async def get_by_tg_id(self, tg_id: int) -> User | None: ...
 
     async def save(self, user: User) -> None: ...

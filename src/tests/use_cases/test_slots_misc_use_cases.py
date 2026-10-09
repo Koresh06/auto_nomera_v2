@@ -66,6 +66,10 @@ class FakeUserRepo:
         self._user = user
         self.saved: list[User] = []
 
+    async def get_by_id_for_update(self, user_id):
+
+        return await self.get_by_id(user_id)
+
     async def get_by_id(self, user_id: int) -> User | None:
         if self._user and self._user.id == user_id:
             return self._user

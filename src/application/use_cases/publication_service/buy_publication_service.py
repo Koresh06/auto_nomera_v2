@@ -60,7 +60,7 @@ class BuyPublicationServiceUseCase(UseCase[BuyPublicationServiceRequest, None]):
             service_type=command.service_type, ad_type=ad.ad_type
         )
 
-        user = await self.user_repo.get_by_id(command.user_id)
+        user = await self.user_repo.get_by_id_for_update(command.user_id)
         if user is None:
             raise UserNotFoundException
 

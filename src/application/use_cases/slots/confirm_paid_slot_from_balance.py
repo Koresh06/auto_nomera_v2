@@ -30,7 +30,7 @@ class ConfirmPaidSlotFromBalanceUseCase(
     transaction_manager: TransactionManager
 
     async def __call__(self, command: ConfirmPaidSlotFromBalanceRequest) -> None:
-        user = await self.user_repo.get_by_id(command.user_id)
+        user = await self.user_repo.get_by_id_for_update(command.user_id)
         if user is None:
             raise UserNotFoundException(command.user_id)
 
@@ -39,16 +39,28 @@ class ConfirmPaidSlotFromBalanceUseCase(
         # ConfirmPaymentUseCase — слот мог достаться другому пользователю
         # буквально секунду раньше, и charge() без этой проверки списал бы
         # деньги без какого-либо эффекта.
+        # Строка пользователя заблокирована (get_by_id_for_update), поэтому
+        # повторный запрос того же пользователя (двойной тап) дождётся конца
+        # этой транзакции и увидит уже оформленный слот. Раньше повтор
+        # проходил mark_converted (тот же владелец — upsert успешен) и
+        # списывал деньги второй раз.
+        owner = await self.converted_repo.get_converted_owner_and_ad(command.slot)
+        if owner is not None:
+            if owner[0] != command.user_id:
+                raise SlotAlreadyConverted()
+            logger.info(
+                f"[ConfirmPaidSlotFromBalance:already_paid] user_id={command.user_id} "
+                f"slot={command.slot.local_day} {command.slot.local_time}"
+            )
+            return
+
         converted = await self.converted_repo.mark_converted(
             slot=command.slot,
             user_id=command.user_id,
         )
         if not converted:
-            owner = await self.converted_repo.get_converted_owner_and_ad(command.slot)
-            owner_user_id = owner[0] if owner else None
-            if owner_user_id != command.user_id:
-                raise SlotAlreadyConverted()
-            # тот же пользователь уже сконвертировал слот ранее — идемпотентно
+            # слот успел оформить другой пользователь между проверкой и вставкой
+            raise SlotAlreadyConverted()
 
         user.charge(command.amount)
         await self.user_repo.save(user)

@@ -110,7 +110,7 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
         await self.payment_repo.save(payment)
         logger.info(f"[ConfirmPayment:marked_paid] payment_id={payment.id}")
 
-        user = await self.user_repo.get_by_id(payment.user_id)
+        user = await self.user_repo.get_by_id_for_update(payment.user_id)
         if user is None:
             raise UserNotFoundException(payment.user_id)
 
