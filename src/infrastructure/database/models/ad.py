@@ -1,3 +1,4 @@
+import re
 from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -19,6 +20,16 @@ if TYPE_CHECKING:
         RegionModel,
         PublicationModel,
     )
+
+
+def _stored_price(raw: object) -> int:
+    """Цена позиции из JSONB. Из-за бага редактирования туда попадали
+    строки с разделителями («1 000 000») — int() на них ронял загрузку
+    всего магазина. Читаем такие значения по цифрам."""
+    if isinstance(raw, int):
+        return raw
+    digits = re.sub(r"\D", "", str(raw))
+    return int(digits) if digits else 0
 
 
 class AdModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
@@ -94,7 +105,7 @@ class AdModel(BaseModel, CreatedAtMixin, UpdatedAtMixin):
                 items.append(
                     StoreItem(
                         plate=item["plate"],
-                        price=Price(int(item["price"])),
+                        price=Price(_stored_price(item["price"])),
                     )
                 )
             if self.shop_name:

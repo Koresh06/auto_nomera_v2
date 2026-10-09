@@ -33,6 +33,15 @@ def _parse_price(raw: str) -> Price:
     return Price(int(digits))
 
 
+def parse_store_price(raw: str) -> Price:
+    """Цена одной позиции магазина — те же правила, что при добавлении
+    списком: только цифры (разделители игнорируются), ноль недопустим."""
+    price = _parse_price(raw)
+    if price.value == 0:
+        raise ValueError("⚠️ Цена не может быть равна <b>0 руб.</b>")
+    return price
+
+
 def parse_store_validator(raw_text: str) -> StoreInputParseResult:
     """
     Парсит текст вида:

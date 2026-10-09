@@ -156,6 +156,21 @@ async def test_huge_price_is_rejected_not_crashing(world, session):
     assert "Укажите стоимость" in u.last.text
 
 
+async def test_too_long_city_is_rejected_not_crashing(world, session):
+    """ads.city — VARCHAR(128): длинный ввод раньше ронял сохранение."""
+    await _setup(session)
+    u = world.user(700)
+    await u.send("/start")
+    await u.click("ПРОДАТЬ")
+    await u.send("А123ВС77")
+    await u.click("Пропустить")
+
+    await u.send("г" * 200)
+
+    assert any("Слишком длинное значение" in m.text for m in u.messages)
+    assert "Укажите город" in u.last.text
+
+
 async def test_photo_is_attached_to_ad(world, session):
     await _setup(session)
     u = world.user(700)

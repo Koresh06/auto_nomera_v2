@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass
 
 from src.application.exceptions.ad import AdNotFoundException
+from src.application.exceptions.store import StoreItemsAlreadyExistException
 from src.application.ports.ad.ad_repo import AdRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.application.dtos.ad import AdDTO
@@ -31,6 +32,9 @@ class UpdateStoreItemUseCase(UseCase[UpdateStoreItemRequest, AdDTO]):
             raise AdNotFoundException(command.ad_id)
 
         existing = ad.store_content
+        if command.new_plate and command.new_plate != command.plate:
+            if any(i.plate == command.new_plate for i in existing.items):
+                raise StoreItemsAlreadyExistException([command.new_plate])
         new_items = []
         for item in existing.items:
             if item.plate == command.plate:

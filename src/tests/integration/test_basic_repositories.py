@@ -437,3 +437,26 @@ async def test_concurrent_bookings_only_one_wins(session_factory):
     results = await asyncio.gather(attempt(u1.id, ad1.id), attempt(u2.id, ad2.id))
 
     assert sorted(results) == [False, True]
+
+
+async def test_store_with_corrupted_price_string_still_loads(session):
+    """Баг редактирования писал в store_items цену строкой «1 000 000».
+    Такие строки в проде не должны ломать загрузку магазина."""
+    from sqlalchemy import update
+
+    from src.infrastructure.database.models import AdModel
+
+    region = await make_region(session)
+    user = await make_user(session, region.id)
+    ad = await make_ad(session, user, ad_type=AdType.STORE, plate="Х111ХХ01")
+    await session.execute(
+        update(AdModel)
+        .where(AdModel.id == ad.id)
+        .values(store_items=[{"plate": "Х111ХХ01", "price": "1 000 000"}])
+    )
+    await session.commit()
+    session.expire_all()
+
+    loaded = await SQLAlchemyAdRepo(session).get_by_id(ad.id)
+
+    assert loaded.store_content.items[0].price.value == 1_000_000

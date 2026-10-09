@@ -6,12 +6,13 @@ from aiogram_dialog.widgets.kbd import Select, Button
 from aiogram_dialog.widgets.input import ManagedTextInput
 
 from src.application.dtos.ad import AdDTO
+from src.application.exceptions.store import StoreItemsAlreadyExistException
 from src.application.mediator import Mediator
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.store.delete_items import DeleteStoreItemRequest
 from src.application.use_cases.store.update_items import UpdateStoreItemRequest
 from src.domain.services.ad.plate_validator import validate_plate
-from src.presentation.telegram.utils.price_validators import validate_price
+from src.domain.services.ad.store_validator import parse_store_price
 from src.presentation.telegram.features.user.modules.store.edit_items.states import (
     StoreEditItemsSG,
 )
@@ -69,12 +70,14 @@ async def on_price_input(
     value: str,
 ) -> None:
     try:
-        validated = validate_price(value)
+        price = parse_store_price(value)
     except ValueError as e:
         await message.answer(str(e))
         return
-    dialog_manager.dialog_data["new_price"] = value
-    dialog_manager.dialog_data["new_price_display"] = validated
+    # Раньше в new_price уходил сырой ввод (строка «1 000 000») — он
+    # записывался в JSONB как есть, и магазин переставал загружаться.
+    dialog_manager.dialog_data["new_price"] = price.value
+    dialog_manager.dialog_data["new_price_display"] = price.display
     dialog_manager.dialog_data["new_plate"] = None
     await dialog_manager.switch_to(StoreEditItemsSG.confirm)
 
@@ -109,14 +112,19 @@ async def on_confirm_update(
     new_plate: str | None = data.get("new_plate")
     new_price: int | None = data.get("new_price")
 
-    await mediator.handle(
-        UpdateStoreItemRequest(
-            ad_id=ad_id,
-            plate=plate,
-            new_plate=new_plate,
-            new_price=new_price,
+    try:
+        await mediator.handle(
+            UpdateStoreItemRequest(
+                ad_id=ad_id,
+                plate=plate,
+                new_plate=new_plate,
+                new_price=new_price,
+            )
         )
-    )
+    except StoreItemsAlreadyExistException as e:
+        await callback.answer(str(e), show_alert=True)
+        await dialog_manager.switch_to(StoreEditItemsSG.edit)
+        return
 
     if new_plate:
         data["selected_plate"] = new_plate

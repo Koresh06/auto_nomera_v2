@@ -1,5 +1,10 @@
 import re
 
+from src.presentation.telegram.utils.text_validators import (
+    MAX_TEXT_FIELD_LEN,
+    capitalize_word,
+)
+
 
 def validate_store(text: str) -> str:
     name = text.strip()
@@ -17,7 +22,9 @@ def validate_store(text: str) -> str:
     if len(name) < 3:
         raise ValueError("❌ Название должно быть не короче 3 символов.")
 
-    if len(name) > 255:
+    # колонка ads.shop_name — VARCHAR(128); раньше проверка была на 255,
+    # и название 129..255 символов роняло сохранение
+    if len(name) > MAX_TEXT_FIELD_LEN:
         raise ValueError("❌ Слишком длинное название магазина.")
 
-    return name.capitalize()
+    return capitalize_word(name)
