@@ -8,6 +8,7 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
+import pytest
 from sqlalchemy import select
 
 from src.domain.enums.ad import AdStatus, AdType
@@ -264,3 +265,113 @@ async def test_buy_priority_from_services_menu_for_own_ad(world, session):
         "4701"
     )
     assert "old-job" in world.tasks.canceled
+
+
+# ------------------------------------------- прочие скрытые кнопки (when=)
+
+
+async def test_forged_click_cannot_register_into_disabled_region(world, session):
+    from src.infrastructure.repositories.region.sqlalchemy import (
+        SQLAlchemyRegionRepository,
+    )
+
+    await make_region(session, title="Активный")
+    off = await make_region(session, title="Выключенный", channel_id=-9)
+    off.disable()
+    await SQLAlchemyRegionRepository(session).update(off)
+    await session.commit()
+    u = world.user(992)
+    await u.send("/start")
+
+    await forge_click(u, f"region_id:{off.id}")
+
+    session.expire_all()
+    user = await SQLAlchemyUserRepo(session).get_by_tg_id(992)
+    assert user is None or user.region_id != off.id
+    assert "недоступен" in u.last_alert
+
+
+@pytest.mark.allow_bot_errors  # use case отказывает исключением — это и защищает
+async def test_forged_click_cannot_publish_empty_store(world, session):
+    from .test_store_flow import _create_store, _new_user
+
+    u = await _new_user(world, session)
+    await _create_store(u)
+    await u.click("Просмотр и Публикация")
+
+    await forge_click(u, "__next__")  # «✅ Публикация» скрыта без номеров
+    try:
+        from .test_create_ad_flow import FREE_SLOT
+
+        await u.click(FREE_SLOT)
+        await u.click("Подтвердить")
+    except AssertionError:
+        pass  # до календаря/подтверждения не пустили — это и нужно
+
+    q = select(PublicationModel).execution_options(populate_existing=True)
+    assert (await session.execute(q)).scalars().all() == []
+
+
+async def test_forged_click_cannot_create_second_store(world, session):
+    from .test_store_flow import _create_store, _new_user
+
+    u = await _new_user(world, session)
+    await _create_store(u)
+    await u.click("Главное меню")
+
+    await forge_click(u, "create_store")
+    try:
+        await u.click("Да")
+        await u.send("Второй Магазин")
+        await u.send("москва")
+        await u.send("+79991112233")
+        await u.click("Подтвердить")
+    except AssertionError:
+        pass
+
+    q = (
+        select(AdModel)
+        .where(AdModel.ad_type == AdType.STORE)
+        .execution_options(populate_existing=True)
+    )
+    assert len((await session.execute(q)).scalars().all()) == 1
+
+
+async def test_urgent_buyout_cannot_be_negotiable_by_forged_click(world, session):
+    region = await make_region(session)
+    await make_user(session, region.id, tg_id=993)
+    await session.commit()
+    u = world.user(993)
+    await u.send("/start")
+    await u.click("Срочный выкуп")
+    await u.send("А123ВС77")
+    await u.click("Пропустить")
+    await u.send("москва")
+    await u.send("+79991234567")
+
+    await forge_click(u, "negotiable_price")
+
+    assert "укажите сумму" in u.last_alert
+    assert "Укажите примерную сумму" in u.last.text
+
+
+async def test_existing_user_cannot_switch_into_disabled_region(world, session):
+    from src.infrastructure.repositories.region.sqlalchemy import (
+        SQLAlchemyRegionRepository,
+    )
+
+    home = await make_region(session, title="Дом")
+    off = await make_region(session, title="Выключенный", channel_id=-9)
+    off.disable()
+    await SQLAlchemyRegionRepository(session).update(off)
+    await make_user(session, home.id, tg_id=994)
+    await session.commit()
+    u = world.user(994)
+    await u.send("/start")
+    await u.click("Смена региона")
+
+    await forge_click(u, f"region_id:{off.id}")
+
+    session.expire_all()
+    user = await SQLAlchemyUserRepo(session).get_by_tg_id(994)
+    assert user.region_id == home.id

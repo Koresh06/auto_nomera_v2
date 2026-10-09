@@ -149,6 +149,11 @@ async def on_negotiable_price(
     widget: Button,
     dialog_manager: DialogManager,
 ) -> None:
+    # Для срочного выкупа кнопка скрыта (сумма обязательна), но скрытая
+    # кнопка в aiogram-dialog всё равно обрабатывает callback.
+    if dialog_manager.dialog_data.get("ad_type") == AdType.URGENT_BUYOUT:
+        await callbck.answer("⚠️ Для срочного выкупа укажите сумму.", show_alert=True)
+        return
     dialog_manager.dialog_data["price"] = 0
     await dialog_manager.next()
 

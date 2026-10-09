@@ -6,7 +6,9 @@ from aiogram_dialog.widgets.kbd import Select
 from aiogram_dialog.widgets.kbd.select import OnItemClick
 
 from src.application.dtos.user import UpdateUserDTO
+from src.application.exceptions.region import RegionNotFoundException
 from src.application.exceptions.user import UserAlreadyExistsException
+from src.domain.exceptions.region import RegionDisabledError
 from src.application.mediator import Mediator
 from src.application.use_cases.user.register import UserRegisterRequest
 from src.application.use_cases.user.update import UpdateUserRequest
@@ -23,6 +25,24 @@ async def register_user_or_change_region(
     dialog_manager: DialogManager,
     item_id: str,
     mediator: FromDishka[Mediator],
+) -> None:
+    try:
+        await _register_or_change_region(callback, item_id, mediator)
+    except (RegionDisabledError, RegionNotFoundException):
+        # регион отключили, пока пользователь смотрел список
+        await callback.answer(
+            "⚠️ Этот регион сейчас недоступен. Выберите другой.", show_alert=True
+        )
+        return
+
+    await dialog_manager.start(
+        UserMenuSG.menu,
+        mode=StartMode.RESET_STACK,
+    )
+
+
+async def _register_or_change_region(
+    callback: CallbackQuery, item_id: str, mediator: Mediator
 ) -> None:
     try:
         await mediator.handle(
@@ -46,8 +66,3 @@ async def register_user_or_change_region(
         logger.info(
             f"Смена региона пользователя tg_id: {callback.from_user.id} на region_id={item_id}"
         )
-
-    await dialog_manager.start(
-        UserMenuSG.menu,
-        mode=StartMode.RESET_STACK,
-    )
