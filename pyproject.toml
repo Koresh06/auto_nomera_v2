@@ -53,3 +53,10 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "**/dialogs.py" = ["E501"]
 "**/*_dialog.py" = ["E501"]
+
+[tool.coverage.run]
+# SQLAlchemy asyncio переключает контекст через greenlet — без этого coverage
+# теряет трассировку после первого await к БД и сильно занижает покрытие.
+concurrency = ["greenlet", "thread"]
+source = ["src"]
+omit = ["src/tests/*", "src/infrastructure/alembic/*"]
