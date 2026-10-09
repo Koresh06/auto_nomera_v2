@@ -8,6 +8,7 @@ from typing import Any
 from yookassa import Configuration, Payment as YooKassaPayment
 from yookassa.domain.response import PaymentResponse
 
+from src.application.exceptions.payment import PaymentProviderUnavailableException
 from src.application.dtos.yookassa import YooKassaInvoiceRequest, YooKassaReceiptItem
 from src.application.ports.payment.provider import PaymentProvider
 from src.core.config.payment import YooKassaSettings
@@ -78,12 +79,16 @@ class YooKassaProvider(PaymentProvider):
                 ),
                 timeout=15,
             )
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             logger.exception("YOOKASSA TIMEOUT")
-            raise
-        except Exception:
+            raise PaymentProviderUnavailableException("yookassa") from e
+        except Exception as e:
+            # Сетевые сбои SDK ЮKassa всплывают невнятно (например, при ошибке
+            # прокси — AttributeError: 'NoneType' object has no attribute
+            # 'status_code'), поэтому любую ошибку вызова считаем
+            # недоступностью провайдера: платёж не создан, можно повторить.
             logger.exception("YOOKASSA ERROR")
-            raise
+            raise PaymentProviderUnavailableException("yookassa") from e
 
         logger.info("AFTER YOOKASSA CREATE: %s", response.id)
 

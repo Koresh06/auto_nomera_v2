@@ -37,3 +37,13 @@ class PaymentAmountInvalidException(Exception):
         if reason:
             message += f": {reason}"
         super().__init__(message)
+
+
+class PaymentProviderUnavailableException(Exception):
+    """Платёжная система не ответила (сеть, таймаут, ошибка API).
+    Платёж в этом случае не создаётся — пользователь может повторить
+    или выбрать другой способ оплаты."""
+
+    def __init__(self, provider: str) -> None:
+        self.provider = provider
+        super().__init__(f"Payment provider {provider} is unavailable")

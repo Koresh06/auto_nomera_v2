@@ -207,3 +207,33 @@ async def test_paid_slot_paid_by_stars_returns_user_to_confirm(world, session):
     # деньги пришли внешним платежом — баланс не трогаем
     assert await _balance(session, 806) == Decimal("0")
     assert user.id == pub.ad.user_id if False else True
+
+
+@pytest.mark.allow_bot_errors  # сбой провайдера логируется как ERROR — так и нужно
+async def test_yookassa_unreachable_shows_clear_message(world, session, monkeypatch):
+    """Как в логе: прокси не пропускает запрос к api.yookassa.ru, SDK падает
+    AttributeError. Пользователь видит понятное сообщение, платёж не
+    создаётся, можно сразу выбрать другой способ."""
+    from src.infrastructure.payment.providers import yookassa as yk_module
+
+    def broken_create(payload, idempotence_key):
+        raise AttributeError("'NoneType' object has no attribute 'status_code'")
+
+    monkeypatch.setattr(
+        yk_module.YooKassaPayment, "create", staticmethod(broken_create)
+    )
+    region = await make_region(session)
+    await make_user(session, region.id, tg_id=807, phone="+79990001122")
+    await session.commit()
+    u = world.user(807)
+
+    await _start_topup(u, "500")
+    await u.click("СБП")
+
+    assert "Платёжная система временно недоступна" in u.last_alert
+    assert "Произошла ошибка" not in (u.last_alert or "")
+    assert "Выберите способ оплаты" in u.last.text
+    assert await _rows(session, PaymentModel) == []
+
+    await u.click("TG Stars")  # другой способ работает
+    assert "Оплата звёздами" in u.last.text

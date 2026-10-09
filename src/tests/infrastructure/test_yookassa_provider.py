@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.application.exceptions.payment import PaymentProviderUnavailableException
 from src.core.config.payment import YooKassaSettings
 from src.domain.entities.payment import Payment
 from src.domain.enums.payment import PaymentMethod, PaymentPurpose
@@ -93,10 +94,20 @@ async def test_create_invoice_requires_phone_for_receipt(provider, sdk):
     assert calls["create"] == []
 
 
-async def test_create_invoice_propagates_api_errors(provider, sdk):
+@pytest.mark.parametrize(
+    "error",
+    [
+        RuntimeError("API down"),
+        # ровно то, что SDK ЮKassa бросает при отказе прокси (ответа нет)
+        AttributeError("'NoneType' object has no attribute 'status_code'"),
+    ],
+)
+async def test_create_invoice_api_failure_means_provider_unavailable(
+    provider, sdk, error
+):
     _, behaviour = sdk
-    behaviour["create"] = RuntimeError("API down")
-    with pytest.raises(RuntimeError):
+    behaviour["create"] = error
+    with pytest.raises(PaymentProviderUnavailableException):
         await provider.create_invoice(
             user_id=5,
             amount=Decimal("100"),
@@ -104,6 +115,50 @@ async def test_create_invoice_propagates_api_errors(provider, sdk):
             description="d",
             external_id="e",
             phone="79990000000",
+        )
+
+
+async def test_create_invoice_timeout_means_provider_unavailable(provider, monkeypatch):
+    async def timeout(*a, **kw):
+        raise asyncio.TimeoutError
+
+    monkeypatch.setattr(module.asyncio, "wait_for", timeout)
+    with pytest.raises(PaymentProviderUnavailableException):
+        await provider.create_invoice(
+            user_id=5,
+            amount=Decimal("100"),
+            currency="RUB",
+            description="d",
+            external_id="e",
+            phone="79990000000",
+        )
+
+
+async def test_stars_network_error_means_provider_unavailable():
+    from aiogram.exceptions import TelegramNetworkError
+    from aiogram.methods import CreateInvoiceLink
+
+    from src.infrastructure.payment.providers.telegram_stars import (
+        TelegramStarsProvider,
+    )
+
+    class Bot:
+        async def create_invoice_link(self, **kw):
+            raise TelegramNetworkError(
+                method=CreateInvoiceLink(
+                    title="t", description="d", payload="p", currency="XTR", prices=[]
+                ),
+                message="connection reset",
+            )
+
+    stars = TelegramStarsProvider(bot=Bot(), xtr_to_rub_rate=Decimal("1.5"))
+    with pytest.raises(PaymentProviderUnavailableException):
+        await stars.create_invoice(
+            user_id=1,
+            amount=Decimal("300"),
+            currency="RUB",
+            description="d",
+            external_id="e",
         )
 
 

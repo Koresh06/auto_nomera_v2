@@ -2,10 +2,13 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_CEILING
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.types import LabeledPrice
 
-from src.application.exceptions.payment import PaymentAmountInvalidException
+from src.application.exceptions.payment import (
+    PaymentAmountInvalidException,
+    PaymentProviderUnavailableException,
+)
 from src.application.ports.payment.provider import PaymentProvider
 from src.domain.entities.payment import Payment
 
@@ -48,6 +51,10 @@ class TelegramStarsProvider(PaymentProvider):
                 f"[TelegramStars] invoice creation failed: stars={stars} amount={amount} error={e}"
             )
             raise PaymentAmountInvalidException(stars=stars) from e
+        except TelegramAPIError as e:
+            # сетевые/серверные ошибки Telegram — не про сумму, а про доступность
+            logger.exception("[TelegramStars] invoice creation failed")
+            raise PaymentProviderUnavailableException("telegram_stars") from e
 
         return {
             "invoice_link": invoice_link,
