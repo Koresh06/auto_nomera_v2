@@ -35,7 +35,8 @@ class ExecuteMailingUseCase(UseCase[ExecuteMailingRequest, None]):
     async def __call__(self, command: ExecuteMailingRequest) -> None:
         try:
             if command.mail_type == MailingType.TO_ALL:
-                users = await self.user_repo.get_all()
+                # как и для рассылки в регион — без заблокированных
+                users = await self.user_repo.get_all_active()
                 chat_ids = [u.tg_id for u in users]
             elif command.mail_type == MailingType.TO_REGION:
                 if command.region_id is None:

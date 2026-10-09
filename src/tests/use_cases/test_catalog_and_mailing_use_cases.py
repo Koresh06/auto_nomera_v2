@@ -85,6 +85,9 @@ class FakeUserRepo:
     async def get_all(self) -> list[User]:
         return self._users
 
+    async def get_all_active(self) -> list[User]:
+        return [u for u in self._users if not u.is_blocked]
+
     async def get_by_region(self, region_id: int) -> list[User]:
         return [u for u in self._users if u.region_id == region_id]
 
