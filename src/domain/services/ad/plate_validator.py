@@ -87,7 +87,6 @@ def validate_plate(plate: str, *, allow_mask: bool = False) -> str:
         "Допустимые форматы:\n"
         "• A111AA77 / A111AA777 — авто\n"
         "• AA111177 / AA1111777 — прицеп\n"
-        "• 1111AA77 / AA1111777 — прицеп\n"
         "• 1111AA77 / 1111AA777 — мото"
     )
 
