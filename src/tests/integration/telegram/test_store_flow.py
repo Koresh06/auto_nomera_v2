@@ -248,3 +248,41 @@ async def test_rename_item_to_existing_plate_is_refused(world, session):
     plates = [i["plate"] for i in store.store_items]
     assert sorted(plates) == sorted(["Х111ХХ01", "О100ОО77"]), "дубли номеров"
     assert "уже есть" in u.last_alert
+
+
+async def test_store_paid_slot_after_payment_can_be_confirmed(world, session):
+    """После оплаты платного слота «Подтвердить» сразу писало «Время ожидания
+    истекло»: окно подтверждения клало регион слота не под тот ключ, а
+    повторный выбор слота падал с KeyError: 'ad_type'."""
+    from src.infrastructure.database.models import PaymentModel
+
+    from .harness import settle
+    from .test_create_ad_flow import PAID_SLOT
+
+    region = await make_region(
+        session,
+        channel_id=CHANNEL_ID,
+        settings=RegionSettings(system_paid_slots_count=3),
+    )
+    await make_user(session, region.id, tg_id=950, username="shopper")
+    await session.commit()
+    u = world.user(950, username="shopper")
+    await u.send("/start")
+    await _create_store(u)
+    await _add_items(u, "х111хх01-1000000")
+    await u.click("Сохранить")
+    await u.click("Просмотр и Публикация")
+    await u.click("Публикация")
+    await u.click(PAID_SLOT)
+    await u.click("TG Stars")
+    [payment] = (await session.execute(select(PaymentModel))).scalars().all()
+    await u.pay_stars(payload=payment.external_id, stars=1)
+    await settle()
+
+    assert "Подтвердите публикацию" in u.last.text
+    assert "Дата публикации</b>: \n" not in u.last.text  # слот виден
+    await u.click("Подтвердить")
+
+    [pub] = await _pubs(session)
+    assert pub.status == PublicationStatus.SCHEDULED
+    assert pub.scheduler_job_id

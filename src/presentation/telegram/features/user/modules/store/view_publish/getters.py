@@ -61,9 +61,18 @@ async def getter_confirm(
         "\n".join(f"✖️ {item.plate} ➖ {item.price.display}" for item in items) or "—"
     )
 
+    # После оплаты слота телепорт открывает это окно с пустым dialog_data —
+    # восстанавливаем всё, что читают on_confirm_publish и календарь
+    # (on_pick_slot при «Выберите слот заново»).
+    data["ad_id"] = ad.id
+    data["ad_type"] = ad.ad_type
+
+    # start_data живёт весь диалог: применяем оплаченный слот один раз, иначе
+    # он перезаписал бы слот, выбранный позже в календаре
     slot_raw = start_data.get("slot")
-    if slot_raw:
-        data["slot_region_id"] = slot_raw["region_id"]
+    if slot_raw and not data.get("paid_slot_restored"):
+        data["paid_slot_restored"] = True
+        data["region_id"] = slot_raw["region_id"]
         data["slot_day"] = slot_raw["slot_day"]
         data["slot_time"] = slot_raw["slot_time"]
         data["is_paid"] = start_data.get("is_paid", True)
