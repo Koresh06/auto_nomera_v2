@@ -11,7 +11,22 @@ APPROX_LINE_LENGTH = 45
 RESERVE = 250
 MAX_ITEMS = max(5, min(200, (TG_MESSAGE_LIMIT - RESERVE) // APPROX_LINE_LENGTH))
 
-_PRICE_CLEANUP_RE = re.compile(r"[^\d]")
+# Целое число из ASCII-цифр; допускаются разделители разрядов (пробелы,
+# включая неразрывные U+00A0/U+202F от мобильных клавиатур, точка, запятая,
+# апостроф) только между группами по три цифры: «1 550 000», «1.200.000».
+# Раньше из строки просто выкидывалось всё, кроме цифр, — «-5», «abc12»,
+# «12 тыс» молча превращались в число.
+_PRICE_RE = re.compile(r"[0-9]+|[0-9]{1,3}(?:[ \u00a0\u202f.,'][0-9]{3})+")
+
+
+def parse_price_digits(raw: str) -> int:
+    value = raw.strip()
+    if not _PRICE_RE.fullmatch(value):
+        raise ValueError("Введите цену цифрами, например 150000")
+    digits = re.sub(r"[^0-9]", "", value)
+    if len(digits) > 1 and digits[0] == "0":
+        raise ValueError("Цена не может начинаться с нуля")
+    return int(digits)
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,10 +42,10 @@ class StoreInputParseResult:
 
 
 def _parse_price(raw: str) -> Price:
-    digits = _PRICE_CLEANUP_RE.sub("", raw)
-    if not digits:
-        raise ValueError(f"не удалось распознать цену: «{raw}»")
-    return Price(int(digits))
+    try:
+        return Price(parse_price_digits(raw))
+    except ValueError:
+        raise ValueError(f"не удалось распознать цену: «{raw}»") from None
 
 
 def parse_store_price(raw: str) -> Price:

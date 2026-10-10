@@ -3,8 +3,8 @@ Regression test for AUD-20: validate_price()/validate_price_urgent_buyout()
 only stripped the ASCII space (U+0020) via .replace(" ", ""), so a price like
 "1 550 000" typed/pasted with a non-breaking space (U+00A0) -- common on
 mobile keyboards -- failed .isdigit() and was rejected as invalid, even though
-it's a perfectly reasonable price. store_validator.py already handled this
-correctly via a digits-only regex; price_validators.py now does the same.
+it's a perfectly reasonable price. Both now go through parse_price_digits(),
+which accepts these separators between digit groups and nothing else.
 """
 
 from decimal import Decimal
@@ -119,3 +119,48 @@ def test_admin_signed_amount_rejects_nan_and_infinity():
         validate_signed_amount("50")  # без знака
     with pytest.raises(ValueError):
         validate_signed_amount("+0")
+
+
+# --- Цена — только число. Раньше из строки выкидывалось всё, кроме цифр:
+# «-5» становилось 5 000 ₽, «abc12» — 12 000 ₽, «0232» — 232 000 ₽.
+
+
+@pytest.mark.parametrize("fn", [validate_price, validate_price_urgent_buyout])
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "-5",
+        "-150000",
+        "+500",
+        "abc12",
+        "12 тыс",
+        "150к",
+        "1 5",
+        "0232",
+        "00",
+        "٣٤",
+        "５００",
+        "",
+    ],
+)
+def test_price_rejects_anything_but_a_plain_number(fn, raw):
+    with pytest.raises(ValueError):
+        fn(raw)
+
+
+def test_validate_price_accepts_dot_thousand_separators():
+    assert validate_price("1.200.000") == 1_200_000
+
+
+def test_store_price_is_as_strict_as_ad_price():
+    from src.domain.services.ad.store_validator import (
+        parse_store_price,
+        parse_store_validator,
+    )
+
+    assert parse_store_price("1 000 000").value == 1_000_000
+    for raw in ("-5", "abc12", "0232"):
+        with pytest.raises(ValueError):
+            parse_store_price(raw)
+    with pytest.raises(ValueError):
+        parse_store_validator("х111хх01 12тыс")
