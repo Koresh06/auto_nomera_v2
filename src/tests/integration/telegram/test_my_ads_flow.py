@@ -172,3 +172,29 @@ async def test_delete_ad_cancels_autopublish_series(world, session):
     alive = [p.id for p in pubs if p.status == PublicationStatus.SCHEDULED]
     assert alive == [], "удалённое объявление не должно продолжать выходить"
     assert {c.scheduler_job_id for c in children} <= set(world.tasks.canceled)
+
+
+async def test_edit_price_of_autopublished_ad_updates_channel_post(world, session):
+    """У объявления с автопубликацией в «Моих объявлениях» открывается самая
+    новая — запланированная — копия. Раньше правка уходила только в БД, а пост
+    в канале оставался со старой ценой."""
+    from aiogram.methods import EditMessageCaption
+
+    u = await _create_ad_until_services(world, session, balance="1000")
+    await u.click("Автопубликация")
+    await u.click("Пропустить")
+    [parent] = await _pubs(session)
+    await _run_publish_worker(world, parent.id)
+    [parent, *_] = await _pubs(session)
+    await _open_my_ad(u)
+
+    await _edit(u, "Изменить цену", "777")
+
+    assert (await _ad(session)).price == 777_000
+    [edit] = world.tg.calls_of(EditMessageCaption)
+    assert edit.message_id == parent.channel_message_id
+    assert "777 000" in edit.caption
+
+    # номер у объявления с живым постом менять нельзя
+    await u.click("Изменить номер")
+    assert "изменить его нельзя" in (u.last_alert or "")

@@ -101,6 +101,9 @@ from src.application.use_cases.publication.create_publication_from_ad import (
 )
 from src.application.use_cases.publication.edit_published import EditPublishedAdUseCase
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdUseCase
+from src.application.use_cases.publication.get_live_by_ad import (
+    GetLivePublicationOfAdUseCase,
+)
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationUseCase,
 )
@@ -478,6 +481,13 @@ class UseCasesProvider(Provider):
         publication_repo: PublicationRepository,
     ) -> GetPublicationByIdUseCase:
         return GetPublicationByIdUseCase(publication_repo=publication_repo)
+
+    @provide
+    def get_live_publication_of_ad_use_case(
+        self,
+        publication_repo: PublicationRepository,
+    ) -> GetLivePublicationOfAdUseCase:
+        return GetLivePublicationOfAdUseCase(publication_repo=publication_repo)
 
     @provide
     def get_all_services_use_case(

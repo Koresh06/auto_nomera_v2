@@ -10,7 +10,6 @@ from src.domain.enums.ad import AdType
 from src.domain.services.ad.plate_validator import validate_plate
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
-from src.domain.enums.publication import PublicationStatus
 from src.application.dtos.ad import AdDTO
 from src.application.dtos.publication import PublicationDTO
 from src.application.dtos.region import RegionDTO
@@ -21,7 +20,9 @@ from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefReq
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 from src.application.use_cases.publication.edit_published import EditPublishedAdRequest
-from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
+from src.application.use_cases.publication.get_live_by_ad import (
+    GetLivePublicationOfAdRequest,
+)
 from src.application.use_cases.publication.get_user import GetUserPublicationsRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
@@ -145,19 +146,17 @@ async def on_edit_plate(
     ) or dialog_manager.dialog_data.get("ad_id")
     ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
 
-    pub_id: int | None = dialog_manager.dialog_data.get(
-        "selected_pub_id"
-    ) or dialog_manager.dialog_data.get("pub_id")
-    if pub_id:
-        pub: PublicationDTO = await mediator.handle(
-            GetPublicationByIdRequest(publication_id=pub_id)
+    # Смотрим на пост в канале, а не на открытую публикацию: при
+    # автопубликации в списке открыта запланированная копия.
+    live_pub: PublicationDTO | None = await mediator.handle(
+        GetLivePublicationOfAdRequest(ad_id=ad.id)
+    )
+    if live_pub is not None:
+        await callback.answer(
+            "⚠️ Номер уже опубликован — изменить его нельзя.",
+            show_alert=True,
         )
-        if pub.status == PublicationStatus.PUBLISHED:
-            await callback.answer(
-                "⚠️ Номер уже опубликован — изменить его нельзя.",
-                show_alert=True,
-            )
-            return
+        return
 
     if ad.ad_type == AdType.BUY:
         dialog_manager.dialog_data["edit_label"] = PLATE_BUY_EDIT_TEXT
@@ -250,7 +249,6 @@ async def on_apply_edit(
 ) -> None:
     data = dialog_manager.dialog_data
     ad_id: int = data.get("selected_ad_id") or data.get("ad_id")
-    pub_id: int | None = data.get("selected_pub_id") or data.get("pub_id")
     plate = data.get("pending_plate")
     city = data.get("pending_city")
     price_raw: int | None = data.get("pending_price")
@@ -264,33 +262,34 @@ async def on_apply_edit(
         else None
     )
 
-    if pub_id is not None:
-        pub: PublicationDTO = await mediator.handle(
-            GetPublicationByIdRequest(publication_id=pub_id)
+    # Правим пост в канале, если он есть, — даже когда в списке открыта
+    # запланированная копия (автопубликация, повторное размещение). Раньше
+    # решение принималось по открытой публикации, и пост не обновлялся.
+    live_pub: PublicationDTO | None = await mediator.handle(
+        GetLivePublicationOfAdRequest(ad_id=ad_id)
+    )
+    if live_pub is not None:
+        await mediator.handle(
+            EditPublishedAdRequest(
+                ad_id=ad_id,
+                publication_id=live_pub.id,
+                city=city,
+                price=price,
+                contacts=contacts,
+            )
         )
-
-        if pub.status == PublicationStatus.PUBLISHED:
-            await mediator.handle(
-                EditPublishedAdRequest(
-                    ad_id=ad_id,
-                    publication_id=pub.id,
-                    city=city,
-                    price=price,
-                    contacts=contacts,
-                )
+    else:
+        file_id_media = data.get("pending_media_file_id")
+        await mediator.handle(
+            UpdateAdContentRequest(
+                ad_id=ad_id,
+                plate_number=plate,
+                city=city,
+                price=price,
+                contacts=contacts,
+                image_file_id=file_id_media,
             )
-        else:
-            file_id_media = data.get("pending_media_file_id")
-            await mediator.handle(
-                UpdateAdContentRequest(
-                    ad_id=ad_id,
-                    plate_number=plate,
-                    city=city,
-                    price=price,
-                    contacts=contacts,
-                    image_file_id=file_id_media,
-                )
-            )
+        )
 
     updated_ad: AdDTO = await mediator.handle(GetByIdAdRequest(ad_id=ad_id))
     data["selected_ad_id"] = updated_ad.id

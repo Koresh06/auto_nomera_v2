@@ -159,6 +159,10 @@ from src.application.use_cases.publication.get_by_id import (
     GetPublicationByIdRequest,
     GetPublicationByIdUseCase,
 )
+from src.application.use_cases.publication.get_live_by_ad import (
+    GetLivePublicationOfAdRequest,
+    GetLivePublicationOfAdUseCase,
+)
 from src.application.use_cases.publication.publish_publication import (
     PublishPublicationRequest,
     PublishPublicationUseCase,
@@ -330,6 +334,7 @@ class MediatorProvider(Provider):
         buy_publication_service_use_case: BuyPublicationServiceUseCase,
         buy_pre_publication_service_use_case: BuyPrePublicationServiceUseCase,
         get_publication_by_id_use_case: GetPublicationByIdUseCase,
+        get_live_publication_of_ad_use_case: GetLivePublicationOfAdUseCase,
         get_all_services_use_case: GetAllServicesUseCase,
         unpin_message_use_case: UnpinMessageUseCase,
         ensure_ad_image_ref_use_case: EnsureAdImageRefUseCase,
@@ -429,6 +434,9 @@ class MediatorProvider(Provider):
             BuyPrePublicationServiceRequest, buy_pre_publication_service_use_case
         )
         mediator.register(GetPublicationByIdRequest, get_publication_by_id_use_case)
+        mediator.register(
+            GetLivePublicationOfAdRequest, get_live_publication_of_ad_use_case
+        )
         mediator.register(GetAllServicesRequest, get_all_services_use_case)
         mediator.register(UnpinMessageRequest, unpin_message_use_case)
         mediator.register(EnsureAdImageRefRequest, ensure_ad_image_ref_use_case)
