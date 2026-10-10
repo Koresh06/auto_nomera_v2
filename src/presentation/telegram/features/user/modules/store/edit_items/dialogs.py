@@ -137,7 +137,7 @@ store_edit_items_dialog = Dialog(
             when=F["new_plate"],
         ),
         Format(
-            "🧾 <b>Проверьте изменения:</b>\n\n💰 Новая цена: <b>{new_price}</b> руб.",
+            "🧾 <b>Проверьте изменения:</b>\n\n💰 Новая цена: <b>{new_price}</b>",
             when=F["new_price"],
         ),
         Button(
