@@ -27,6 +27,7 @@ async def getter_list_publications(
         GetUserPublicationsRequest(
             user_id=user.id,
             region_id=user.region_id,
+            is_pub_store=False,
         )
     )
 

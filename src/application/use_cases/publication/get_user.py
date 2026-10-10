@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class GetUserPublicationsRequest(UseCaseRequest):
     user_id: int
     region_id: int
+    is_pub_store: bool = True
 
 
 @dataclass(kw_only=True)
@@ -31,6 +32,13 @@ class GetUserPublicationsUseCase(
             user_id=command.user_id,
             region_id=command.region_id,
         )
+
+        if not command.is_pub_store:
+            rows = [
+                (pub, plate, shop_name)
+                for pub, plate, shop_name in rows
+                if shop_name is None
+            ]
 
         return [
             PublicationDTO.from_entity(
