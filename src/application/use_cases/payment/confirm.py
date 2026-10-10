@@ -42,10 +42,6 @@ from src.domain.enums.payment import PaymentPurpose
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.exceptions.publication import ServiceNotAllowed
-from src.domain.exceptions.slot_reservation import (
-    SlotAlreadyBooked,
-    SlotAlreadyConverted,
-)
 from src.domain.services.publication.service_eligibility import (
     ensure_service_allowed_for_ad_type,
 )
@@ -244,33 +240,18 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                 if publication is None:
                     raise PublicationNotFoundException(payment.purpose_id)
 
-                try:
-                    await self.confirm_paid_slot(
-                        ConfirmPaidSlotAndSchedulePublicationRequest(
-                            publication_id=publication.id,
-                            user_id=payment.user_id,
-                            ad_id=publication.ad_id,
-                        )
+                # Оплаченный слот выдаётся всегда — даже если его уже занял
+                # другой пользователь (платный слот не эксклюзивный).
+                await self.confirm_paid_slot(
+                    ConfirmPaidSlotAndSchedulePublicationRequest(
+                        publication_id=publication.id,
+                        user_id=payment.user_id,
+                        ad_id=publication.ad_id,
                     )
-                    extra["slot_text"] = (
-                        f"{publication.publish_at_utc:%d.%m}-{publication.publish_at_utc:%H:%M}"
-                    )
-                except (SlotAlreadyBooked, SlotAlreadyConverted) as e:
-                    # Слот оказался занят другим пользователем в результате
-                    # гонки ПОСЛЕ того, как деньги уже реально получены (внешний
-                    # платёж). Денег не теряем: компенсируем их на баланс —
-                    # ровно под этот случай уже есть готовый текст в
-                    # PaymentNotifier._build_user_text (extra["slot_conflict"]).
-                    logger.error(
-                        f"[ConfirmPayment:slot_conflict] payment_id={payment.id} "
-                        f"pub_id={publication.id} user_id={payment.user_id}: {e} "
-                        f"— компенсируем {payment.amount} руб. на баланс"
-                    )
-                    sentry_sdk.capture_exception(e)
-                    user.top_up(payment.amount)
-                    await self.user_repo.save(user)
-                    extra["slot_conflict"] = True
-                    extra["compensated_amount"] = payment.amount
+                )
+                extra["slot_text"] = (
+                    f"{publication.publish_at_utc:%d.%m}-{publication.publish_at_utc:%H:%M}"
+                )
             elif "slot" in return_data:
                 slot_dict = return_data["slot"]
                 slot = SlotKey(
@@ -279,47 +260,16 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                     local_time=time.fromisoformat(slot_dict["slot_time"]),
                 )
 
-                converted = (
-                    await self.reservation_service.converted_repo.mark_converted(
-                        slot=slot,
-                        user_id=payment.user_id,
-                        ad_id=None,
-                    )
+                await self.reservation_service.converted_repo.mark_converted(
+                    slot=slot,
+                    user_id=payment.user_id,
+                    ad_id=None,
                 )
-                owner_user_id: int | None = payment.user_id
-                if not converted:
-                    owner = await self.reservation_service.converted_repo.get_converted_owner_and_ad(
-                        slot
-                    )
-                    owner_user_id = owner[0] if owner else None
-
-                if owner_user_id != payment.user_id:
-                    logger.error(
-                        f"[ConfirmPayment:slot_conflict] payment_id={payment.id} "
-                        f"user_id={payment.user_id} slot={slot.local_day} "
-                        f"{slot.local_time} already_owned_by={owner_user_id} — "
-                        f"компенсируем {payment.amount} руб. на баланс"
-                    )
-                    sentry_sdk.capture_message(
-                        f"Slot payment conflict: payment_id={payment.id}, "
-                        f"slot already owned by user {owner_user_id}",
-                        level="error",
-                    )
-                    user.top_up(payment.amount)
-                    await self.user_repo.save(user)
-                    extra["slot_conflict"] = True
-                    extra["compensated_amount"] = payment.amount
-                    extra["slot_text"] = (
-                        f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
-                    )
-                else:
-                    extra["slot_text"] = (
-                        f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
-                    )
-                    logger.info(
-                        f"[ConfirmPayment:slot_converted] user_id={payment.user_id} "
-                        f"slot={slot.local_day} {slot.local_time}"
-                    )
+                extra["slot_text"] = f"{slot.local_day:%d.%m} {slot.local_time:%H:%M}"
+                logger.info(
+                    f"[ConfirmPayment:slot_converted] user_id={payment.user_id} "
+                    f"slot={slot.local_day} {slot.local_time}"
+                )
             else:
                 raise PaymnetNotFountPurposeException(command.external_id)
 

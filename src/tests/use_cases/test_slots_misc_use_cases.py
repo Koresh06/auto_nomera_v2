@@ -34,7 +34,6 @@ from src.domain.entities.user import User
 from src.domain.enums.region import RegionStatus
 from src.domain.enums.role import UserRole
 from src.domain.exceptions.region import RegionDisabledError
-from src.domain.exceptions.slot_reservation import SlotAlreadyConverted
 from src.domain.exceptions.user import InsufficientBalance
 from src.domain.services.region.region_guard import RegionGuard
 from src.domain.services.slots.calendar_builder import CalendarBuilder
@@ -47,6 +46,9 @@ from src.infrastructure.redis.holt_store.in_memory import InMemorySlotHoldStore
 from src.infrastructure.repositories.slot.in_memory import (
     InMemorySlotBookingRepo,
     InMemorySlotConvertedRepo,
+)
+from src.infrastructure.redis.paid_slot_charge_guard import (
+    InMemoryPaidSlotChargeGuard,
 )
 from src.utils.get_datetime_utc_now import get_datetime_utc_now
 
@@ -184,7 +186,9 @@ async def test_release_hold_delegates_to_reservation_service():
 
     tx = FakeTransactionManager()
     use_case = ReleaseHoldUseCase(
-        reservation_service=reservation_service, transaction_manager=tx
+        reservation_service=reservation_service,
+        charge_guard=InMemoryPaidSlotChargeGuard(),
+        transaction_manager=tx,
     )
 
     await use_case(ReleaseHoldRequest(slot=slot, user_id=1))
@@ -236,6 +240,7 @@ async def test_confirm_paid_slot_from_balance_raises_for_unknown_user():
     use_case = ConfirmPaidSlotFromBalanceUseCase(
         user_repo=FakeUserRepo(None),
         converted_repo=InMemorySlotConvertedRepo(),
+        charge_guard=InMemoryPaidSlotChargeGuard(),
         transaction_manager=FakeTransactionManager(),
     )
     from datetime import date, time
@@ -263,6 +268,7 @@ async def test_confirm_paid_slot_from_balance_charges_and_converts_on_success():
     use_case = ConfirmPaidSlotFromBalanceUseCase(
         user_repo=FakeUserRepo(user),
         converted_repo=converted_repo,
+        charge_guard=InMemoryPaidSlotChargeGuard(),
         transaction_manager=tx,
     )
 
@@ -273,9 +279,9 @@ async def test_confirm_paid_slot_from_balance_charges_and_converts_on_success():
     assert tx.commits == 1
 
 
-async def test_confirm_paid_slot_from_balance_raises_without_charging_on_conflict():
-    """The AUD-03-class bug found while adding this test: if another user
-    already converted the slot, the balance must NOT be touched."""
+async def test_confirm_paid_slot_taken_by_another_user_is_charged_and_allowed():
+    """Платный слот не эксклюзивный: если его уже занял другой пользователь,
+    слот всё равно можно взять — за деньги."""
     from datetime import date, time
 
     user = make_user(balance=500)
@@ -286,15 +292,14 @@ async def test_confirm_paid_slot_from_balance_raises_without_charging_on_conflic
     use_case = ConfirmPaidSlotFromBalanceUseCase(
         user_repo=FakeUserRepo(user),
         converted_repo=converted_repo,
+        charge_guard=InMemoryPaidSlotChargeGuard(),
         transaction_manager=FakeTransactionManager(),
     )
 
-    with pytest.raises(SlotAlreadyConverted):
-        await use_case(
-            ConfirmPaidSlotFromBalanceRequest(user_id=1, slot=slot, amount=199)
-        )
-
-    assert user.balance == 500  # untouched
+    assert await use_case(
+        ConfirmPaidSlotFromBalanceRequest(user_id=1, slot=slot, amount=199)
+    )
+    assert user.balance == 301
 
 
 async def test_confirm_paid_slot_from_balance_insufficient_balance_raises():
@@ -306,6 +311,7 @@ async def test_confirm_paid_slot_from_balance_insufficient_balance_raises():
     use_case = ConfirmPaidSlotFromBalanceUseCase(
         user_repo=FakeUserRepo(user),
         converted_repo=InMemorySlotConvertedRepo(),
+        charge_guard=InMemoryPaidSlotChargeGuard(),
         transaction_manager=FakeTransactionManager(),
     )
 
@@ -313,3 +319,47 @@ async def test_confirm_paid_slot_from_balance_insufficient_balance_raises():
         await use_case(
             ConfirmPaidSlotFromBalanceRequest(user_id=1, slot=slot, amount=199)
         )
+
+
+async def test_confirm_paid_slot_double_tap_charges_once_until_released():
+    """Второй тап сразу после оплаты не списывает. После «Отмены» (снятие
+    блокировки) повторный выбор того же слота — новая покупка."""
+    from datetime import date, time
+
+    user = make_user(balance=1000)
+    slot = SlotKey(region_id=1, local_day=date(2026, 2, 12), local_time=time(10, 0))
+    guard = InMemoryPaidSlotChargeGuard()
+    use_case = ConfirmPaidSlotFromBalanceUseCase(
+        user_repo=FakeUserRepo(user),
+        converted_repo=InMemorySlotConvertedRepo(),
+        charge_guard=guard,
+        transaction_manager=FakeTransactionManager(),
+    )
+    request = ConfirmPaidSlotFromBalanceRequest(user_id=1, slot=slot, amount=199)
+
+    assert await use_case(request) is True
+    assert await use_case(request) is False
+    assert user.balance == 801
+
+    await guard.release(1, slot)
+    assert await use_case(request) is True
+    assert user.balance == 602
+
+
+async def test_confirm_paid_slot_failed_charge_does_not_block_retry():
+    from datetime import date, time
+
+    user = make_user(balance=50)
+    slot = SlotKey(region_id=1, local_day=date(2026, 2, 12), local_time=time(10, 0))
+    use_case = ConfirmPaidSlotFromBalanceUseCase(
+        user_repo=FakeUserRepo(user),
+        converted_repo=InMemorySlotConvertedRepo(),
+        charge_guard=InMemoryPaidSlotChargeGuard(),
+        transaction_manager=FakeTransactionManager(),
+    )
+    request = ConfirmPaidSlotFromBalanceRequest(user_id=1, slot=slot, amount=199)
+
+    with pytest.raises(InsufficientBalance):
+        await use_case(request)
+    user.top_up(500)
+    assert await use_case(request) is True

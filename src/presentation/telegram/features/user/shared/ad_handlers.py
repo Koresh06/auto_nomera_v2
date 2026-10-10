@@ -157,10 +157,9 @@ async def on_pick_slot(
             result.is_converted,
         )
     except (SlotAlreadyHeld, SlotAlreadyConverted):
-        await _start_slot_payment(
-            dialog_manager, callback, mediator, user, region, slot
-        )
-        return
+        # слот прямо сейчас занимает другой пользователь — взять его можно
+        # только за деньги (с баланса, если хватает)
+        is_paid_slot = True
 
     if not is_paid_slot:
         limit_result: LimitCheckResult = await mediator.handle(
@@ -191,21 +190,18 @@ async def on_pick_slot(
     if is_paid_slot:
         amount = region.settings.paid_slot_price
         if user.balance >= amount:
-            try:
-                await mediator.handle(
-                    ConfirmPaidSlotFromBalanceRequest(
-                        user_id=user.id,
-                        slot=slot,
-                        amount=amount,
-                    )
+            charged: bool = await mediator.handle(
+                ConfirmPaidSlotFromBalanceRequest(
+                    user_id=user.id,
+                    slot=slot,
+                    amount=amount,
                 )
-            except SlotAlreadyConverted:
-                # Кто-то успел занять этот слот буквально за секунды до нас —
-                # баланс НЕ списан (use case проверяет это до charge()).
-                await callback.answer(
-                    "⛔ Этот слот только что заняли. Выберите другой.",
-                    show_alert=True,
-                )
+            )
+
+            if not charged:
+                # второй тап по той же кнопке: деньги и переход в окно
+                # подтверждения уже сделал первый
+                await callback.answer()
                 return
 
             dialog_manager.dialog_data["region_id"] = slot.region_id

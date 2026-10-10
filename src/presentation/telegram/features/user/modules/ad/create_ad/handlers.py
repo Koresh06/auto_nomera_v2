@@ -338,8 +338,9 @@ async def on_confirm_ad(
         await dialog_manager.next()
         return
 
-    # обычный путь — холд должен быть жив
-    hold_valid: bool = await mediator.handle(
+    # обычный путь — холд бесплатного слота должен быть жив. Оплаченный слот
+    # не эксклюзивный: чужой холд на нём не мешает.
+    hold_valid: bool = data.get("is_paid", False) or await mediator.handle(
         CheckHoldRequest(
             region_id=region_id,
             slot=slot,

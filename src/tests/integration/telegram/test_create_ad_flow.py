@@ -264,6 +264,53 @@ async def test_paid_slot_is_charged_from_balance(world, session):
     assert pub.status == PublicationStatus.SCHEDULED
 
 
+async def test_cancel_paid_slot_and_repick_charges_again(world, session):
+    """Оплатили слот с баланса и нажали «Отмена» (бот предупреждает о потере
+    слота) — оплата сгорает, повторный выбор того же слота снова платный.
+    Раньше бот писал «Списано», но ничего не списывал."""
+    _, user = await _setup(session, paid_slots=3, balance=Decimal("1000"))
+    u = world.user(700)
+    await _fill_sale_until_calendar(u)
+    paid_slot = u.find_button(PAID_SLOT)[1].text
+
+    await u.click(paid_slot)
+    assert "Списано 199 руб." in (u.last_alert or "")
+    await u.click("Отмена")
+    assert "потеряете доступ" in (u.last_alert or "")
+    await u.click("Отмена")
+    await _fill_sale_until_calendar(u)
+    await u.click(paid_slot)
+
+    assert "Списано 199 руб." in (u.last_alert or "")
+    session.expire_all()
+    saved = await SQLAlchemyUserRepo(session).get_by_id(user.id)
+    assert saved.balance == Decimal("602")
+
+
+async def test_paid_slot_abandoned_via_menu_is_charged_again(world, session):
+    """Оплатил слот с баланса и ушёл через /start, не подтвердив публикацию, —
+    слот упущен. Раньше при повторном выборе бот писал «слот уже оплачен» и
+    не списывал."""
+    _, user = await _setup(session, paid_slots=3, balance=Decimal("1000"))
+    u = world.user(700)
+    await _fill_sale_until_calendar(u)
+    paid_slot = u.find_button(PAID_SLOT)[1].text
+    await u.click(paid_slot)
+    assert "Списано 199 руб." in (u.last_alert or "")
+
+    # прошло больше окна двойного тапа — блокировка истекла
+    for key in await world.redis.keys("paid_slot_charge:*"):
+        await world.redis.delete(key)
+    await _fill_sale_until_calendar(u)  # начинается с /start
+    await u.click(paid_slot)
+
+    assert "Списано 199 руб." in (u.last_alert or "")
+    assert "оплачен" not in (u.last_alert or "")
+    session.expire_all()
+    saved = await SQLAlchemyUserRepo(session).get_by_id(user.id)
+    assert saved.balance == Decimal("602")
+
+
 async def test_paid_slot_without_balance_opens_payment(world, session):
     await _setup(session, paid_slots=3, balance=Decimal("0"))
     u = world.user(700)

@@ -7,8 +7,6 @@ from src.domain.value_objects.slot_key import SlotKey
 from src.domain.value_objects.hold_owner import HoldOwner
 from src.domain.exceptions.slot_reservation import (
     SlotAlreadyHeld,
-    SlotAlreadyBooked,
-    SlotAlreadyConverted,
     SlotHoldNotFound,
 )
 from src.infrastructure.redis.holt_store.in_memory import InMemorySlotHoldStore
@@ -151,25 +149,17 @@ async def test_book_after_payment_is_idempotent_for_same_user():
     assert await service.booking_repo.is_booked(slot) is True
 
 
-async def test_book_after_payment_raises_if_booking_lost_to_another_user():
-    """AUD-03: если слот уже забронирован ДРУГИМ пользователем, деньги не должны
-    молча "раствориться" — book_after_payment обязан сообщить о конфликте."""
+async def test_book_after_payment_succeeds_on_slot_taken_by_another_user():
+    """Оплаченный слот не эксклюзивный: если его уже занял другой
+    пользователь, оплатившему он всё равно достаётся (без ошибки)."""
     service = make_service()
     slot = make_slot()
-    await service.booking_repo.book(slot, ad_id=1, user_id=1)  # кто-то успел раньше
-
-    with pytest.raises(SlotAlreadyBooked):
-        await service.book_after_payment(slot=slot, user_id=2, ad_id=2)
-
-
-async def test_book_after_payment_raises_if_converted_lost_to_another_user():
-    """AUD-03: аналогично для converted_repo — другой владелец уже сконвертировал слот."""
-    service = make_service()
-    slot = make_slot()
+    await service.booking_repo.book(slot, ad_id=1, user_id=1)
     await service.converted_repo.mark_converted(slot=slot, user_id=1, ad_id=1)
 
-    with pytest.raises(SlotAlreadyConverted):
-        await service.book_after_payment(slot=slot, user_id=2, ad_id=2)
+    await service.book_after_payment(slot=slot, user_id=2, ad_id=2)
+
+    assert await service.converted_repo.is_converted(slot) is True
 
 
 async def test_book_after_payment_requires_hold_owner_when_flagged():

@@ -50,7 +50,8 @@ async def on_confirm_publish(
 
     user: UserDTO = await mediator.handle(GetTgIdRequest(tg_id=callback.from_user.id))
 
-    hold_valid: bool = await mediator.handle(
+    # оплаченный слот не эксклюзивный — холд проверяем только у бесплатного
+    hold_valid: bool = data.get("is_paid", False) or await mediator.handle(
         CheckHoldRequest(
             region_id=slot.region_id,
             slot=slot,

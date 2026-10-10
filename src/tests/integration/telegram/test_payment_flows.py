@@ -1,6 +1,7 @@
 """Сквозные сценарии оплаты через бота: пополнение баланса (Stars, ЮKassa),
 оплата платного слота с возвратом в сценарий публикации."""
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -17,7 +18,7 @@ from src.infrastructure.repositories.user.sqlalchemy import SQLAlchemyUserRepo
 from ..factories import make_region, make_user
 from .conftest import ADMIN_TG_ID
 from .harness import settle
-from .test_create_ad_flow import PAID_SLOT, _fill_sale_until_calendar
+from .test_create_ad_flow import FREE_SLOT, PAID_SLOT, _fill_sale_until_calendar
 
 
 async def _rows(session, model):
@@ -237,3 +238,54 @@ async def test_yookassa_unreachable_shows_clear_message(world, session, monkeypa
 
     await u.click("TG Stars")  # другой способ работает
     assert "Оплата звёздами" in u.last.text
+
+
+async def test_slot_taken_by_another_user_can_be_bought(world, session):
+    """Слот бесплатен один раз; занятый другим пользователем слот можно взять
+    за деньги — и с баланса, и внешним платежом. Ветка аудита отвечала
+    «слот только что заняли», а внешний платёж возвращала на баланс."""
+    region = await make_region(
+        session, settings=RegionSettings(system_paid_slots_count=0)
+    )
+    await make_user(session, region.id, tg_id=811, username="first")
+    await make_user(
+        session, region.id, tg_id=812, username="rich", balance=Decimal("1000")
+    )
+    await make_user(session, region.id, tg_id=813, username="card")
+    await session.commit()
+
+    first = world.user(811, username="first")
+    await _fill_sale_until_calendar(first)
+    slot_label = first.find_button(FREE_SLOT)[1].text
+    await first.click(slot_label)
+    await first.click("Подтвердить")
+    hh_mm = re.search(r"\d{1,2}:\d{2}", slot_label).group()
+
+    taken = re.compile(rf"💰.*{hh_mm}")
+
+    rich = world.user(812, username="rich")
+    await _fill_sale_until_calendar(rich, plate="В777ОР199")
+    await rich.click(taken)
+    assert "Списано 199 руб." in (rich.last_alert or "")
+    await rich.click("Подтвердить")
+    assert await _balance(session, 812) == Decimal("801")
+
+    card = world.user(813, username="card")
+    await _fill_sale_until_calendar(card, plate="Е555КХ77")
+    await card.click(taken)
+    await card.click("TG Stars")
+    payment = [
+        p
+        for p in await _rows(session, PaymentModel)
+        if p.purpose == PaymentPurpose.SLOT
+    ][0]
+    await card.pay_stars(payload=payment.external_id, stars=1)
+    await settle()
+    assert "Проверьте данные" in card.last.text
+    await card.click("Подтвердить")
+    assert await _balance(session, 813) == Decimal("0")  # без «возврата»
+
+    pubs = await _rows(session, PublicationModel)
+    assert len(pubs) == 3
+    assert {p.status for p in pubs} == {PublicationStatus.SCHEDULED}
+    assert len({(p.slot_day, p.slot_time) for p in pubs}) == 1

@@ -13,6 +13,7 @@ from src.application.ports.publication_service.service_definition_repo import (
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
+from src.application.ports.slots.paid_slot_charge_guard import PaidSlotChargeGuard
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.application.ports.ad.draft_reminder_store import DraftReminderStore
 from src.application.ports.user.user_repo import UserRepository
@@ -33,12 +34,17 @@ from src.infrastructure.repositories.slot.sqlalchemy import (
 )
 from src.infrastructure.repositories.user.sqlalchemy import SQLAlchemyUserRepo
 from src.infrastructure.redis.holt_store.redis import RedisSlotHoldStore
+from src.infrastructure.redis.paid_slot_charge_guard import RedisPaidSlotChargeGuard
 
 
 class RepositoriesProvider(Provider):
     @provide(scope=Scope.APP)
     def get_slot_hold_store(self, redis: Redis) -> SlotHoldStore:
         return RedisSlotHoldStore(redis)
+
+    @provide(scope=Scope.APP)
+    def get_paid_slot_charge_guard(self, redis: Redis) -> PaidSlotChargeGuard:
+        return RedisPaidSlotChargeGuard(redis)
 
     @provide(scope=Scope.REQUEST)
     def get_draft_reminder_store(self, redis: Redis) -> DraftReminderStore:

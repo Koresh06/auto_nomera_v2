@@ -129,6 +129,7 @@ from src.application.use_cases.publication_service.priority_publish_publication 
 from src.application.ports.region.region_repo import RegionRepository
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
+from src.application.ports.slots.paid_slot_charge_guard import PaidSlotChargeGuard
 from src.application.ports.slots.slot_hold_store import SlotHoldStore
 from src.application.use_cases.publication.confirm_paid_slot_and_schedule_publication import (
     ConfirmPaidSlotAndSchedulePublicationUseCase,
@@ -335,11 +336,13 @@ class UseCasesProvider(Provider):
         self,
         user_repo: UserRepository,
         converted_repo: SlotConvertedRepository,
+        charge_guard: PaidSlotChargeGuard,
         transaction_manager: TransactionManager,
     ) -> ConfirmPaidSlotFromBalanceUseCase:
         return ConfirmPaidSlotFromBalanceUseCase(
             user_repo=user_repo,
             converted_repo=converted_repo,
+            charge_guard=charge_guard,
             transaction_manager=transaction_manager,
         )
 
@@ -347,10 +350,12 @@ class UseCasesProvider(Provider):
     def release_hold_use_case(
         self,
         reservation_service: SlotReservationService,
+        charge_guard: PaidSlotChargeGuard,
         transaction_manager: TransactionManager,
     ) -> ReleaseHoldUseCase:
         return ReleaseHoldUseCase(
             reservation_service=reservation_service,
+            charge_guard=charge_guard,
             transaction_manager=transaction_manager,
         )
 

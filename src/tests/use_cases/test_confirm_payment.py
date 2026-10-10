@@ -29,7 +29,6 @@ from src.domain.enums.payment import PaymentMethod, PaymentPurpose, PaymentStatu
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.enums.role import UserRole
-from src.domain.exceptions.slot_reservation import SlotAlreadyBooked
 from src.domain.services.slots.slot_reservation_service import SlotReservationService
 from src.domain.value_objects.slot_key import SlotKey
 from src.infrastructure.redis.holt_store.in_memory import InMemorySlotHoldStore
@@ -343,45 +342,9 @@ async def test_confirm_payment_publication_service_effect_failure_does_not_crash
     assert len(ctx["notifier"].user_notifications) == 1
 
 
-async def test_confirm_payment_slot_conflict_compensates_balance():
-    """AUD-03: confirm_paid_slot loses the race -> money goes to user balance,
-    notify_user is called with slot_conflict flag so the user sees why."""
-    publication = Publication(
-        id=7,
-        ad_id=1,
-        region_id=1,
-        status=PublicationStatus.AWAITING_PAYMENT,
-    )
-    payment = make_payment(
-        purpose=PaymentPurpose.SLOT,
-        purpose_id=7,
-        amount=Decimal("199"),
-    )
-    user = make_user(balance=Decimal("50"))
-    failing_confirm_slot = RaisingUseCase(SlotAlreadyBooked())
-
-    use_case, ctx = make_use_case(
-        payment=payment,
-        user=user,
-        publication=publication,
-        confirm_paid_slot=failing_confirm_slot,
-    )
-
-    await use_case(ConfirmPaymentRequest(external_id="ext-123"))
-
-    assert failing_confirm_slot.calls == 1
-    assert user.balance == Decimal("249")  # 50 + 199 compensated
-    assert payment.status == PaymentStatus.PAID
-    assert len(ctx["notifier"].user_notifications) == 1
-    _, extra = ctx["notifier"].user_notifications[0]
-    assert extra["slot_conflict"] is True
-    assert extra["compensated_amount"] == Decimal("199")
-
-
-async def test_confirm_payment_slot_without_publication_conflict_compensates_balance():
-    """Second SLOT sub-branch (no purpose_id yet, pre-publication slot payment):
-    if mark_converted loses to a different owner, compensate instead of silently
-    leaving the user with a slot that isn't actually theirs."""
+async def test_confirm_payment_slot_taken_by_another_user_is_still_given():
+    """Платный слот не эксклюзивный: оплату за слот, который уже занимал
+    другой пользователь, принимаем как обычно — без возврата на баланс."""
     other_owner_converted = InMemorySlotConvertedRepo()
     slot = SlotKey(region_id=1, local_day=date(2026, 2, 12), local_time=time_(10, 0))
     await other_owner_converted.mark_converted(slot=slot, user_id=999, ad_id=42)
@@ -417,9 +380,10 @@ async def test_confirm_payment_slot_without_publication_conflict_compensates_bal
 
     await use_case(ConfirmPaymentRequest(external_id="ext-123"))
 
-    assert user.balance == Decimal("199")
+    assert user.balance == Decimal("0")
+    assert payment.status == PaymentStatus.PAID
     _, extra = ctx["notifier"].user_notifications[0]
-    assert extra["slot_conflict"] is True
+    assert not extra.get("slot_conflict")
 
 
 async def test_confirm_payment_highlight_for_store_compensates_balance():
