@@ -23,7 +23,6 @@ from src.infrastructure.tasks.taskiq_queue import TaskiqTaskQueue
 from ..factories import make_region, make_user
 from .conftest import ADMIN_TG_ID
 from .harness import settle
-from .test_create_ad_flow import FREE_SLOT
 
 SUB = datetime.now(timezone.utc) + timedelta(days=5)
 
@@ -72,7 +71,9 @@ async def test_subscribers_are_notified_before_publication_and_open_catalog(
     await seller.send("москва")
     await seller.send("+79991234567")
     await seller.send("150000")
-    await seller.click(FREE_SLOT)
+    # слот на завтра: у сегодняшнего окно «за 2 часа» может уже пройти,
+    # тогда уведомление законно не планируется и тест зависит от времени суток
+    await seller.click("Завтра-")
     await seller.click("Подтвердить")
 
     [(_, args, notify_at, _)] = [
