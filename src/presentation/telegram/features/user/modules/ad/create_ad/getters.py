@@ -9,7 +9,6 @@ from src.application.dtos.ad import AdDTO
 from src.application.dtos.region import RegionDTO
 from src.application.dtos.user import UserDTO
 from src.application.mediator import Mediator
-from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefRequest
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.region.get_by_id import IdRegionRequest
 from src.application.use_cases.user.get_by_tg_id import GetTgIdRequest
@@ -17,6 +16,9 @@ from src.domain.enums.ad import AdType
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.price import Price
 from src.domain.value_objects.slot_key import SlotKey
+from src.presentation.telegram.features.user.shared.plate_media import (
+    ensure_plate_media,
+)
 from src.presentation.telegram.utils.build_media import build_media_attachment
 
 
@@ -214,12 +216,12 @@ async def getter_confirm(
         if photo:
             media = build_media_attachment(photo["file_id"])
         else:
-            media = await mediator.handle(
-                EnsureAdImageRefRequest(
-                    plate=plate,
-                    channel_username=channel_username,
-                    chat_id=tg_id,
-                )
+            media = await ensure_plate_media(
+                data,
+                mediator,
+                plate=plate,
+                channel_username=channel_username,
+                chat_id=tg_id,
             )
         data["media_file_id"] = (
             media.file_id.file_id if media and media.file_id else None

@@ -21,7 +21,6 @@ from src.application.use_cases.slots.confirm_paid_slot_from_balance import (
     ConfirmPaidSlotFromBalanceRequest,
 )
 from src.application.use_cases.ad.create_ad_draft import CreateAdDraftRequest
-from src.application.use_cases.ad.ensure_ad_image_ref import EnsureAdImageRefRequest
 from src.application.use_cases.ad.get_by_id import GetByIdAdRequest
 from src.application.use_cases.ad.update_ad_content import UpdateAdContentRequest
 from src.application.use_cases.publication.get_by_id import GetPublicationByIdRequest
@@ -70,6 +69,9 @@ from src.presentation.telegram.features.user.modules.menu.states import UserMenu
 from src.presentation.telegram.features.user.modules.payment.helpers import (
     PaymentStartParams,
     start_payment,
+)
+from src.presentation.telegram.features.user.shared.plate_media import (
+    ensure_plate_media,
 )
 from src.presentation.telegram.utils.build_media import build_media_attachment
 
@@ -274,12 +276,12 @@ async def _start_slot_payment(
         if photo:
             media = build_media_attachment(photo["file_id"])
         else:
-            media = await mediator.handle(
-                EnsureAdImageRefRequest(
-                    plate=plate,
-                    channel_username=data["channel_username"],
-                    chat_id=callback.from_user.id,
-                )
+            media = await ensure_plate_media(
+                data,
+                mediator,
+                plate=plate,
+                channel_username=data["channel_username"],
+                chat_id=callback.from_user.id,
             )
         media_file_id = media.file_id.file_id if media and media.file_id else None
 
