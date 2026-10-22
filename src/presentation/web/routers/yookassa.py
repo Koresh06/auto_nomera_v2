@@ -8,7 +8,6 @@ from src.application.services.payment.provider_registry import PaymentProviderRe
 from src.domain.enums.payment import PaymentMethod
 from src.infrastructure.payment.providers.yookassa import YooKassaProvider
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -101,5 +100,7 @@ async def yookassa_webhook(
 ) -> dict:
     payload = await request.json()
     return await process_yookassa_webhook(
-        payload, task_queue=task_queue, provider_registry=provider_registry
+        payload,
+        task_queue=task_queue,
+        provider_registry=provider_registry,
     )
