@@ -50,6 +50,11 @@ class ExecuteMailingUseCase(UseCase[ExecuteMailingRequest, None]):
                 logger.warning(f"Unhandled: {command.mail_type}")
                 return
 
+            # несколько регионов могут вещать в один канал (Тыва/Хакасия,
+            # Крым/Севастополь) — без дедупликации такой канал получал
+            # рассылку «во все каналы» по разу на каждый регион
+            chat_ids = list(dict.fromkeys(chat_ids))
+
             if not chat_ids:
                 logger.info("[ExecuteMailing] no recipients")
                 return
