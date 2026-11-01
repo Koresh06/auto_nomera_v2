@@ -19,6 +19,7 @@ from src.domain.entities.service_definition import ServiceDefinition
 from src.domain.entities.user import User
 from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.enums.role import UserRole
+from src.tests.use_cases.fakes import RecordingLedger
 
 
 class FakeUserRepo:
@@ -69,6 +70,7 @@ async def test_buy_pre_publication_respects_custom_duration_days():
         duration_days=7,
     )
     use_case = BuyPrePublicationServiceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         service_def_repo=FakeServiceDefRepo(definition),
         transaction_manager=FakeTransactionManager(),
@@ -102,6 +104,7 @@ async def test_buy_pre_publication_default_days_is_30_when_duration_not_set():
         duration_days=None,
     )
     use_case = BuyPrePublicationServiceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         service_def_repo=FakeServiceDefRepo(definition),
         transaction_manager=FakeTransactionManager(),

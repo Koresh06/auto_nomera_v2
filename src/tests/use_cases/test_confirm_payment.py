@@ -36,6 +36,7 @@ from src.infrastructure.repositories.slot.in_memory import (
     InMemorySlotBookingRepo,
     InMemorySlotConvertedRepo,
 )
+from src.tests.use_cases.fakes import RecordingLedger
 
 
 class FakePaymentRepo:
@@ -237,6 +238,7 @@ def make_use_case(
         )
     )
     tx = FakeTransactionManager()
+    ledger = RecordingLedger()
     teleporter = FakeTeleporter(fail=teleporter_fails)
     notifier = FakePaymentNotifier()
     notification_service = FakeNotificationService()
@@ -248,6 +250,7 @@ def make_use_case(
     )
 
     use_case = ConfirmPaymentUseCase(
+        ledger=ledger,
         payment_repo=payment_repo,
         user_repo=user_repo,
         publication_repo=publication_repo,
@@ -270,6 +273,7 @@ def make_use_case(
         "teleporter": teleporter,
         "notifier": notifier,
         "notification_service": notification_service,
+        "ledger": ledger,
     }
     return use_case, ctx
 

@@ -6,13 +6,16 @@ from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.service_definition import ServiceNotAvailableException
 from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.balance.balance_ledger import BalanceLedger
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.publication_service.service_definition_repo import (
     ServiceDefinitionRepository,
 )
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.domain.entities.balance_transaction import BalanceTransaction
 from src.domain.entities.publication_service import PublicationService
+from src.domain.enums.balance import BalanceTransactionKind
 from src.domain.enums.publication_service import PublicationServiceType
 from src.domain.services.publication.service_eligibility import (
     ensure_service_allowed_for_ad_type,
@@ -33,6 +36,7 @@ class BuyPublicationServiceUseCase(UseCase[BuyPublicationServiceRequest, None]):
     user_repo: UserRepository
     publication_repo: PublicationRepository
     ad_repo: AdRepository
+    ledger: BalanceLedger
     service_def_repo: ServiceDefinitionRepository
     transaction_manager: TransactionManager
 
@@ -67,6 +71,16 @@ class BuyPublicationServiceUseCase(UseCase[BuyPublicationServiceRequest, None]):
         price = Decimal(definition.price)
         user.charge(price)
         await self.user_repo.save(user)
+        await self.ledger.record(
+            BalanceTransaction.of(
+                user,
+                amount=-price,
+                kind=BalanceTransactionKind.SERVICE_PURCHASE,
+                region_id=publication.region_id,
+                publication_id=publication.id,
+                description=definition.title,
+            )
+        )
 
         default_params = (
             {"days": definition.duration_days} if definition.duration_days else {}

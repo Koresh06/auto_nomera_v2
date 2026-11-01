@@ -3,10 +3,13 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from src.application.exceptions.user import UserNotFoundException
+from src.application.ports.balance.balance_ledger import BalanceLedger
 from src.application.ports.slots.paid_slot_charge_guard import PaidSlotChargeGuard
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.domain.entities.balance_transaction import BalanceTransaction
+from src.domain.enums.balance import BalanceTransactionKind
 from src.domain.value_objects.slot_key import SlotKey
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
@@ -34,6 +37,7 @@ class ConfirmPaidSlotFromBalanceUseCase(
 
     user_repo: UserRepository
     converted_repo: SlotConvertedRepository
+    ledger: BalanceLedger
     charge_guard: PaidSlotChargeGuard
     transaction_manager: TransactionManager
 
@@ -59,6 +63,18 @@ class ConfirmPaidSlotFromBalanceUseCase(
 
             user.charge(command.amount)
             await self.user_repo.save(user)
+            await self.ledger.record(
+                BalanceTransaction.of(
+                    user,
+                    amount=-command.amount,
+                    kind=BalanceTransactionKind.SLOT_PURCHASE,
+                    region_id=command.slot.region_id,
+                    description=(
+                        f"Слот {command.slot.local_day:%d.%m.%Y} "
+                        f"{command.slot.local_time:%H:%M}"
+                    ),
+                )
+            )
 
             await self.transaction_manager.commit()
         except BaseException:

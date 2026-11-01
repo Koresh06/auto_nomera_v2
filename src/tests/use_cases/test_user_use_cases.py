@@ -46,6 +46,7 @@ from src.domain.services.region.region_guard import RegionGuard
 from src.domain.value_objects.region_metadata import RegionMetadata
 from src.domain.value_objects.region_settings import RegionSettings
 from src.domain.value_objects.timezone_name import TimezoneName
+from src.tests.use_cases.fakes import RecordingLedger
 
 
 class FakeUserRepo:
@@ -151,7 +152,7 @@ async def test_admin_adjust_balance_positive_tops_up():
     user = make_user(balance=Decimal("100"))
     tx = FakeTransactionManager()
     use_case = AdminAdjustBalanceUseCase(
-        user_repo=FakeUserRepo([user]), transaction_manager=tx
+        ledger=RecordingLedger(), user_repo=FakeUserRepo([user]), transaction_manager=tx
     )
 
     dto = await use_case(AdminAdjustBalanceCommand(user_id=1, amount=Decimal("50")))
@@ -163,7 +164,9 @@ async def test_admin_adjust_balance_positive_tops_up():
 async def test_admin_adjust_balance_negative_charges():
     user = make_user(balance=Decimal("100"))
     use_case = AdminAdjustBalanceUseCase(
-        user_repo=FakeUserRepo([user]), transaction_manager=FakeTransactionManager()
+        ledger=RecordingLedger(),
+        user_repo=FakeUserRepo([user]),
+        transaction_manager=FakeTransactionManager(),
     )
 
     dto = await use_case(AdminAdjustBalanceCommand(user_id=1, amount=Decimal("-30")))
@@ -173,6 +176,7 @@ async def test_admin_adjust_balance_negative_charges():
 
 async def test_admin_adjust_balance_zero_raises():
     use_case = AdminAdjustBalanceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo([make_user()]),
         transaction_manager=FakeTransactionManager(),
     )
@@ -184,7 +188,9 @@ async def test_admin_adjust_balance_zero_raises():
 async def test_admin_adjust_balance_negative_exceeding_balance_raises():
     user = make_user(balance=Decimal("10"))
     use_case = AdminAdjustBalanceUseCase(
-        user_repo=FakeUserRepo([user]), transaction_manager=FakeTransactionManager()
+        ledger=RecordingLedger(),
+        user_repo=FakeUserRepo([user]),
+        transaction_manager=FakeTransactionManager(),
     )
 
     with pytest.raises(InsufficientBalance):
@@ -193,7 +199,9 @@ async def test_admin_adjust_balance_negative_exceeding_balance_raises():
 
 async def test_admin_adjust_balance_unknown_user_raises():
     use_case = AdminAdjustBalanceUseCase(
-        user_repo=FakeUserRepo([]), transaction_manager=FakeTransactionManager()
+        ledger=RecordingLedger(),
+        user_repo=FakeUserRepo([]),
+        transaction_manager=FakeTransactionManager(),
     )
 
     with pytest.raises(UserNotFoundException):

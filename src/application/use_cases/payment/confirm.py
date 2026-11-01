@@ -12,6 +12,7 @@ from src.application.exceptions.ad import AdNotFoundException
 from src.application.exceptions.publication import PublicationNotFoundException
 from src.application.exceptions.user import UserNotFoundException
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.balance.balance_ledger import BalanceLedger
 from src.application.ports.dialog.teleport import DialogTeleporter
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
@@ -36,8 +37,10 @@ from src.application.use_cases.publication_service.priority_publish_publication 
     PriorityPublishPublicationRequest,
     PriorityPublishPublicationUseCase,
 )
+from src.domain.entities.balance_transaction import BalanceTransaction
 from src.domain.entities.payment import Payment, PaymentStatus
 from src.domain.entities.publication_service import PublicationService
+from src.domain.enums.balance import BalanceTransactionKind
 from src.domain.enums.payment import PaymentPurpose
 from src.domain.enums.publication import PublicationStatus
 from src.domain.enums.publication_service import PublicationServiceType
@@ -62,6 +65,7 @@ class ConfirmPaymentRequest(UseCaseRequest):
 class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
     payment_repo: PaymentRepository
     user_repo: UserRepository
+    ledger: BalanceLedger
     publication_repo: PublicationRepository
     ad_repo: AdRepository
     service_def_repo: ServiceDefinitionRepository
@@ -116,6 +120,14 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
             logger.info("[ConfirmPayment:branch] BALANCE_TOPUP")
             user.top_up(payment.amount)
             await self.user_repo.save(user)
+            await self.ledger.record(
+                BalanceTransaction.of(
+                    user,
+                    amount=payment.amount,
+                    kind=BalanceTransactionKind.TOPUP,
+                    payment_id=payment.id,
+                )
+            )
 
         elif payment.purpose == PaymentPurpose.PUBLICATION_SERVICE:
             service_type_raw = payment.meta.get("service_type")
@@ -147,6 +159,19 @@ class ConfirmPaymentUseCase(UseCase[ConfirmPaymentRequest, None]):
                 sentry_sdk.capture_exception(e)
                 user.top_up(payment.amount)
                 await self.user_repo.save(user)
+                # по этой записи отчёт исключает платёж из выручки: услуга не
+                # оказана, деньги остались у пользователя на балансе
+                await self.ledger.record(
+                    BalanceTransaction.of(
+                        user,
+                        amount=payment.amount,
+                        kind=BalanceTransactionKind.COMPENSATION,
+                        region_id=publication.region_id,
+                        payment_id=payment.id,
+                        publication_id=publication.id,
+                        description="Услуга недоступна для этого объявления",
+                    )
+                )
                 await self.transaction_manager.commit()
                 await self.payment_notifier.notify_user(
                     payment,

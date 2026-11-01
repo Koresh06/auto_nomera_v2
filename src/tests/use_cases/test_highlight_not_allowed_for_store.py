@@ -35,6 +35,7 @@ from src.domain.enums.role import UserRole
 from src.domain.exceptions.publication import ServiceNotAllowed
 from src.domain.value_objects.contacts import Contacts
 from src.domain.value_objects.store_content import StoreContent
+from src.tests.use_cases.fakes import RecordingLedger
 
 
 class FakeUserRepo:
@@ -109,6 +110,7 @@ async def test_buy_publication_service_rejects_highlight_for_store_without_charg
     )
 
     use_case = BuyPublicationServiceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         publication_repo=FakePublicationRepo(pub),
         ad_repo=FakeAdRepo(make_store_ad()),
@@ -148,6 +150,7 @@ async def test_buy_publication_service_allows_highlight_for_sale_ad():
     )
 
     use_case = BuyPublicationServiceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         publication_repo=FakePublicationRepo(pub),
         ad_repo=FakeAdRepo(sale_ad),

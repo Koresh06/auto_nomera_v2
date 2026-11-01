@@ -4,6 +4,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.ports.ad.ad_repo import AdRepository
+from src.application.ports.balance.balance_ledger import BalanceLedger
 from src.application.ports.cache.block import BlockCache
 from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
@@ -11,6 +12,7 @@ from src.application.ports.publication_service.service_definition_repo import (
     ServiceDefinitionRepository,
 )
 from src.application.ports.region.region_repo import RegionRepository
+from src.application.ports.stats.report_repo import StatsReportRepository
 from src.application.ports.slots.slot_booking_repo import SlotBookingRepository
 from src.application.ports.slots.slot_converted_repo import SlotConvertedRepository
 from src.application.ports.slots.paid_slot_charge_guard import PaidSlotChargeGuard
@@ -20,6 +22,7 @@ from src.application.ports.user.user_repo import UserRepository
 from src.infrastructure.cache.block import RedisBlockCache
 from src.infrastructure.redis.draft_reminder_store import RedisDraftReminderStore
 from src.infrastructure.repositories.ad.sqlalchemy import SQLAlchemyAdRepo
+from src.infrastructure.repositories.balance.sqlalchemy import SQLAlchemyBalanceLedger
 from src.infrastructure.repositories.payment.sqlalchemy import SQLAlchemyPaymentRepo
 from src.infrastructure.repositories.publication.sqlalchemy import (
     SQLAlchemyPublicationRepo,
@@ -31,6 +34,9 @@ from src.infrastructure.repositories.service_def.sqlalchemy import (
 from src.infrastructure.repositories.slot.sqlalchemy import (
     SQLAlchemySlotBookingRepo,
     SQLAlchemySlotConvertedRepo,
+)
+from src.infrastructure.repositories.stats_report.sqlalchemy import (
+    SQLAlchemyStatsReportRepo,
 )
 from src.infrastructure.repositories.user.sqlalchemy import SQLAlchemyUserRepo
 from src.infrastructure.redis.holt_store.redis import RedisSlotHoldStore
@@ -89,6 +95,16 @@ class RepositoriesProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_payment_repository(self, session: AsyncSession) -> PaymentRepository:
         return SQLAlchemyPaymentRepo(session)
+
+    @provide(scope=Scope.REQUEST)
+    def get_balance_ledger(self, session: AsyncSession) -> BalanceLedger:
+        return SQLAlchemyBalanceLedger(session)
+
+    @provide(scope=Scope.REQUEST)
+    def get_stats_report_repository(
+        self, session: AsyncSession
+    ) -> StatsReportRepository:
+        return SQLAlchemyStatsReportRepo(session)
 
     @provide(scope=Scope.APP)
     def get_block_cache(self, redis: Redis) -> BlockCache:
