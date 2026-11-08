@@ -150,6 +150,7 @@ async def make_payment(
     method: PaymentMethod = PaymentMethod.YOOKASSA,
     status: PaymentStatus = PaymentStatus.PAID,
     purpose: PaymentPurpose = PaymentPurpose.BALANCE_TOPUP,
+    purpose_id: int | None = None,
     meta: dict | None = None,
     paid_at: datetime | None = None,
 ) -> Payment:
@@ -160,6 +161,7 @@ async def make_payment(
         amount=amount,
         status=status,
         purpose=purpose,
+        purpose_id=purpose_id,
         meta=meta or {},
         paid_at=paid_at
         or (datetime.now(timezone.utc) if status == PaymentStatus.PAID else None),

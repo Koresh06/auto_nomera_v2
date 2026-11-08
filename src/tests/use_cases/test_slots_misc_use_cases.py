@@ -51,6 +51,7 @@ from src.infrastructure.redis.paid_slot_charge_guard import (
     InMemoryPaidSlotChargeGuard,
 )
 from src.utils.get_datetime_utc_now import get_datetime_utc_now
+from src.tests.use_cases.fakes import RecordingLedger
 
 
 class FakeRegionRepo:
@@ -238,6 +239,7 @@ async def test_get_calendar_returns_slots_for_active_region():
 
 async def test_confirm_paid_slot_from_balance_raises_for_unknown_user():
     use_case = ConfirmPaidSlotFromBalanceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(None),
         converted_repo=InMemorySlotConvertedRepo(),
         charge_guard=InMemoryPaidSlotChargeGuard(),
@@ -266,6 +268,7 @@ async def test_confirm_paid_slot_from_balance_charges_and_converts_on_success():
     tx = FakeTransactionManager()
 
     use_case = ConfirmPaidSlotFromBalanceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         converted_repo=converted_repo,
         charge_guard=InMemoryPaidSlotChargeGuard(),
@@ -290,6 +293,7 @@ async def test_confirm_paid_slot_taken_by_another_user_is_charged_and_allowed():
     await converted_repo.mark_converted(slot=slot, user_id=999, ad_id=42)
 
     use_case = ConfirmPaidSlotFromBalanceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         converted_repo=converted_repo,
         charge_guard=InMemoryPaidSlotChargeGuard(),
@@ -309,6 +313,7 @@ async def test_confirm_paid_slot_from_balance_insufficient_balance_raises():
     slot = SlotKey(region_id=1, local_day=date(2026, 2, 12), local_time=time(10, 0))
 
     use_case = ConfirmPaidSlotFromBalanceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         converted_repo=InMemorySlotConvertedRepo(),
         charge_guard=InMemoryPaidSlotChargeGuard(),
@@ -330,6 +335,7 @@ async def test_confirm_paid_slot_double_tap_charges_once_until_released():
     slot = SlotKey(region_id=1, local_day=date(2026, 2, 12), local_time=time(10, 0))
     guard = InMemoryPaidSlotChargeGuard()
     use_case = ConfirmPaidSlotFromBalanceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         converted_repo=InMemorySlotConvertedRepo(),
         charge_guard=guard,
@@ -352,6 +358,7 @@ async def test_confirm_paid_slot_failed_charge_does_not_block_retry():
     user = make_user(balance=50)
     slot = SlotKey(region_id=1, local_day=date(2026, 2, 12), local_time=time(10, 0))
     use_case = ConfirmPaidSlotFromBalanceUseCase(
+        ledger=RecordingLedger(),
         user_repo=FakeUserRepo(user),
         converted_repo=InMemorySlotConvertedRepo(),
         charge_guard=InMemoryPaidSlotChargeGuard(),

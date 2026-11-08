@@ -291,6 +291,36 @@ async def test_execute_mailing_to_all_regions_uses_channel_ids():
     assert queue.enqueued[0][1][0] == [-100999]
 
 
+async def test_execute_mailing_to_all_regions_dedupes_shared_channel():
+    # два региона вещают в один канал — он должен получить рассылку один раз
+    regions = [
+        make_region(id=1, channel_id=-100111),
+        make_region(id=2, channel_id=-100222),
+        make_region(id=3, channel_id=-100111),
+    ]
+    region_repo = FakeRegionRepo(None)
+    region_repo.get_all = lambda: _async_value(regions)  # type: ignore[method-assign]
+    use_case = ExecuteMailingUseCase(
+        user_repo=FakeUserRepo([]),
+        region_repo=region_repo,
+        notification_service=FakeNotificationService(),
+        task_queue=(queue := FakeTaskQueue()),
+    )
+
+    await use_case(
+        ExecuteMailingRequest(
+            mail_type=MailingType.TO_ALL_REGIONS, from_chat_id=555, message_id=10
+        )
+    )
+
+    assert len(queue.enqueued) == 1
+    assert queue.enqueued[0][1][0] == [-100111, -100222]
+
+
+async def _async_value(value):
+    return value
+
+
 async def test_execute_mailing_no_recipients_does_not_enqueue():
     use_case = ExecuteMailingUseCase(
         user_repo=FakeUserRepo([]),

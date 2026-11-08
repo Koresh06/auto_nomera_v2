@@ -352,3 +352,30 @@ async def test_urgent_buyout_goes_to_admin_moderation(world, session):
     assert admin_msgs, "админ должен получить заявку на модерацию"
     assert "А123ВС77" in admin_msgs[-1].text
     assert admin_msgs[-1].buttons, "у заявки должны быть кнопки модерации"
+
+
+async def test_confirm_rerender_uploads_plate_image_once(world, session):
+    # раньше каждая перерисовка окна подтверждения заново генерировала и
+    # грузила картинку номера в Telegram — при тормозах API окно падало
+    # по таймауту с «Cannot get window data»
+    from aiogram.methods import SendPhoto
+    from aiogram.types import BufferedInputFile
+
+    await _setup(session, paid_slots=3, balance=Decimal("1000"), tg_id=701)
+    u = world.user(701, username="seller")
+    await _fill_sale_until_calendar(u)
+
+    await u.click(PAID_SLOT)
+    assert "Проверьте данные" in u.last.text
+    # первое «Отмена» на платном слоте — только предупреждение, окно
+    # подтверждения перерисовывается (геттер вызывается снова)
+    await u.click("Отмена")
+    assert "потеряете доступ" in (u.last_alert or "")
+    assert "Проверьте данные" in u.last.text
+
+    uploads = [
+        c
+        for c in world.tg.calls_of(SendPhoto)
+        if isinstance(c.photo, BufferedInputFile)
+    ]
+    assert len(uploads) == 1

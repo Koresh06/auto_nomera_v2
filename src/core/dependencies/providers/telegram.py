@@ -64,8 +64,10 @@ class TelegramProvider(Provider):
         return dp
 
     @provide
-    def bg_manager_factory(self, dp: Dispatcher) -> BgManagerFactory:
-        return setup_dialogs(dp)
+    def bg_manager_factory(
+        self, dp: Dispatcher, message_manager: CustomMessageManager
+    ) -> BgManagerFactory:
+        return setup_dialogs(dp, message_manager=message_manager)
 
     @provide
     def dialog_teleporter(

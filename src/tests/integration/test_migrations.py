@@ -33,3 +33,21 @@ async def test_upgrade_head_creates_every_model_table(migrated_db):
 async def test_migrated_schema_matches_models(migrated_db):
     diff, _ = await _diff(migrated_db)
     assert diff == [], f"Схема после миграций расходится с моделями: {diff}"
+
+
+def test_balance_ledger_migration_rolls_back_and_reapplies(migrated_db):
+    """Откат нужен на случай неудачного деплоя: enum должен удаляться вместе
+    с таблицей, иначе повторный upgrade упадёт с «type already exists»."""
+    from alembic import command
+    from alembic.config import Config
+
+    from src.core.config.database import PostgresSettings
+
+    original_url = PostgresSettings.url
+    PostgresSettings.url = property(lambda self: migrated_db)  # type: ignore[method-assign,assignment]
+    try:
+        config = Config("alembic.ini")
+        command.downgrade(config, "5e1740d656ab")
+        command.upgrade(config, "head")
+    finally:
+        PostgresSettings.url = original_url  # type: ignore[method-assign]

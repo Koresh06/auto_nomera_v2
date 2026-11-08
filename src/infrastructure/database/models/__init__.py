@@ -7,6 +7,7 @@ from .publication import PublicationModel
 from .slot import SlotBookingModel, SlotConvertedModel
 from .service_definition import ServiceDefinitionModel
 from .payment import PaymentModel
+from .balance_transaction import BalanceTransactionModel
 
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "SlotConvertedModel",
     "ServiceDefinitionModel",
     "PaymentModel",
+    "BalanceTransactionModel",
 ]

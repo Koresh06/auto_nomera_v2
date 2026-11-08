@@ -92,6 +92,9 @@ from src.presentation.telegram.features.admin.modules.stats.publications.dialogs
 from src.presentation.telegram.features.admin.modules.stats.globals.dialogs import (
     global_stats_dialog,
 )
+from src.presentation.telegram.features.admin.modules.stats.export.dialogs import (
+    stats_export_dialog,
+)
 from src.presentation.telegram.features.admin.modules.unpublished_publications.dialogs import (
     unpublished_publications_dialog,
 )
@@ -123,6 +126,7 @@ def get_admin_dialogs() -> list[Dialog]:
         stats_replenishment_dialog,
         publish_stats_dialog,
         global_stats_dialog,
+        stats_export_dialog,
         unpublished_publications_dialog,
     ]
 
@@ -173,5 +177,6 @@ def get_all_dialogs() -> list[Dialog]:
         stats_replenishment_dialog,
         publish_stats_dialog,
         global_stats_dialog,
+        stats_export_dialog,
         unpublished_publications_dialog,
     ]

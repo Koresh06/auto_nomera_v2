@@ -3,13 +3,25 @@ from io import BytesIO
 from typing import Union
 
 from aiogram import Bot
-from aiogram.types import BufferedInputFile, InputFile
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.types import BufferedInputFile, InputFile, Message
 
 from aiogram_dialog.manager.message_manager import MessageManager
-from aiogram_dialog.api.entities import MediaAttachment, MediaId
+from aiogram_dialog.api.entities import MediaAttachment, MediaId, NewMessage, OldMessage
 
 from src.infrastructure.telegram.media_virtual_url import CUSTOM_URL_PREFIX
 from src.infrastructure.images.plate_generator.plate_generator import PlateGenerator
+
+
+# Telegram отвечает так, когда сохранённое в стеке диалога представление
+# старого сообщения (текст/медиа) разошлось с реальным — обычно после сетевого
+# таймаута, когда сообщение ушло, а стек не обновился. Редактировать такое
+# сообщение бесполезно: удаляем и шлём окно заново.
+_EDIT_MISMATCH_ERRORS = (
+    "there is no text in the message to edit",
+    "there is no caption in the message to edit",
+    "there is no media in the message to edit",
+)
 
 
 class CustomMessageManager(MessageManager):
@@ -90,3 +102,17 @@ class CustomMessageManager(MessageManager):
 
         # 6) Возвращаем file_id, чтобы Telegram переиспользовал загруженный файл
         return photo.file_id
+
+    async def edit_message_safe(
+        self,
+        bot: Bot,
+        new_message: NewMessage,
+        old_message: OldMessage,
+    ) -> Message:
+        try:
+            return await super().edit_message_safe(bot, new_message, old_message)
+        except TelegramBadRequest as err:
+            if not any(e in err.message for e in _EDIT_MISMATCH_ERRORS):
+                raise
+            await self.remove_message_safe(bot, old_message, new_message)
+            return await self.send_message(bot, new_message)

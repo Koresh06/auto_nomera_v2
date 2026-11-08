@@ -117,6 +117,18 @@ class FakePaymentRepo:
         return self.breakdown_result
 
 
+class FakeReportRepo:
+    def __init__(self) -> None:
+        self.filters: list = []
+
+    async def get_region_metrics(self, report_filter):
+        self.filters.append(report_filter)
+        return {
+            1: {"revenue_count": Decimal("2"), "revenue_total": Decimal("300")},
+            2: {"revenue_count": Decimal("1"), "revenue_total": Decimal("200")},
+        }
+
+
 def make_region(**overrides) -> Region:
     defaults = dict(
         id=1,
@@ -140,7 +152,7 @@ async def test_get_global_stats_aggregates_everything():
         ad_repo=FakeAdRepo(),
         publication_repo=FakePublicationRepo(),
         region_repo=FakeRegionRepo(),
-        payment_repo=FakePaymentRepo(),
+        report_repo=FakeReportRepo(),
     )
 
     result = await use_case(GetGlobalStatsRequest(period=StatsPeriod.WEEK))
@@ -151,6 +163,7 @@ async def test_get_global_stats_aggregates_everything():
     assert result.total_ads == 50
     assert result.scheduled_ads == 15
     assert result.total_regions == 7
+    # покупки из тех же показателей, что и в выгрузке, по всем регионам
     assert result.total_purchases == 3
     assert result.total_amount == Decimal("500")
     assert result.total_services == 5
@@ -163,7 +176,7 @@ async def test_get_global_stats_skips_top_regions_when_region_id_given():
         ad_repo=FakeAdRepo(),
         publication_repo=FakePublicationRepo(),
         region_repo=FakeRegionRepo(),
-        payment_repo=FakePaymentRepo(),
+        report_repo=FakeReportRepo(),
     )
 
     result = await use_case(GetGlobalStatsRequest(period=StatsPeriod.WEEK, region_id=1))

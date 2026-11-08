@@ -17,6 +17,9 @@ from src.presentation.telegram.features.admin.modules.paid_services.states impor
 from src.presentation.telegram.features.admin.modules.region.main.states import (
     MainRegionSG,
 )
+from src.presentation.telegram.features.admin.modules.stats.export.states import (
+    StatsExportSG,
+)
 from src.presentation.telegram.features.admin.modules.stats.globals.states import (
     GlobalStatsSG,
 )
@@ -90,6 +93,11 @@ admin_menu_dialog = Dialog(
             Const("📈 Общая статистика"),
             id="global_stats",
             state=GlobalStatsSG.start,
+        ),
+        Start(
+            Const("📤 Выгрузка статистики"),
+            id="stats_export",
+            state=StatsExportSG.menu,
         ),
         Start(
             Const("📭 Не опубликованные объявления"),

@@ -3,6 +3,7 @@ from aiogram import Bot
 from dishka import Provider, Scope, provide
 
 from src.application.ports.region.region_repo import RegionRepository
+from src.application.ports.stats.report_writer import ReportWriter
 from src.application.services.notification.notification_service import (
     NotificationService,
 )
@@ -23,6 +24,7 @@ from src.infrastructure.payment.providers.cryptomus import CryptomusProvider
 from src.infrastructure.payment.providers.manual_card import ManualCardProvider
 from src.infrastructure.payment.providers.telegram_stars import TelegramStarsProvider
 from src.infrastructure.payment.providers.yookassa import YooKassaProvider
+from src.infrastructure.reports.xlsx_writer import OpenpyxlReportWriter
 from src.infrastructure.telegram.image_processor import PillowImageProcessor
 from src.infrastructure.telegram.notification_service import AiogramNotificationService
 
@@ -31,6 +33,10 @@ class ServicesProvider(Provider):
     @provide(scope=Scope.APP)
     def slot_hold_ttl(self, settings: AppSettings) -> timedelta:
         return timedelta(seconds=settings.app.hold_slots_time)
+
+    @provide(scope=Scope.APP)
+    def report_writer(self) -> ReportWriter:
+        return OpenpyxlReportWriter()
 
     @provide(scope=Scope.APP)
     def calendar_builder(self) -> CalendarBuilder:

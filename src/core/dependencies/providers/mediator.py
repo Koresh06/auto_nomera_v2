@@ -258,6 +258,12 @@ from src.application.use_cases.stats.region_schedule import (
     GetRegionScheduleRequest,
     GetRegionScheduleUseCase,
 )
+from src.application.use_cases.stats.report import (
+    BuildStatsReportRequest,
+    BuildStatsReportUseCase,
+    GetReportPreviewRequest,
+    GetReportPreviewUseCase,
+)
 from src.application.use_cases.store.add_items import (
     AddStoreItemsRequest,
     AddStoreItemsUseCase,
@@ -387,6 +393,8 @@ class MediatorProvider(Provider):
         cancel_publication_by_admin_use_case: CancelPublicationByAdminUseCase,
         get_admin_scheduled_catalog_use_case: GetAdminScheduledCatalogUseCase,
         get_global_stats_use_case: GetGlobalStatsUseCase,
+        get_report_preview_use_case: GetReportPreviewUseCase,
+        build_stats_report_use_case: BuildStatsReportUseCase,
         schedule_ad_draft_reminder_use_case: ScheduleAdDraftReminderUseCase,
         cancel_ad_draft_reminder_use_case: CancelAdDraftReminderUseCase,
         get_overdue_unpublished_use_case: GetOverdueUnpublishedUseCase,
@@ -513,6 +521,8 @@ class MediatorProvider(Provider):
             GetAdminScheduledCatalogRequest, get_admin_scheduled_catalog_use_case
         )
         mediator.register(GetGlobalStatsRequest, get_global_stats_use_case)
+        mediator.register(GetReportPreviewRequest, get_report_preview_use_case)
+        mediator.register(BuildStatsReportRequest, build_stats_report_use_case)
         mediator.register(
             ScheduleAdDraftReminderRequest, schedule_ad_draft_reminder_use_case
         )

@@ -3,11 +3,14 @@ from decimal import Decimal
 
 from src.application.exceptions.service_definition import ServiceNotAvailableException
 from src.application.exceptions.user import UserNotFoundException
+from src.application.ports.balance.balance_ledger import BalanceLedger
 from src.application.ports.publication_service.service_definition_repo import (
     ServiceDefinitionRepository,
 )
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
+from src.domain.entities.balance_transaction import BalanceTransaction
+from src.domain.enums.balance import BalanceTransactionKind
 from src.domain.enums.publication_service import PublicationServiceType
 from src.infrastructure.database.transaction_manager.base import TransactionManager
 
@@ -21,6 +24,7 @@ class BuyPrePublicationServiceRequest(UseCaseRequest):
 @dataclass(kw_only=True)
 class BuyPrePublicationServiceUseCase(UseCase[BuyPrePublicationServiceRequest, None]):
     user_repo: UserRepository
+    ledger: BalanceLedger
     service_def_repo: ServiceDefinitionRepository
     transaction_manager: TransactionManager
 
@@ -39,4 +43,12 @@ class BuyPrePublicationServiceUseCase(UseCase[BuyPrePublicationServiceRequest, N
         user.charge(price)
         user.activate_pre_publication(days=command.days)
         await self.user_repo.save(user)
+        await self.ledger.record(
+            BalanceTransaction.of(
+                user,
+                amount=-price,
+                kind=BalanceTransactionKind.PRE_PUBLICATION_PURCHASE,
+                description=f"{definition.title}, {command.days} дн.",
+            )
+        )
         await self.transaction_manager.commit()

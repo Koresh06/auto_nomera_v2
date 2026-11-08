@@ -5,7 +5,10 @@ from src.application.ports.ad.ad_repo import AdRepository
 from src.application.ports.ad.draft_reminder_store import DraftReminderStore
 from src.application.ports.cache.block import BlockCache
 from src.application.ports.dialog.teleport import DialogTeleporter
+from src.application.ports.balance.balance_ledger import BalanceLedger
 from src.application.ports.payment.payment_repo import PaymentRepository
+from src.application.ports.stats.report_repo import StatsReportRepository
+from src.application.ports.stats.report_writer import ReportWriter
 from src.application.services.payment_notifier import PaymentNotifier
 from src.application.use_cases.ad.cancel_ad_draft_reminder import (
     CancelAdDraftReminderUseCase,
@@ -160,6 +163,10 @@ from src.application.use_cases.stats.payment import (
 )
 from src.application.use_cases.stats.publication import GetPublicationStatsUseCase
 from src.application.use_cases.stats.region_schedule import GetRegionScheduleUseCase
+from src.application.use_cases.stats.report import (
+    BuildStatsReportUseCase,
+    GetReportPreviewUseCase,
+)
 from src.application.use_cases.store.add_items import AddStoreItemsUseCase
 from src.application.use_cases.store.create import CreateStoreUseCase
 from src.application.use_cases.store.delete_items import DeleteStoreItemUseCase
@@ -339,11 +346,13 @@ class UseCasesProvider(Provider):
         self,
         user_repo: UserRepository,
         converted_repo: SlotConvertedRepository,
+        ledger: BalanceLedger,
         charge_guard: PaidSlotChargeGuard,
         transaction_manager: TransactionManager,
     ) -> ConfirmPaidSlotFromBalanceUseCase:
         return ConfirmPaidSlotFromBalanceUseCase(
             user_repo=user_repo,
+            ledger=ledger,
             converted_repo=converted_repo,
             charge_guard=charge_guard,
             transaction_manager=transaction_manager,
@@ -452,10 +461,12 @@ class UseCasesProvider(Provider):
         publication_repo: PublicationRepository,
         ad_repo: AdRepository,
         service_def_repo: ServiceDefinitionRepository,
+        ledger: BalanceLedger,
         transaction_manager: TransactionManager,
     ) -> BuyPublicationServiceUseCase:
         return BuyPublicationServiceUseCase(
             user_repo=user_repo,
+            ledger=ledger,
             publication_repo=publication_repo,
             ad_repo=ad_repo,
             service_def_repo=service_def_repo,
@@ -467,10 +478,12 @@ class UseCasesProvider(Provider):
         self,
         user_repo: UserRepository,
         service_def_repo: ServiceDefinitionRepository,
+        ledger: BalanceLedger,
         transaction_manager: TransactionManager,
     ) -> BuyPrePublicationServiceUseCase:
         return BuyPrePublicationServiceUseCase(
             user_repo=user_repo,
+            ledger=ledger,
             service_def_repo=service_def_repo,
             transaction_manager=transaction_manager,
         )
@@ -685,10 +698,12 @@ class UseCasesProvider(Provider):
         notification_service: NotificationService,
         payment_notifier: PaymentNotifier,
         teleporter: DialogTeleporter,
+        ledger: BalanceLedger,
         transaction_manager: TransactionManager,
     ) -> ConfirmPaymentUseCase:
         return ConfirmPaymentUseCase(
             payment_repo=payment_repo,
+            ledger=ledger,
             user_repo=user_repo,
             publication_repo=publication_repo,
             ad_repo=ad_repo,
@@ -964,10 +979,12 @@ class UseCasesProvider(Provider):
     def admin_adjust_balance_use_case(
         self,
         user_repo: UserRepository,
+        ledger: BalanceLedger,
         transaction_manager: TransactionManager,
     ) -> AdminAdjustBalanceUseCase:
         return AdminAdjustBalanceUseCase(
             user_repo=user_repo,
+            ledger=ledger,
             transaction_manager=transaction_manager,
         )
 
@@ -1099,14 +1116,34 @@ class UseCasesProvider(Provider):
         ad_repo: AdRepository,
         publication_repo: PublicationRepository,
         region_repo: RegionRepository,
-        payment_repo: PaymentRepository,
+        report_repo: StatsReportRepository,
     ) -> GetGlobalStatsUseCase:
         return GetGlobalStatsUseCase(
             user_repo=user_repo,
             ad_repo=ad_repo,
             publication_repo=publication_repo,
             region_repo=region_repo,
-            payment_repo=payment_repo,
+            report_repo=report_repo,
+        )
+
+    @provide
+    def get_report_preview_use_case(
+        self,
+        report_repo: StatsReportRepository,
+    ) -> GetReportPreviewUseCase:
+        return GetReportPreviewUseCase(report_repo=report_repo)
+
+    @provide
+    def build_stats_report_use_case(
+        self,
+        report_repo: StatsReportRepository,
+        region_repo: RegionRepository,
+        writer: ReportWriter,
+    ) -> BuildStatsReportUseCase:
+        return BuildStatsReportUseCase(
+            report_repo=report_repo,
+            region_repo=region_repo,
+            writer=writer,
         )
 
     @provide

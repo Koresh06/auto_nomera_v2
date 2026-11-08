@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 
 from src.application.dtos.global_stats import (
     AdTypeCountDTO,
@@ -6,10 +7,11 @@ from src.application.dtos.global_stats import (
     RegionActivityDTO,
     ServiceCountDTO,
 )
+from src.application.dtos.stats_report import ReportFilter, sum_metrics
 from src.application.ports.ad.ad_repo import AdRepository
-from src.application.ports.payment.payment_repo import PaymentRepository
 from src.application.ports.publication.publication_repo import PublicationRepository
 from src.application.ports.region.region_repo import RegionRepository
+from src.application.ports.stats.report_repo import StatsReportRepository
 from src.application.ports.user.user_repo import UserRepository
 from src.application.use_cases.base import UseCase, UseCaseRequest
 from src.domain.enums.period import StatsPeriod
@@ -27,7 +29,7 @@ class GetGlobalStatsUseCase(UseCase[GetGlobalStatsRequest, GlobalStatsDTO]):
     ad_repo: AdRepository
     publication_repo: PublicationRepository
     region_repo: RegionRepository
-    payment_repo: PaymentRepository
+    report_repo: StatsReportRepository
 
     async def __call__(self, command: GetGlobalStatsRequest) -> GlobalStatsDTO:
         since = command.period.since_utc()
@@ -44,7 +46,12 @@ class GetGlobalStatsUseCase(UseCase[GetGlobalStatsRequest, GlobalStatsDTO]):
             since, rid
         )
 
-        pay = await self.payment_repo.get_stats(since_utc=since, region_id=rid)
+        # те же показатели, что в выгрузке, иначе бот и Excel разойдутся:
+        # платежи содержат пополнения, но не покупки с баланса
+        metrics = await self.report_repo.get_region_metrics(
+            ReportFilter(since_utc=since, region_ids=(rid,) if rid else ())
+        )
+        totals = sum_metrics(metrics.values())
 
         total_regions = await self.region_repo.count_regions()
 
@@ -63,8 +70,8 @@ class GetGlobalStatsUseCase(UseCase[GetGlobalStatsRequest, GlobalStatsDTO]):
             scheduled_ads=scheduled,
             by_ad_type=[AdTypeCountDTO(ad_type=t, count=c) for t, c in by_type_raw],
             total_regions=total_regions,
-            total_purchases=pay.total_count,
-            total_amount=pay.total_amount,
+            total_purchases=int(totals.get("revenue_count", Decimal("0"))),
+            total_amount=totals.get("revenue_total", Decimal("0")),
             total_services=total_services,
             by_service=[ServiceCountDTO(type=t, count=c) for t, c in by_service_raw],
             top_regions=top_regions,
