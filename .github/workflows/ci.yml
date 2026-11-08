@@ -23,6 +23,9 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
+          # .python-version в .gitignore — без явной версии uv берёт системный
+          # Python раннера (3.14), под который у pgserver нет wheel.
+          python-version: "3.12"
 
       - name: Install dependencies
         run: uv sync --dev --locked
@@ -43,6 +46,9 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
+          # .python-version в .gitignore — без явной версии uv берёт системный
+          # Python раннера (3.14), под который у pgserver нет wheel.
+          python-version: "3.12"
 
       - name: Install dependencies
         run: uv sync --dev --locked
@@ -67,6 +73,9 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
+          # .python-version в .gitignore — без явной версии uv берёт системный
+          # Python раннера (3.14), под который у pgserver нет wheel.
+          python-version: "3.12"
 
       - name: Install dependencies
         run: uv sync --dev --locked
